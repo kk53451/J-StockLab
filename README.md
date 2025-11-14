@@ -213,9 +213,8 @@ J-StockLab/
 │   ├── stock.py                  # 미국 버전 (참고용)
 │   ├── stock_japan.py            # 일본 버전 (메인 사용)
 │   ├── predict.py                # Transformer 모델 학습 및 예측 (Colab용)
-│   ├── report.py                 # 평가 메트릭 및 Buy/Sell 추천
+│   ├── report.py                 # 평가 메트릭 및 Buy/Sell 추천 (Colab용)
 │   ├── total.csv                 # 통합 데이터 (약 4,000+ rows, 48 columns)
-│   ├── final_stock_analysis.csv  # 최종 분석 리포트
 │   └── test_result/              # 테스트 결과 저장
 │       ├── fred/                 # FRED 테스트 결과
 │       ├── yfinance/             # yfinance 테스트 결과
@@ -240,7 +239,8 @@ J-StockLab/
 ├── models/                       # 학습된 모델 저장 (선택)
 │
 ├── predicted_stock.csv           # 예측 결과 (약 3,900+ rows, 41 columns)
-├── 주가예측하기_new.ipynb        # Google Colab 노트북
+├── final_stock_analysis.csv      # 최종 분석 리포트 (20 rows, 12 columns)
+├── 주가예측하기_new.ipynb        # Google Colab 노트북 (Cell 0: predict.py, Cell 1: report.py)
 ├── requirements.txt              # 필요한 라이브러리
 ├── README.md                     # 프로젝트 설명
 ├── IMPLEMENTATION_PLAN.md        # 구현 가이드
@@ -295,11 +295,13 @@ J-StockLab/
 
 ### Phase 4: 평가 및 웹 서비스
 
-1. **report.py 작성**
-   - MAE, RMSE, MAPE, Accuracy 계산
-   - 상승/하락 예측 및 확률 계산
-   - Buy/Sell 추천 로직
+1. **report.py 작성** ✅
+   - MAE, MSE, RMSE, MAPE, Accuracy 계산
+   - 상승/하락 예측 및 확률 계산 (Rise Probability %)
+   - Buy/Sell 추천 로직 (STRONG BUY/BUY/SELL)
    - final_stock_analysis.csv 생성
+   - Google Colab 직접 파일 업로드 방식 적용
+   - 주가예측하기_new.ipynb에 Cell 1로 추가
 
 2. **FastAPI 확장**
    - `/api/predictions` - 전체 종목 예측 결과
@@ -375,13 +377,21 @@ python stock_japan.py  # 일본 버전 사용 (stock.py는 미국 참고용)
 
 생성 파일: `predicted_stock.csv` (프로젝트 루트에 저장)
 
-### 5. 평가 리포트 생성
+### 5. 평가 리포트 생성 (Google Colab 사용)
 
-```bash
-python report.py
-```
+**Google Colab에서 실행**:
+1. 주가예측하기_new.ipynb의 Cell 1 실행 (report.py 코드)
+2. 또는 report.py 코드를 Colab 노트북에 복사
+3. 코드 실행 시 `predicted_stock.csv` 업로드 요청 팝업에서 파일 선택하여 업로드
+4. 평가 완료 후 자동으로 `final_stock_analysis.csv` 파일 다운로드
 
-생성 파일: `eda/final_stock_analysis.csv`
+**출력 내용**:
+- 평가 지표: MAE, MSE, RMSE, MAPE, Accuracy
+- 상승/하락 예측 및 확률 (Rise Probability %)
+- 매수/매도 추천 (STRONG BUY/BUY/SELL)
+- 요약 통계 (평균 정확도, 추천 분포, Top 5 종목)
+
+생성 파일: `final_stock_analysis.csv` (프로젝트 루트에 저장)
 
 ### 6. FastAPI 서버 실행
 

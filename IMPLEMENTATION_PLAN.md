@@ -562,12 +562,18 @@ Last Actual Price | Predicted Future Price | Predicted Rise |
 Rise Probability(%) | Recommendation | Analysis
 ```
 
-**실행 방법**:
+**실행 방법** (Google Colab):
 
-```bash
-cd /Users/kk53451/Desktop/J-StockLab/eda
-python report.py
-```
+1. 주가예측하기_new.ipynb의 Cell 1 실행
+2. 또는 report.py 코드를 Colab 노트북에 복사
+3. predicted_stock.csv 파일 업로드 (팝업)
+4. 자동으로 final_stock_analysis.csv 다운로드
+
+**출력 결과**:
+- 평가 지표: MAE, MSE, RMSE, MAPE, Accuracy
+- 상승/하락 예측: Rise Probability (%)
+- 매수/매도 추천: STRONG BUY (>2%), BUY (0~2%), SELL (<0%)
+- 요약 통계: 평균 정확도, 추천 분포, Top 5 종목
 
 ---
 
@@ -719,11 +725,14 @@ open web/index.html
 - [x] 영문 종목명 사용으로 matplotlib 한글 폰트 문제 해결
 - [x] Google Colab 직접 파일 업로드 방식 적용
 
-### Phase 4
+### Phase 4 (평가 및 웹 서비스)
 
-- [ ] `eda/report.py` 작성
-- [ ] 평가 메트릭 계산
-- [ ] `eda/final_stock_analysis.csv` 생성
+- [x] `eda/report.py` 작성 (Google Colab용)
+- [x] 평가 메트릭 계산 (MAE, MSE, RMSE, MAPE, Accuracy)
+- [x] Buy/Sell 추천 로직 구현 (STRONG BUY/BUY/SELL)
+- [x] `final_stock_analysis.csv` 생성 (프로젝트 루트)
+- [x] Google Colab 직접 파일 업로드 방식 적용 (report.py)
+- [x] 주가예측하기_new.ipynb에 report.py 셀 추가
 - [ ] FastAPI 예측 엔드포인트 추가
 - [ ] 웹 인터페이스 업데이트
 - [ ] 통합 테스트

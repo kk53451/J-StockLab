@@ -1,11 +1,16 @@
-# --------------------------------------------------------------
-# Full Code: Final Report Generation + Buy/Sell Recommendation + Metric Descriptions
-# --------------------------------------------------------------
+"""
+J-StockLab: 일본 주식 예측 - 평가 리포트 및 매수/매도 추천
 
-# Google Drive Mount
-from google.colab import drive
-drive.mount('/content/drive')
+프로젝트: Nikkei 225 상위 20개 종목의 7일 후 주가 예측 평가
+- 평가 지표: MAE, MSE, RMSE, MAPE, Accuracy
+- 상승/하락 분석 및 매수/매도 추천
+- 파일 직접 업로드 방식 (Google Drive 불필요)
 
+작성자: 최정민, 김종수, 김용균
+"""
+
+# 파일 직접 업로드 방식 (Google Drive 불필요)
+from google.colab import files
 import pandas as pd
 import numpy as np
 from sklearn.metrics import mean_absolute_error, mean_squared_error
@@ -15,18 +20,17 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 ######################
 def evaluate_predictions(data, target_columns, forecast_horizon):
     """
-    This function compares actual vs. predicted values (for the next 7 days)
-    and computes various metrics such as MAE, MSE, RMSE, MAPE, and Accuracy.
+    실제값과 예측값을 비교하여 다양한 평가 지표를 계산합니다.
 
-    - MAE (Mean Absolute Error): Average absolute error between actual and predicted
-      (lower is better, same unit as original data)
-    - MSE (Mean Squared Error): Average of squared errors
-      (lower is better)
-    - RMSE (Root Mean Squared Error): Square root of MSE
-      (lower is better, often used with MAE)
-    - MAPE (Mean Absolute Percentage Error): Error as a percentage of the actual values
-      (lower is better)
-    - Accuracy (%): Computed as 100 - MAPE, serving as a simple accuracy measure
+    - MAE (Mean Absolute Error): 평균 절대 오차
+      (낮을수록 좋음, 원본 데이터와 동일한 단위)
+    - MSE (Mean Squared Error): 평균 제곱 오차
+      (낮을수록 좋음)
+    - RMSE (Root Mean Squared Error): MSE의 제곱근
+      (낮을수록 좋음, MAE와 함께 자주 사용됨)
+    - MAPE (Mean Absolute Percentage Error): 평균 절대 백분율 오차
+      (낮을수록 좋음, 백분율로 표현)
+    - Accuracy (%): 정확도 (100 - MAPE)
     """
 
     metrics = []
@@ -35,18 +39,17 @@ def evaluate_predictions(data, target_columns, forecast_horizon):
         predicted_col = f'{col}_Predicted'
         actual_col = f'{col}_Actual'
 
-        # Check if the columns exist
+        # 컬럼 존재 여부 확인
         if predicted_col not in data.columns or actual_col not in data.columns:
             print(f"Skipping {col}: Columns not found in data")
             continue
 
-        # Retrieve predicted and actual values
+        # 예측값 및 실제값 추출
         predicted = data[predicted_col]
-        # Shift the actual values by forecast_horizon days
-        # so that today's prediction aligns with actual values 7 days ahead
+        # 7일 후의 실제값과 비교하기 위해 shift 적용
         actual = data[actual_col].shift(-forecast_horizon)
 
-        # Use only valid (non-NaN) indices
+        # 유효한 데이터만 사용 (NaN 제거)
         valid_idx = ~predicted.isna() & ~actual.isna()
         predicted = predicted[valid_idx]
         actual = actual[valid_idx]
@@ -55,7 +58,7 @@ def evaluate_predictions(data, target_columns, forecast_horizon):
             print(f"Skipping {col}: No valid prediction/actual pairs.")
             continue
 
-        # Calculate metrics
+        # 평가 지표 계산
         mae = mean_absolute_error(actual, predicted)
         mse = mean_squared_error(actual, predicted)
         rmse = mse ** 0.5
@@ -78,9 +81,9 @@ def evaluate_predictions(data, target_columns, forecast_horizon):
 ###############################
 def analyze_rise_predictions(data, target_columns):
     """
-    This function looks at the last row of the DataFrame (most recent date),
-    compares actual vs. predicted values, and calculates rise/fall information
-    and rise probability in percentage.
+    가장 최근 데이터 기준으로 7일 후 상승/하락 예측 분석
+    - 마지막 행의 실제 주가와 예측 주가를 비교
+    - 상승 확률(%) 계산
     """
 
     last_row = data.iloc[-1]
@@ -90,7 +93,7 @@ def analyze_rise_predictions(data, target_columns):
         last_actual_price = last_row.get(f'{col}_Actual', np.nan)
         predicted_future_price = last_row.get(f'{col}_Predicted', np.nan)
 
-        # Determine rise/fall and rise percentage
+        # 상승/하락 및 상승 확률 계산
         if pd.notna(last_actual_price) and pd.notna(predicted_future_price):
             predicted_rise = predicted_future_price > last_actual_price
             rise_probability = ((predicted_future_price - last_actual_price) / last_actual_price) * 100
@@ -113,10 +116,10 @@ def analyze_rise_predictions(data, target_columns):
 #######################################
 def generate_recommendation(row):
     """
-    Example logic:
-    - (Predicted Rise == True) and (Rise Probability > 0) => BUY
-    - (Rise Probability > 2) => STRONG BUY
-    - Otherwise => SELL
+    매수/매도 추천 로직:
+    - 상승 예측 & 상승률 > 0% => BUY
+    - 상승률 > 2% => STRONG BUY
+    - 그 외 => SELL
     """
     rise_prob = row.get('Rise Probability (%)', 0)
     predicted_rise = row.get('Predicted Rise', False)
@@ -134,9 +137,7 @@ def generate_recommendation(row):
 
 def generate_analysis(row):
     """
-    Provides a one-line comment for each entry.
-    Stock: stock name
-    Rise Probability (%): approximate rise probability
+    각 종목에 대한 간단한 분석 코멘트 생성
     """
     stock_name = row['Stock']
     rise_prob = row.get('Rise Probability (%)', 0)
@@ -153,39 +154,63 @@ def generate_analysis(row):
 #######################
 # (4) Main Code
 #######################
-# File path setting
-predicted_file_path = '/content/drive/My Drive/predicted_stock.csv'
+print("=" * 80)
+print("J-StockLab: Nikkei 225 Stock Prediction Evaluation")
+print("=" * 80)
 
-# 1) Load Data
-data = pd.read_csv(predicted_file_path, parse_dates=['날짜'])
+print("\n📁 Please upload 'predicted_stock.csv' file...")
+uploaded = files.upload()
 
-# 2) Target columns
+print("\nLoading predicted stock data...")
+file_path = list(uploaded.keys())[0]  # 업로드된 파일명 자동 인식
+data = pd.read_csv(file_path, parse_dates=['날짜'])
+print(f"Data loaded: {len(data)} rows, {len(data.columns)} columns")
+print(f"Date range: {data['날짜'].min()} ~ {data['날짜'].max()}")
+
+# Nikkei 225 상위 20개 종목 (영문명)
 target_columns = [
-    'QQQ ETF'
+    'Toyota', 'SoftBank Group', 'Mitsubishi UFJ Financial', 'Sony Group',
+    'Hitachi', 'Fast Retailing', 'SMFG', 'Nintendo',
+    'Tokyo Electron', 'Advantest', 'Mitsubishi Heavy Ind', 'Mitsubishi Corp',
+    'Keyence', 'Chugai Pharma', 'ITOCHU', 'Mizuho Financial',
+    'NTT', 'Mitsui & Co', 'Recruit Holdings', 'Tokio Marine'
 ]
-forecast_horizon = 7  # predicting 7 days ahead
 
-# 3) Evaluate predictions
+forecast_horizon = 7  # 7일 후 예측
+
+print(f"\nTarget stocks: {len(target_columns)} stocks")
+print(f"Forecast horizon: {forecast_horizon} days\n")
+
+# 1) 모델 평가
+print("=" * 80)
+print("Step 1: Evaluating prediction accuracy...")
+print("=" * 80)
 evaluation_results = evaluate_predictions(data, target_columns, forecast_horizon)
-print("============ Evaluation Results ============")
-print(evaluation_results)
+print("\n============ Evaluation Results ============")
+print(evaluation_results.to_string(index=False))
 
-# 4) Analyze future rise
+# 2) 미래 상승/하락 분석
+print("\n" + "=" * 80)
+print("Step 2: Analyzing future price movements...")
+print("=" * 80)
 rise_results = analyze_rise_predictions(data, target_columns)
-print("============ Rise Predictions ============")
-print(rise_results)
+print("\n============ Rise Predictions ============")
+print(rise_results.to_string(index=False))
 
-# 5) Merge DataFrames (evaluation metrics + rise analysis)
+# 3) 데이터프레임 병합 (평가 지표 + 상승 분석)
+print("\n" + "=" * 80)
+print("Step 3: Generating recommendations...")
+print("=" * 80)
 final_results = pd.merge(evaluation_results, rise_results, on='Stock', how='outer')
 
-# 6) Sort by rise probability (descending order)
+# 4) 상승 확률 기준 내림차순 정렬
 final_results = final_results.sort_values(by='Rise Probability (%)', ascending=False)
 
-# 7) Generate buy/sell recommendations and analysis
+# 5) 매수/매도 추천 및 분석 생성
 final_results['Recommendation'] = final_results.apply(generate_recommendation, axis=1)
 final_results['Analysis'] = final_results.apply(generate_analysis, axis=1)
 
-# Reorder columns
+# 컬럼 순서 재정렬
 column_order = [
     'Stock',
     'MAE', 'MSE', 'RMSE', 'MAPE (%)', 'Accuracy (%)',
@@ -194,22 +219,35 @@ column_order = [
 ]
 final_results = final_results[column_order]
 
-# 8) Save final results to CSV
-final_output_path = '/content/drive/My Drive/final_stock_analysis.csv'
-final_results.to_csv(final_output_path, index=False)
-print(f"\nFinal combined results saved to {final_output_path}\n")
+# 6) CSV 파일로 저장
+output_file_path = 'final_stock_analysis.csv'
+final_results.to_csv(output_file_path, index=False, encoding='utf-8-sig')
+print(f"\n✅ Final analysis saved to: {output_file_path}")
+print(f"   - Total stocks analyzed: {len(final_results)} stocks")
+print(f"   - Columns: {len(final_results.columns)}")
 
-# 9) Print final report
+# 7) 결과 파일 다운로드
+print("\n📥 Downloading final_stock_analysis.csv...")
+files.download(output_file_path)
+
+# 8) 최종 리포트 출력
+print("\n" + "=" * 80)
 print("=============== Final Report ===============")
+print("=" * 80)
 print(final_results.to_string(index=False))
 
+# 9) 요약 통계
+print("\n" + "=" * 80)
+print("=============== Summary Statistics ===============")
+print("=" * 80)
+print(f"\nTotal stocks analyzed: {len(final_results)}")
+print(f"Average Accuracy: {final_results['Accuracy (%)'].mean():.2f}%")
+print(f"Average MAPE: {final_results['MAPE (%)'].mean():.2f}%")
+print(f"\nRecommendation Distribution:")
+print(final_results['Recommendation'].value_counts())
+print(f"\nTop 5 stocks by Rise Probability:")
+print(final_results[['Stock', 'Rise Probability (%)', 'Recommendation']].head(5).to_string(index=False))
 
-
-
-# 타겟 컬럼들
-# target_columns = [
-#     '애플', '마이크로소프트', '아마존', '구글 A', '구글 C',
-#     '메타', '테슬라', '엔비디아', '페이팔', '어도비',
-#     '넷플릭스', '컴캐스트', '펩시코', '인텔', '시스코',
-#     '브로드컴', '텍사스 인스트루먼트', '퀄컴', '코스트코', '암젠'
-# ]
+print("\n" + "=" * 80)
+print("✅ All done! Check the downloaded 'final_stock_analysis.csv' file.")
+print("=" * 80)
