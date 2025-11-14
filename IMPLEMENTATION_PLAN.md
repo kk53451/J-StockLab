@@ -46,20 +46,23 @@ Phase 4: 평가 및 웹 서비스 (5주차)
 
 ```
 J-StockLab/
-├── eda/                    # 데이터 수집 및 분석
-│   ├── stock.py           # FRED + yfinance 데이터 수집
-│   ├── predict.py         # Transformer 모델 학습 및 예측
-│   ├── report.py          # 평가 메트릭 및 Buy/Sell 추천
-│   ├── total.csv          # 통합 데이터
-│   ├── predicted_stock.csv      # 예측 결과
-│   └── final_stock_analysis.csv # 최종 분석 리포트
-├── api/                   # FastAPI 서버
+├── eda/                             # 데이터 수집 및 분석
+│   ├── stock_japan.py               # FRED + yfinance 데이터 수집 (일본용)
+│   ├── predict.py                   # Transformer 모델 학습 및 예측 (Colab용)
+│   ├── report.py                    # 평가 메트릭 및 Buy/Sell 추천
+│   ├── total.csv                    # 통합 데이터 (4,047 rows, 48 columns)
+│   └── final_stock_analysis.csv     # 최종 분석 리포트
+├── api/                             # FastAPI 서버
 │   └── main.py
-├── web/                   # 프론트엔드
+├── web/                             # 프론트엔드
 │   └── index.html
-├── notebooks/             # Jupyter 분석 (선택)
+├── predicted_stock.csv              # 예측 결과 (3,957 rows, 41 columns)
+├── 주가예측하기_new.ipynb           # Google Colab 노트북
 ├── requirements.txt
-└── README.md
+├── README.md
+├── IMPLEMENTATION_PLAN.md           # 구현 가이드
+├── INDICATORS.md                    # 경제 지표 설명
+└── NIKKEI225_SECTORS.md             # Nikkei 225 종목 정보
 ```
 
 ---
@@ -151,26 +154,26 @@ yfinance_indicators = {
 
 ```python
 nikkei_top_20 = [
-    ("7203.T", "토요타"),                      # 1. Toyota Motor
-    ("9984.T", "소프트뱅크그룹"),               # 2. SoftBank Group
-    ("8306.T", "미쓰비시UFJ파이낸셜그룹"),      # 3. Mitsubishi UFJ Financial
-    ("6758.T", "소니그룹"),                     # 4. Sony Group
-    ("6501.T", "히타치제작소"),                 # 5. Hitachi
-    ("9983.T", "패스트리테일링"),               # 6. Fast Retailing (Uniqlo)
-    ("8316.T", "미쓰이스미토모파이낸셜그룹"),   # 7. Sumitomo Mitsui Financial
-    ("7974.T", "닌텐도"),                      # 8. Nintendo
-    ("8035.T", "도쿄일렉트론"),                 # 9. Tokyo Electron
-    ("6857.T", "어드반테스트"),                 # 10. Advantest
-    ("7011.T", "미쓰비시중공업"),               # 11. Mitsubishi Heavy Industries
-    ("8058.T", "미쓰비시상사"),                 # 12. Mitsubishi Corporation
-    ("6861.T", "키엔스"),                      # 13. Keyence
-    ("4519.T", "주가이제약"),                   # 14. Chugai Pharmaceutical
-    ("8001.T", "이토추"),                      # 15. ITOCHU
-    ("8411.T", "미즈호파이낸셜그룹"),           # 16. Mizuho Financial
-    ("9432.T", "일본전신전화"),                 # 17. NTT (Nippon Telegraph)
-    ("8031.T", "미쓰이물산"),                   # 18. Mitsui & Co
-    ("6098.T", "리크루트홀딩스"),               # 19. Recruit Holdings
-    ("8766.T", "도쿄해상홀딩스"),               # 20. Tokio Marine Holdings
+    ("7203.T", "Toyota"),                        # 1. Toyota Motor
+    ("9984.T", "SoftBank Group"),                # 2. SoftBank Group
+    ("8306.T", "Mitsubishi UFJ Financial"),      # 3. Mitsubishi UFJ Financial
+    ("6758.T", "Sony Group"),                    # 4. Sony Group
+    ("6501.T", "Hitachi"),                       # 5. Hitachi
+    ("9983.T", "Fast Retailing"),                # 6. Fast Retailing (Uniqlo)
+    ("8316.T", "SMFG"),                          # 7. Sumitomo Mitsui Financial Group
+    ("7974.T", "Nintendo"),                      # 8. Nintendo
+    ("8035.T", "Tokyo Electron"),                # 9. Tokyo Electron
+    ("6857.T", "Advantest"),                     # 10. Advantest
+    ("7011.T", "Mitsubishi Heavy Ind"),          # 11. Mitsubishi Heavy Industries
+    ("8058.T", "Mitsubishi Corp"),               # 12. Mitsubishi Corporation
+    ("6861.T", "Keyence"),                       # 13. Keyence
+    ("4519.T", "Chugai Pharma"),                 # 14. Chugai Pharmaceutical
+    ("8001.T", "ITOCHU"),                        # 15. ITOCHU
+    ("8411.T", "Mizuho Financial"),              # 16. Mizuho Financial
+    ("9432.T", "NTT"),                           # 17. NTT (Nippon Telegraph)
+    ("8031.T", "Mitsui & Co"),                   # 18. Mitsui & Co
+    ("6098.T", "Recruit Holdings"),              # 19. Recruit Holdings
+    ("8766.T", "Tokio Marine"),                  # 20. Tokio Marine Holdings
 ]
 ```
 
@@ -183,7 +186,7 @@ end_date = datetime.today().strftime('%Y-%m-%d')
 
 **출력 파일**:
 
-- `eda/total.csv` - 모든 데이터 통합 (2014-10-16 ~ 최신 거래일, 47열)
+- `eda/total.csv` - 모든 데이터 통합 (2014-10-16 ~ 실행 시점 기준 전일, 48열)
 
 **실행 방법**:
 
@@ -260,11 +263,11 @@ Forward fill을 먼저 적용한 후 dropna를 실행해야 분기/월간 지표
 
 ### Step 2-4: total.csv 검증
 
-**실제 데이터 현황** (예시: 2025-11-13 실행 시):
+**실제 데이터 현황** (stock_japan.py 실행 시):
 
-- 데이터 기간: 2014-10-16 ~ 2025-11-12 (최신 거래일)
-- 데이터 행 수: 약 4,046행 (기간에 따라 증가)
-- 컬럼 수: 47개 (FRED 18 + yfinance 9 + 종목 20)
+- 데이터 기간: 2014-10-16 ~ 실행 시점 기준 전일 (동적으로 변경)
+- 데이터 행 수: 약 4,000행 이상 (실행 시점에 따라 증가)
+- 컬럼 수: 48개 (날짜 + FRED 18 + yfinance 9 + 종목 20)
 - 결측치: 0% (모두 처리됨)
 - 데이터 타입: 모두 숫자형 (float64)
 - 날짜 인덱스: datetime 타입
@@ -387,15 +390,15 @@ Output: 20개 종목의 7일 후 예측 가격
 
 ### Step 3-2: 데이터 전처리
 
-**target_columns** (예측 대상 - Nikkei 225 상위 20개 종목):
+**target_columns** (예측 대상 - Nikkei 225 상위 20개 종목, 영문명):
 
 ```python
 target_columns = [
-    '토요타', '소프트뱅크그룹', '미쓰비시UFJ파이낸셜그룹', '소니그룹',
-    '히타치제작소', '패스트리테일링', '미쓰이스미토모파이낸셜그룹', '닌텐도',
-    '도쿄일렉트론', '어드반테스트', '미쓰비시중공업', '미쓰비시상사',
-    '키엔스', '주가이제약', '이토추', '미즈호파이낸셜그룹',
-    '일본전신전화', '미쓰이물산', '리크루트홀딩스', '도쿄해상홀딩스'
+    'Toyota', 'SoftBank Group', 'Mitsubishi UFJ Financial', 'Sony Group',
+    'Hitachi', 'Fast Retailing', 'SMFG', 'Nintendo',
+    'Tokyo Electron', 'Advantest', 'Mitsubishi Heavy Ind', 'Mitsubishi Corp',
+    'Keyence', 'Chugai Pharma', 'ITOCHU', 'Mizuho Financial',
+    'NTT', 'Mitsui & Co', 'Recruit Holdings', 'Tokio Marine'
 ]
 ```
 
@@ -466,7 +469,8 @@ predicted_prices = model.predict([X_stock_full, X_econ_full])
 predicted_prices_actual = stock_scaler.inverse_transform(predicted_prices)
 
 # 7. 결과 저장
-result_data.to_csv('eda/predicted_stock.csv', index=False)
+result_data.to_csv('predicted_stock.csv', index=False)
+# Google Colab에서는 files.download()로 다운로드
 ```
 
 ---
@@ -476,7 +480,7 @@ result_data.to_csv('eda/predicted_stock.csv', index=False)
 **출력 형식**:
 
 ```
-날짜,토요타_Predicted,토요타_Actual,소니_Predicted,소니_Actual,...
+날짜,Toyota_Predicted,Toyota_Actual,Sony Group_Predicted,Sony Group_Actual,...
 2024-01-01,2500.5,2480.0,12000.3,11950.0,...
 2024-01-02,2520.1,2510.0,12100.5,12050.0,...
 ...
@@ -487,6 +491,37 @@ result_data.to_csv('eda/predicted_stock.csv', index=False)
 - ✅ 예측값과 실제값 컬럼 모두 존재
 - ✅ 날짜 순서대로 정렬
 - ✅ 모든 20개 종목에 대한 예측값 포함
+
+---
+
+## 📝 predict.py: 미국 버전 vs 일본 버전 주요 변경 사항
+
+### 변경된 항목
+
+| 항목 | 미국 버전 | 일본 버전 | 변경 이유 |
+|------|----------|----------|----------|
+| **실행 환경** | 로컬 Python | Google Colab | GPU 활용 및 접근성 향상 |
+| **파일 업로드** | 로컬 경로 직접 로드 | `files.upload()` 직접 업로드 | Colab 환경 적합 |
+| **target_columns** | 나스닥 100 상위 20개<br>(미국 종목) | Nikkei 225 상위 20개<br>(일본 종목, 영문명) | 프로젝트 대상 변경 |
+| **economic_features** | 미국 경제 지표 중심<br>(18개) | 일본 8개 + 미국 10개<br>+ yfinance 9개 (총 27개) | 일본 시장 특화 |
+| **종목명** | 영문 (Apple, Microsoft 등) | 영문 (Toyota, Sony Group 등) | matplotlib 한글 폰트 문제 해결 |
+| **결과 다운로드** | 로컬 저장 | `files.download()` | Colab 파일 다운로드 |
+| **시각화 종목** | 5개 대표 종목 | Toyota, Sony Group, Nintendo,<br>SoftBank Group, Fast Retailing | 일본 대표 종목 |
+
+### 동일한 부분
+
+- ✅ **모델 아키텍처**: Transformer Dual Input (stock stream + economic stream)
+- ✅ **하이퍼파라미터**: lookback=90, forecast_horizon=7, num_heads=8, ff_dim=256, epochs=50
+- ✅ **데이터 전처리**: MinMaxScaler, ffill/bfill, 시퀀스 생성 로직
+- ✅ **학습 방식**: Adam optimizer, MSE loss, batch_size=32
+- ✅ **출력 형식**: predicted_stock.csv (날짜 + 종목별 Predicted/Actual 컬럼)
+
+### 핵심 개선 사항
+
+1. **Google Colab 전환**: GPU 활용으로 학습 속도 향상
+2. **직접 파일 업로드 방식**: Google Drive 마운트 권한 문제 해결
+3. **영문 종목명 사용**: matplotlib 한글 폰트 설치 불필요
+4. **경제 지표 확장**: 일본 경제 지표 8개 추가로 예측 정확도 향상
 
 ---
 
@@ -635,10 +670,14 @@ python report.py
 cd /Users/kk53451/Desktop/J-StockLab/eda
 python stock_japan.py  # total.csv 생성
 
-# 2. 모델 학습 및 예측 (Phase 3)
-python predict.py  # predicted_stock.csv 생성
+# 2. 모델 학습 및 예측 (Phase 3) - Google Colab에서 실행
+# - Colab에서 주가예측하기_new.ipynb 열기
+# - predict.py 코드 복사하여 실행
+# - total.csv 업로드
+# - predicted_stock.csv 다운로드
 
 # 3. 평가 리포트 생성 (Phase 4)
+cd /Users/kk53451/Desktop/J-StockLab/eda
 python report.py  # final_stock_analysis.csv 생성
 
 # 4. FastAPI 서버 실행 (Phase 4)
@@ -665,18 +704,20 @@ open web/index.html
 - [x] `eda/stock_japan.py` 작성
 - [x] FRED API 키 설정 및 18개 지표 수집
 - [x] yfinance 9개 지표 수집
-- [x] Nikkei 225 상위 20개 종목 수집
-- [x] `eda/total.csv` 생성 (2014-10-16 ~ 최신 거래일, 47열)
+- [x] Nikkei 225 상위 20개 종목 수집 (영문명)
+- [x] `eda/total.csv` 생성 (2014-10-16 ~ 실행 시점 기준 전일, 48열)
 - [x] 데이터 검증 (결측치 0%, 데이터 품질 확인)
 - [x] 결측치 처리 로직 개선 (ffill 후 dropna로 순서 변경)
 
-### Phase 3
+### Phase 3 (Transformer 모델링)
 
-- [ ] `eda/predict.py` 작성
-- [ ] Transformer 모델 구현
-- [ ] 모델 학습 (50 epochs)
-- [ ] `eda/predicted_stock.csv` 생성
-- [ ] 예측 결과 시각화
+- [x] `eda/predict.py` 작성 (Google Colab용)
+- [x] Transformer Dual Input 모델 구현 (stock stream + economic stream)
+- [x] 모델 학습 (50 epochs, 90-day lookback, 7-day forecast)
+- [x] `predicted_stock.csv` 생성 (약 3,900+ rows, 41 columns)
+- [x] 예측 결과 시각화 (대표 5개 종목 그래프)
+- [x] 영문 종목명 사용으로 matplotlib 한글 폰트 문제 해결
+- [x] Google Colab 직접 파일 업로드 방식 적용
 
 ### Phase 4
 

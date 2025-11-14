@@ -66,29 +66,29 @@
   - `1306.T` (TOPIX ETF) - TOPIX 추종 ETF
   - `^N300` (Nikkei 300) - 중형주 포함 확장 지수
 
-- **Nikkei 225 상위 20개 종목** (시가총액 기준, 2025-01 기준):
-  | 순위 | 티커 | 기업명 | 섹터 |
-  |------|------|--------|------|
-  | 1 | 7203.T | 토요타 (Toyota Motor) | 자동차 |
-  | 2 | 9984.T | 소프트뱅크그룹 (SoftBank Group) | 통신 |
-  | 3 | 8306.T | 미쓰비시UFJ파이낸셜그룹 | 금융 |
-  | 4 | 6758.T | 소니그룹 (Sony Group) | 전자 |
-  | 5 | 6501.T | 히타치제작소 (Hitachi) | 전기 기기 |
-  | 6 | 9983.T | 패스트리테일링 (Fast Retailing) | 소매 |
-  | 7 | 8316.T | 미쓰이스미토모파이낸셜그룹 | 금융 |
-  | 8 | 7974.T | 닌텐도 (Nintendo) | 게임 |
-  | 9 | 8035.T | 도쿄일렉트론 (Tokyo Electron) | 반도체 |
-  | 10 | 6857.T | 어드반테스트 (Advantest) | 반도체 |
-  | 11 | 7011.T | 미쓰비시중공업 | 기계 |
-  | 12 | 8058.T | 미쓰비시상사 (Mitsubishi Corp) | 종합 상사 |
-  | 13 | 6861.T | 키엔스 (Keyence) | 전기 기기 |
-  | 14 | 4519.T | 주가이제약 (Chugai Pharmaceutical) | 제약 |
-  | 15 | 8001.T | 이토추 (ITOCHU) | 종합 상사 |
-  | 16 | 8411.T | 미즈호파이낸셜그룹 | 금융 |
-  | 17 | 9432.T | 일본전신전화 (NTT) | 통신 |
-  | 18 | 8031.T | 미쓰이물산 (Mitsui & Co) | 종합 상사 |
-  | 19 | 6098.T | 리크루트홀딩스 (Recruit Holdings) | 서비스 |
-  | 20 | 8766.T | 도쿄해상홀딩스 (Tokio Marine) | 보험 |
+- **Nikkei 225 상위 20개 종목** (시가총액 기준, 2025-01 기준, 영문명):
+  | 순위 | 티커 | 기업명 (영문) | 기업명 (한글) | 섹터 |
+  |------|------|---------------|---------------|------|
+  | 1 | 7203.T | Toyota | 토요타 | 자동차 |
+  | 2 | 9984.T | SoftBank Group | 소프트뱅크그룹 | 통신 |
+  | 3 | 8306.T | Mitsubishi UFJ Financial | 미쓰비시UFJ파이낸셜그룹 | 금융 |
+  | 4 | 6758.T | Sony Group | 소니그룹 | 전자 |
+  | 5 | 6501.T | Hitachi | 히타치제작소 | 전기 기기 |
+  | 6 | 9983.T | Fast Retailing | 패스트리테일링 | 소매 |
+  | 7 | 8316.T | SMFG | 미쓰이스미토모파이낸셜그룹 | 금융 |
+  | 8 | 7974.T | Nintendo | 닌텐도 | 게임 |
+  | 9 | 8035.T | Tokyo Electron | 도쿄일렉트론 | 반도체 |
+  | 10 | 6857.T | Advantest | 어드반테스트 | 반도체 |
+  | 11 | 7011.T | Mitsubishi Heavy Ind | 미쓰비시중공업 | 기계 |
+  | 12 | 8058.T | Mitsubishi Corp | 미쓰비시상사 | 종합 상사 |
+  | 13 | 6861.T | Keyence | 키엔스 | 전기 기기 |
+  | 14 | 4519.T | Chugai Pharma | 주가이제약 | 제약 |
+  | 15 | 8001.T | ITOCHU | 이토추 | 종합 상사 |
+  | 16 | 8411.T | Mizuho Financial | 미즈호파이낸셜그룹 | 금융 |
+  | 17 | 9432.T | NTT | 일본전신전화 | 통신 |
+  | 18 | 8031.T | Mitsui & Co | 미쓰이물산 | 종합 상사 |
+  | 19 | 6098.T | Recruit Holdings | 리크루트홀딩스 | 서비스 |
+  | 20 | 8766.T | Tokio Marine | 도쿄해상홀딩스 | 보험 |
 
 - **미국 시장 지표** (일본 주식에 영향):
   - S&P 500, 나스닥 종합지수, VIX 지수
@@ -212,10 +212,9 @@ J-StockLab/
 ├── eda/                           # 데이터 수집 및 분석
 │   ├── stock.py                  # 미국 버전 (참고용)
 │   ├── stock_japan.py            # 일본 버전 (메인 사용)
-│   ├── predict.py                # Transformer 모델 학습 및 예측
+│   ├── predict.py                # Transformer 모델 학습 및 예측 (Colab용)
 │   ├── report.py                 # 평가 메트릭 및 Buy/Sell 추천
-│   ├── total.csv                 # 통합 데이터 (2014-10-16 ~ 최신, 47열, 결측치 0%)
-│   ├── predicted_stock.csv       # 예측 결과
+│   ├── total.csv                 # 통합 데이터 (약 4,000+ rows, 48 columns)
 │   ├── final_stock_analysis.csv  # 최종 분석 리포트
 │   └── test_result/              # 테스트 결과 저장
 │       ├── fred/                 # FRED 테스트 결과
@@ -240,9 +239,12 @@ J-StockLab/
 │
 ├── models/                       # 학습된 모델 저장 (선택)
 │
+├── predicted_stock.csv           # 예측 결과 (약 3,900+ rows, 41 columns)
+├── 주가예측하기_new.ipynb        # Google Colab 노트북
 ├── requirements.txt              # 필요한 라이브러리
 ├── README.md                     # 프로젝트 설명
 ├── IMPLEMENTATION_PLAN.md        # 구현 가이드
+├── INDICATORS.md                 # 경제 지표 설명
 └── NIKKEI225_SECTORS.md          # Nikkei 225 섹터 정보
 ```
 
@@ -250,44 +252,46 @@ J-StockLab/
 
 ## 수행 계획
 
-### Phase 1: 환경 설정 및 데이터 검증
+### Phase 1: 환경 설정 및 데이터 검증 ✅
 
-- [ ] yfinance로 3개 지수 데이터 수집
-- [ ] FastAPI 서버 구축
-- [ ] 웹 인터페이스 구현
+- [x] yfinance로 3개 지수 데이터 수집
+- [x] FastAPI 서버 구축
+- [x] 웹 인터페이스 구현
 
-### Phase 2: 데이터 수집 및 전처리
+### Phase 2: 데이터 수집 및 전처리 ✅
 
-1. **FRED API 설정**
-   - API 키 발급
+1. **FRED API 설정** ✅
+   - API 키 발급 완료
    - 경제 지표 18개 수집 (일본 8개 + 미국 10개)
 
-2. **stock_japan.py 작성**
+2. **stock_japan.py 작성** ✅
    - FRED 데이터 수집 및 리샘플링
    - yfinance로 일본 지수 9개 수집
-   - Nikkei 225 상위 20개 종목 수집
+   - Nikkei 225 상위 20개 종목 수집 (영문명)
    - 미국 시장 지표 수집
    - total.csv 생성 (모든 데이터 통합)
 
-3. **데이터 검증**
+3. **데이터 검증** ✅
    - 결측치: 0%
-   - 데이터 기간: 2014-10-16 ~ 현재 기준 최신 거래일
-   - 컬럼 수: 47개 (FRED 18 + yfinance 9 + 종목 20)
-   - 데이터 행 수: 약 4,000행 이상 (기간에 따라 증가)
+   - 데이터 기간: 2014-10-16 ~ 실행 시점 기준 전일 (동적으로 변경)
+   - 컬럼 수: 48개 (날짜 + FRED 18 + yfinance 9 + 종목 20)
+   - 데이터 행 수: 약 4,000행 이상 (실행 시점에 따라 증가)
    - 데이터 타입: 모두 숫자형 (float64)
 
-### Phase 3: Transformer 모델링
+### Phase 3: Transformer 모델링 ✅
 
-1. **predict.py 작성**
+1. **predict.py 작성** ✅
    - Transformer Encoder 구현
-   - Dual Input Stream 설계
-   - 데이터 전처리 및 스케일링
-   - 모델 학습 (50 epochs)
+   - Dual Input Stream 설계 (stock stream + economic stream)
+   - 데이터 전처리 및 스케일링 (MinMaxScaler)
+   - 모델 학습 (50 epochs, Google Colab)
+   - 영문 종목명 사용으로 matplotlib 한글 폰트 문제 해결
 
-2. **예측 수행**
+2. **예측 수행** ✅
    - 90일 lookback window
-   - 7일 후 예측
-   - predicted_stock.csv 생성
+   - 7일 후 예측 (forecast_horizon=7)
+   - predicted_stock.csv 생성 (약 3,900+ rows, 41 columns)
+   - Google Colab 직접 파일 업로드 방식 적용
 
 ### Phase 4: 평가 및 웹 서비스
 
@@ -358,15 +362,18 @@ cd eda
 python stock_japan.py  # 일본 버전 사용 (stock.py는 미국 참고용)
 ```
 
-생성 파일: `eda/total.csv` (2014-10-16 ~ 최신 거래일, 47열, 결측치 0%)
+생성 파일: `eda/total.csv` (2014-10-16 ~ 실행 시점 기준 전일, 48열, 결측치 0%)
 
-### 4. 모델 학습 및 예측
+### 4. 모델 학습 및 예측 (Google Colab 사용)
 
-```bash
-python predict.py
-```
+**Google Colab에서 실행**:
+1. `주가예측하기_new.ipynb` 파일을 Google Colab에 업로드
+2. 또는 `predict.py` 코드를 Colab 노트북에 복사
+3. Colab 상단 메뉴: **런타임 > 런타임 유형 변경 > T4 GPU** 선택
+4. 코드 실행 시 `total.csv` 업로드 요청 팝업에서 파일 선택하여 업로드
+5. 학습 완료 후 자동으로 `predicted_stock.csv` 파일 다운로드
 
-생성 파일: `eda/predicted_stock.csv`
+생성 파일: `predicted_stock.csv` (프로젝트 루트에 저장)
 
 ### 5. 평가 리포트 생성
 

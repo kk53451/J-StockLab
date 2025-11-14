@@ -604,29 +604,29 @@ Wikipedia의 일본 산업 분류 대신 **yfinance가 제공하는 글로벌 �
 ✅ **일본 주요 기업 자동 선정** (Toyota, Sony, SoftBank 등)
 ✅ **구현 자동화 가능**
 
-#### 5. 실제 결과 (시가총액 Top 20)
+#### 5. 실제 결과 (시가총액 Top 20, 영문명)
 
 ```
-1. Toyota (토요타)
-2. SoftBank Group (소프트뱅크그룹)
-3. Mitsubishi UFJ Financial (미쓰비시UFJ파이낸셜그룹)
-4. Sony Group (소니그룹)
-5. Hitachi (히타치제작소)
-6. Fast Retailing (패스트리테일링)
-7. Sumitomo Mitsui Financial (미쓰이스미토모파이낸셜그룹)
-8. Nintendo (닌텐도)
-9. Tokyo Electron (도쿄일렉트론)
-10. Advantest (어드반테스트)
-11. Mitsubishi Heavy Industries (미쓰비시중공업)
-12. Mitsubishi Corporation (미쓰비시상사)
-13. Keyence (키엔스)
-14. Chugai Pharmaceutical (주가이제약)
-15. ITOCHU (이토추)
-16. Mizuho Financial (미즈호파이낸셜그룹)
-17. NTT (일본전신전화)
-18. Mitsui & Co (미쓰이물산)
-19. Recruit Holdings (리크루트홀딩스)
-20. Tokio Marine Holdings (도쿄해상홀딩스)
+1. Toyota
+2. SoftBank Group
+3. Mitsubishi UFJ Financial
+4. Sony Group
+5. Hitachi
+6. Fast Retailing
+7. SMFG (Sumitomo Mitsui Financial Group)
+8. Nintendo
+9. Tokyo Electron
+10. Advantest
+11. Mitsubishi Heavy Ind
+12. Mitsubishi Corp
+13. Keyence
+14. Chugai Pharma
+15. ITOCHU
+16. Mizuho Financial
+17. NTT
+18. Mitsui & Co
+19. Recruit Holdings
+20. Tokio Marine
 ```
 
 ---
@@ -756,29 +756,29 @@ nikkei_top_100 = [
 ]
 ```
 
-### Top 20 종목 (프로젝트 사용 예정)
+### Top 20 종목 (프로젝트 사용 - 영문명)
 
 ```python
 nikkei_top_20 = [
-    ("7203.T", "토요타"),
-    ("9984.T", "소프트뱅크그룹"),
-    ("8306.T", "미쓰비시UFJ파이낸셜그룹"),
-    ("6758.T", "소니그룹"),
-    ("6501.T", "히타치제작소"),
-    ("9983.T", "패스트리테일링"),
-    ("8316.T", "미쓰이스미토모파이낸셜그룹"),
-    ("7974.T", "닌텐도"),
-    ("8035.T", "도쿄일렉트론"),
-    ("6857.T", "어드반테스트"),
-    ("7011.T", "미쓰비시중공업"),
-    ("8058.T", "미쓰비시상사"),
-    ("6861.T", "키엔스"),
-    ("4519.T", "주가이제약"),
-    ("8001.T", "이토추"),
-    ("8411.T", "미즈호파이낸셜그룹"),
-    ("9432.T", "일본전신전화"),
-    ("8031.T", "미쓰이물산"),
-    ("6098.T", "리크루트홀딩스"),
-    ("8766.T", "도쿄해상홀딩스"),
+    ("7203.T", "Toyota"),                        # 1. Toyota Motor (토요타)
+    ("9984.T", "SoftBank Group"),                # 2. SoftBank Group (소프트뱅크그룹)
+    ("8306.T", "Mitsubishi UFJ Financial"),      # 3. Mitsubishi UFJ Financial (미쓰비시UFJ파이낸셜그룹)
+    ("6758.T", "Sony Group"),                    # 4. Sony Group (소니그룹)
+    ("6501.T", "Hitachi"),                       # 5. Hitachi (히타치제작소)
+    ("9983.T", "Fast Retailing"),                # 6. Fast Retailing (패스트리테일링)
+    ("8316.T", "SMFG"),                          # 7. Sumitomo Mitsui Financial Group (미쓰이스미토모파이낸셜그룹)
+    ("7974.T", "Nintendo"),                      # 8. Nintendo (닌텐도)
+    ("8035.T", "Tokyo Electron"),                # 9. Tokyo Electron (도쿄일렉트론)
+    ("6857.T", "Advantest"),                     # 10. Advantest (어드반테스트)
+    ("7011.T", "Mitsubishi Heavy Ind"),          # 11. Mitsubishi Heavy Industries (미쓰비시중공업)
+    ("8058.T", "Mitsubishi Corp"),               # 12. Mitsubishi Corporation (미쓰비시상사)
+    ("6861.T", "Keyence"),                       # 13. Keyence (키엔스)
+    ("4519.T", "Chugai Pharma"),                 # 14. Chugai Pharmaceutical (주가이제약)
+    ("8001.T", "ITOCHU"),                        # 15. ITOCHU (이토추)
+    ("8411.T", "Mizuho Financial"),              # 16. Mizuho Financial (미즈호파이낸셜그룹)
+    ("9432.T", "NTT"),                           # 17. NTT (일본전신전화)
+    ("8031.T", "Mitsui & Co"),                   # 18. Mitsui & Co (미쓰이물산)
+    ("6098.T", "Recruit Holdings"),              # 19. Recruit Holdings (리크루트홀딩스)
+    ("8766.T", "Tokio Marine"),                  # 20. Tokio Marine Holdings (도쿄해상홀딩스)
 ]
 ```

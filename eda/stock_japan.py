@@ -66,28 +66,28 @@ yfinance_indicators = {
     '엔/달러 환율': 'JPY=X',         # 일본 엔 대 미국 달러 환율
 }
 
-# Nikkei 225 상위 20개 종목 티커 리스트와 한글 이름
+# Nikkei 225 상위 20개 종목 티커 리스트와 영문 이름
 nikkei_top_20 = [
-    ("7203.T", "토요타"),                      # 1. Toyota Motor
-    ("9984.T", "소프트뱅크그룹"),               # 2. SoftBank Group
-    ("8306.T", "미쓰비시UFJ파이낸셜그룹"),      # 3. Mitsubishi UFJ Financial
-    ("6758.T", "소니그룹"),                     # 4. Sony Group
-    ("6501.T", "히타치제작소"),                 # 5. Hitachi
-    ("9983.T", "패스트리테일링"),               # 6. Fast Retailing (Uniqlo)
-    ("8316.T", "미쓰이스미토모파이낸셜그룹"),   # 7. Sumitomo Mitsui Financial
-    ("7974.T", "닌텐도"),                      # 8. Nintendo
-    ("8035.T", "도쿄일렉트론"),                 # 9. Tokyo Electron
-    ("6857.T", "어드반테스트"),                 # 10. Advantest
-    ("7011.T", "미쓰비시중공업"),               # 11. Mitsubishi Heavy Industries
-    ("8058.T", "미쓰비시상사"),                 # 12. Mitsubishi Corporation
-    ("6861.T", "키엔스"),                      # 13. Keyence
-    ("4519.T", "주가이제약"),                   # 14. Chugai Pharmaceutical
-    ("8001.T", "이토추"),                      # 15. ITOCHU
-    ("8411.T", "미즈호파이낸셜그룹"),           # 16. Mizuho Financial
-    ("9432.T", "일본전신전화"),                 # 17. NTT (Nippon Telegraph)
-    ("8031.T", "미쓰이물산"),                   # 18. Mitsui & Co
-    ("6098.T", "리크루트홀딩스"),               # 19. Recruit Holdings
-    ("8766.T", "도쿄해상홀딩스"),               # 20. Tokio Marine Holdings
+    ("7203.T", "Toyota"),                        # 1. Toyota Motor
+    ("9984.T", "SoftBank Group"),                # 2. SoftBank Group
+    ("8306.T", "Mitsubishi UFJ Financial"),      # 3. Mitsubishi UFJ Financial
+    ("6758.T", "Sony Group"),                    # 4. Sony Group
+    ("6501.T", "Hitachi"),                       # 5. Hitachi
+    ("9983.T", "Fast Retailing"),                # 6. Fast Retailing (Uniqlo)
+    ("8316.T", "SMFG"),                          # 7. Sumitomo Mitsui Financial Group
+    ("7974.T", "Nintendo"),                      # 8. Nintendo
+    ("8035.T", "Tokyo Electron"),                # 9. Tokyo Electron
+    ("6857.T", "Advantest"),                     # 10. Advantest
+    ("7011.T", "Mitsubishi Heavy Ind"),          # 11. Mitsubishi Heavy Industries
+    ("8058.T", "Mitsubishi Corp"),               # 12. Mitsubishi Corporation
+    ("6861.T", "Keyence"),                       # 13. Keyence
+    ("4519.T", "Chugai Pharma"),                 # 14. Chugai Pharmaceutical
+    ("8001.T", "ITOCHU"),                        # 15. ITOCHU
+    ("8411.T", "Mizuho Financial"),              # 16. Mizuho Financial
+    ("9432.T", "NTT"),                           # 17. NTT (Nippon Telegraph)
+    ("8031.T", "Mitsui & Co"),                   # 18. Mitsui & Co
+    ("6098.T", "Recruit Holdings"),              # 19. Recruit Holdings
+    ("8766.T", "Tokio Marine"),                  # 20. Tokio Marine Holdings
 ]
 
 # 데이터 수집 기간 설정

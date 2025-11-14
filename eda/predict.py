@@ -1,7 +1,16 @@
-# Google Drive 마운트
-from google.colab import drive
-drive.mount('/content/drive')
+"""
+J-StockLab: 일본 주식 예측 - Transformer 모델 학습 및 예측
 
+프로젝트: Nikkei 225 상위 20개 종목의 7일 후 주가 예측
+모델: Transformer Dual Input Model
+- Input 1: 주식 데이터 (20개 종목)
+- Input 2: 경제 지표 (FRED 18개 + yfinance 9개)
+
+작성자: 최정민, 김종수, 김용균
+"""
+
+# 파일 직접 업로드 방식 (Google Drive 불필요)
+from google.colab import files
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
@@ -51,57 +60,71 @@ def build_transformer_with_two_inputs(stock_shape, econ_shape, num_heads, ff_dim
 
     return Model(inputs=[stock_inputs, econ_inputs], outputs=outputs)
 
-print("Loading data...")
-file_path = '/content/drive/My Drive/total.csv'
+print("=" * 80)
+print("J-StockLab: Nikkei 225 Stock Prediction with Transformer")
+print("=" * 80)
+
+print("\n📁 Please upload 'total.csv' file...")
+uploaded = files.upload()
+
+print("\nLoading data...")
+file_path = list(uploaded.keys())[0]  # 업로드된 파일명 자동 인식
 data = pd.read_csv(file_path, parse_dates=['날짜'])
 data.sort_values(by='날짜', inplace=True)
+print(f"Data loaded: {len(data)} rows, {len(data.columns)} columns")
+print(f"Date range: {data['날짜'].min()} ~ {data['날짜'].max()}")
 
-print("Handling missing values and filtering invalid data...")
+print("\nHandling missing values and filtering invalid data...")
 data.fillna(method='ffill', inplace=True)
 data.fillna(method='bfill', inplace=True)
 data = data.apply(pd.to_numeric, errors='coerce')
 data.dropna(inplace=True)
+print(f"After cleaning: {len(data)} rows")
 
+# 하이퍼파라미터
 forecast_horizon = 7  # 예측 기간 (7일 후를 예측)
+lookback = 90  # 과거 90일 데이터 사용
+num_heads = 8  # Multi-Head Attention
+ff_dim = 256  # Feed-Forward Dimension
+epochs = 50
+batch_size = 32
+learning_rate = 0.0001
 
-# target_columns = [
-#     '애플', '마이크로소프트', '아마존', '구글 A', '구글 C',
-#     '메타', '테슬라', '엔비디아', '페이팔', '어도비',
-#     '넷플릭스', '컴캐스트', '펩시코', '인텔', '시스코',
-#     '브로드컴', '텍사스 인스트루먼트', '퀄컴', '코스트코', '암젠'
-# ]
-
+# Nikkei 225 상위 20개 종목 (시가총액 기준) - 영문명
 target_columns = [
-    'QQQ ETF'
+    'Toyota', 'SoftBank Group', 'Mitsubishi UFJ Financial', 'Sony Group',
+    'Hitachi', 'Fast Retailing', 'SMFG', 'Nintendo',
+    'Tokyo Electron', 'Advantest', 'Mitsubishi Heavy Ind', 'Mitsubishi Corp',
+    'Keyence', 'Chugai Pharma', 'ITOCHU', 'Mizuho Financial',
+    'NTT', 'Mitsui & Co', 'Recruit Holdings', 'Tokio Marine'
 ]
 
+# 경제 지표: FRED 18개 + yfinance 9개 = 총 27개
 economic_features = [
-    '10년 기대 인플레이션율',
-    '장단기 금리차',
-    '기준금리',
-    '미시간대 소비자 심리지수',
-    '실업률',
-    '2년 만기 미국 국채 수익률',
-    '10년 만기 미국 국채 수익률',
-    '금융스트레스지수',
-    '소비자 물가지수',
-    '5년 변동금리 모기지',
-    '미국 달러 환율',
-    '가계 부채 비율',
-    'GDP 성장률',
-    '나스닥 종합지수',
-    'S&P 500 지수',
-    '금 가격',
-    '달러 인덱스',
-    '나스닥 100',
-    'S&P 500 ETF',
-    # 'QQQ ETF',
-    '러셀 2000 ETF',
-    '다우 존스 ETF',
-    'VIX 지수'
+    # === 일본 경제 지표 (8개) ===
+    '일본 실질 GDP', '일본 실업률', '일본 10년 국채 수익률',
+    '일본 3개월 은행간 금리', '일본 총산업생산', '일본 무역수지',
+    '일본 소비자 신뢰지수', '일본은행 총자산',
+
+    # === 미국 경제 지표 (10개) ===
+    '미국 10년 기대 인플레이션율', '미국 장단기 금리차', '미국 기준금리',
+    '미국 2년 만기 국채 수익률', '미국 10년 만기 국채 수익률',
+    '미시간대 소비자 심리지수', '미국 실업률', '미국 소비자 물가지수',
+    '미국 GDP 성장률', '미국 금융스트레스지수',
+
+    # === yfinance 시장 지표 (9개) ===
+    '닛케이 225', '닛케이 300', 'TOPIX ETF',
+    'S&P 500 지수', '나스닥 종합지수',
+    'VIX 지수', '금 가격', '달러 인덱스', '엔/달러 환율'
 ]
 
-print("Scaling data...")
+print(f"\nTarget stocks: {len(target_columns)} stocks")
+print(f"Economic features: {len(economic_features)} indicators")
+print(f"  - Japan FRED: 8 indicators")
+print(f"  - US FRED: 10 indicators")
+print(f"  - yfinance: 9 indicators")
+
+print("\nScaling data...")
 train_size = int(len(data) * 0.8)
 train_data = data.iloc[:train_size]
 test_data = data.iloc[train_size:]
@@ -113,7 +136,11 @@ econ_scaler = MinMaxScaler()
 data_scaled[target_columns] = stock_scaler.fit_transform(data[target_columns])
 data_scaled[economic_features] = econ_scaler.fit_transform(data[economic_features])
 
-lookback = 90
+print(f"Train/Test split: {train_size} / {len(data) - train_size} ({train_size/len(data)*100:.1f}% / {(1-train_size/len(data))*100:.1f}%)")
+
+print(f"\nCreating sequences...")
+print(f"Lookback window: {lookback} days")
+print(f"Forecast horizon: {forecast_horizon} days")
 
 # 훈련 데이터 생성
 X_stock_train = []
@@ -132,6 +159,11 @@ X_stock_train = np.array(X_stock_train)
 X_econ_train = np.array(X_econ_train)
 y_train = np.array(y_train)
 
+print(f"Training data shape:")
+print(f"  X_stock: {X_stock_train.shape} (samples, lookback, stocks)")
+print(f"  X_econ: {X_econ_train.shape} (samples, lookback, indicators)")
+print(f"  y: {y_train.shape} (samples, stocks)")
+
 # 전체 예측 데이터 생성: 마지막 날짜까지 포함하여 예측 (미래 실제값 없어도 예측)
 X_stock_full = []
 X_econ_full = []
@@ -144,20 +176,35 @@ for i in range(lookback, len(data_scaled)):  # 여기서 forecast_horizon 빼지
 X_stock_full = np.array(X_stock_full)
 X_econ_full = np.array(X_econ_full)
 
-print("Building Transformer model...")
+print("\n" + "=" * 80)
+print("Building Transformer Dual Input Model...")
+print("=" * 80)
 stock_shape = (lookback, len(target_columns))
 econ_shape = (lookback, len(economic_features))
 
-model = build_transformer_with_two_inputs(stock_shape, econ_shape, num_heads=8, ff_dim=256, target_size=len(target_columns))
-model.compile(optimizer=Adam(learning_rate=0.0001), loss='mse', metrics=['mae'])
+print(f"\nModel architecture:")
+print(f"  Stock Input: {stock_shape}")
+print(f"  Economic Input: {econ_shape}")
+print(f"  Transformer Layers: 4 layers each stream")
+print(f"  Multi-Head Attention: {num_heads} heads")
+print(f"  Feed-Forward Dim: {ff_dim}")
+print(f"  Output: {len(target_columns)} stocks (7-day forecast)")
+
+model = build_transformer_with_two_inputs(stock_shape, econ_shape, num_heads=num_heads, ff_dim=ff_dim, target_size=len(target_columns))
+model.compile(optimizer=Adam(learning_rate=learning_rate), loss='mse', metrics=['mae'])
 model.summary()
 
-print("Training model...")
-history = model.fit([X_stock_train, X_econ_train], y_train, epochs=50, batch_size=32, verbose=1)
+print("\n" + "=" * 80)
+print(f"Training model... (Epochs: {epochs}, Batch size: {batch_size}, LR: {learning_rate})")
+print("=" * 80)
+history = model.fit([X_stock_train, X_econ_train], y_train, epochs=epochs, batch_size=batch_size, verbose=1)
 
+print("\n" + "=" * 80)
 print("Performing full predictions...")
+print("=" * 80)
 predicted_prices = model.predict([X_stock_full, X_econ_full], verbose=1)
 predicted_prices_actual = stock_scaler.inverse_transform(predicted_prices)
+print(f"Predictions generated: {len(predicted_prices_actual)} samples")
 
 pred_len = len(predicted_prices_actual)
 
@@ -182,9 +229,17 @@ for idx, col in enumerate(target_columns):
 result_data['날짜'] = pd.to_datetime(result_data['날짜'], errors='coerce')
 result_data['날짜'] = result_data['날짜'].dt.strftime('%Y-%m-%d')
 
-output_file_path = '/content/drive/My Drive/predicted_stock.csv'
+output_file_path = 'predicted_stock.csv'
 result_data.to_csv(output_file_path, index=False)
-print(f"Predicted stock returns saved to {output_file_path}")
+print(f"\n" + "=" * 80)
+print(f"✅ Predicted stock prices saved to: {output_file_path}")
+print(f"   - Total predictions: {len(result_data)} rows")
+print(f"   - Columns: {len(result_data.columns)} (날짜 + {len(target_columns)*2} stock columns)")
+print("=" * 80)
+
+# 결과 파일 다운로드
+print("\n📥 Downloading predicted_stock.csv...")
+files.download(output_file_path)
 
 plt.figure(figsize=(12, 6))
 plt.plot(history.history['loss'], label='Train Loss')
@@ -194,7 +249,10 @@ plt.ylabel('Loss')
 plt.legend()
 plt.show()
 
-for col in target_columns:
+# 대표 종목 5개만 그래프 출력 (전체 20개는 너무 많음)
+sample_stocks = ['Toyota', 'Sony Group', 'Nintendo', 'SoftBank Group', 'Fast Retailing']
+print(f"\n📊 Displaying sample stock predictions ({len(sample_stocks)} stocks)...")
+for col in sample_stocks:
     plt.figure(figsize=(12, 6))
     plt.plot(pd.to_datetime(result_data['날짜']), result_data[f'{col}_Actual'], label='Actual (Today)', alpha=0.7)
     plt.plot(pd.to_datetime(result_data['날짜']), result_data[f'{col}_Predicted'], label='Predicted (7 days later)', alpha=0.7)
@@ -207,3 +265,5 @@ for col in target_columns:
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
     plt.gcf().autofmt_xdate()
     plt.show()
+
+print("\n✅ All done! Check the downloaded 'predicted_stock.csv' file.")
