@@ -1,10 +1,11 @@
 """
 J-StockLab: 일본 주식 예측 - Transformer 모델 학습 및 예측
 
-프로젝트: Nikkei 225 상위 20개 종목의 7일 후 주가 예측
+프로젝트: Nikkei 225 상위 20개 종목의 1~7일 후 주가 예측
 모델: Transformer Dual Input Model
 - Input 1: 주식 데이터 (20개 종목)
 - Input 2: 경제 지표 (FRED 18개 + yfinance 9개)
+- Output: 각 종목별 1~7일 후 주가 (20종목 × 7일 = 140개 출력)
 
 작성자: 최정민, 김종수, 김용균
 """
@@ -82,8 +83,9 @@ data.dropna(inplace=True)
 print(f"After cleaning: {len(data)} rows")
 
 # 하이퍼파라미터
-forecast_horizon = 7  # 예측 기간 (7일 후를 예측)
+forecast_horizon = 7  # 예측 기간 (1~7일 후를 예측)
 lookback = 90  # 과거 90일 데이터 사용
+num_forecast_days = 7  # 예측할 일수 (1일, 2일, ..., 7일)
 num_heads = 8  # Multi-Head Attention
 ff_dim = 256  # Feed-Forward Dimension
 epochs = 50
@@ -142,7 +144,7 @@ print(f"\nCreating sequences...")
 print(f"Lookback window: {lookback} days")
 print(f"Forecast horizon: {forecast_horizon} days")
 
-# 훈련 데이터 생성
+# 훈련 데이터 생성 (1~7일 후 모두 예측)
 X_stock_train = []
 X_econ_train = []
 y_train = []
@@ -150,7 +152,11 @@ y_train = []
 for i in range(lookback, len(data_scaled) - forecast_horizon):
     X_stock_seq = data_scaled[target_columns].iloc[i - lookback:i].to_numpy()
     X_econ_seq = data_scaled[economic_features].iloc[i - lookback:i].to_numpy()
-    y_val = data_scaled[target_columns].iloc[i + forecast_horizon - 1].to_numpy()
+    # 1일 후 ~ 7일 후까지의 주가를 모두 타겟으로 설정
+    y_vals = []
+    for day in range(1, num_forecast_days + 1):
+        y_vals.append(data_scaled[target_columns].iloc[i + day].to_numpy())
+    y_val = np.concatenate(y_vals)  # (20*7=140,) 형태로 flatten
     X_stock_train.append(X_stock_seq)
     X_econ_train.append(X_econ_seq)
     y_train.append(y_val)
@@ -162,7 +168,7 @@ y_train = np.array(y_train)
 print(f"Training data shape:")
 print(f"  X_stock: {X_stock_train.shape} (samples, lookback, stocks)")
 print(f"  X_econ: {X_econ_train.shape} (samples, lookback, indicators)")
-print(f"  y: {y_train.shape} (samples, stocks)")
+print(f"  y: {y_train.shape} (samples, stocks × days = {len(target_columns)} × {num_forecast_days})")
 
 # 전체 예측 데이터 생성: 마지막 날짜까지 포함하여 예측 (미래 실제값 없어도 예측)
 X_stock_full = []
@@ -188,9 +194,11 @@ print(f"  Economic Input: {econ_shape}")
 print(f"  Transformer Layers: 4 layers each stream")
 print(f"  Multi-Head Attention: {num_heads} heads")
 print(f"  Feed-Forward Dim: {ff_dim}")
-print(f"  Output: {len(target_columns)} stocks (7-day forecast)")
+print(f"  Output: {len(target_columns) * num_forecast_days} values ({len(target_columns)} stocks × {num_forecast_days} days)")
 
-model = build_transformer_with_two_inputs(stock_shape, econ_shape, num_heads=num_heads, ff_dim=ff_dim, target_size=len(target_columns))
+# 출력 크기: 20종목 × 7일 = 140
+target_size = len(target_columns) * num_forecast_days
+model = build_transformer_with_two_inputs(stock_shape, econ_shape, num_heads=num_heads, ff_dim=ff_dim, target_size=target_size)
 model.compile(optimizer=Adam(learning_rate=learning_rate), loss='mse', metrics=['mae'])
 model.summary()
 
@@ -203,10 +211,17 @@ print("\n" + "=" * 80)
 print("Performing full predictions...")
 print("=" * 80)
 predicted_prices = model.predict([X_stock_full, X_econ_full], verbose=1)
-predicted_prices_actual = stock_scaler.inverse_transform(predicted_prices)
-print(f"Predictions generated: {len(predicted_prices_actual)} samples")
 
-pred_len = len(predicted_prices_actual)
+# 예측값을 (samples, days, stocks) 형태로 reshape하여 inverse_transform 적용
+pred_len = len(predicted_prices)
+predicted_reshaped = predicted_prices.reshape(pred_len, num_forecast_days, len(target_columns))
+
+# 각 day별로 inverse_transform 적용
+predicted_prices_actual = np.zeros_like(predicted_reshaped)
+for day in range(num_forecast_days):
+    predicted_prices_actual[:, day, :] = stock_scaler.inverse_transform(predicted_reshaped[:, day, :])
+
+print(f"Predictions generated: {pred_len} samples × {num_forecast_days} days × {len(target_columns)} stocks")
 
 # 오늘 날짜들 (마지막 날짜까지 포함)
 today_dates = data['날짜'].iloc[lookback : lookback + pred_len].values
@@ -222,8 +237,12 @@ if actual_full.shape[0] < pred_len:
 
 result_data = pd.DataFrame({'날짜': today_dates})
 
+# 각 종목별로 Day1~Day7 예측값과 Actual 저장
 for idx, col in enumerate(target_columns):
-    result_data[f'{col}_Predicted'] = predicted_prices_actual[:, idx]
+    # 1일 후 ~ 7일 후 예측값
+    for day in range(1, num_forecast_days + 1):
+        result_data[f'{col}_Day{day}'] = predicted_prices_actual[:, day - 1, idx]
+    # 오늘 실제 주가
     result_data[f'{col}_Actual'] = actual_full[:, idx]
 
 result_data['날짜'] = pd.to_datetime(result_data['날짜'], errors='coerce')
@@ -234,7 +253,7 @@ result_data.to_csv(output_file_path, index=False)
 print(f"\n" + "=" * 80)
 print(f"✅ Predicted stock prices saved to: {output_file_path}")
 print(f"   - Total predictions: {len(result_data)} rows")
-print(f"   - Columns: {len(result_data.columns)} (날짜 + {len(target_columns)*2} stock columns)")
+print(f"   - Columns: {len(result_data.columns)} (날짜 + {len(target_columns)} stocks × ({num_forecast_days} days + 1 actual))")
 print("=" * 80)
 
 # 결과 파일 다운로드
@@ -255,8 +274,9 @@ print(f"\n📊 Displaying sample stock predictions ({len(sample_stocks)} stocks)
 for col in sample_stocks:
     plt.figure(figsize=(12, 6))
     plt.plot(pd.to_datetime(result_data['날짜']), result_data[f'{col}_Actual'], label='Actual (Today)', alpha=0.7)
-    plt.plot(pd.to_datetime(result_data['날짜']), result_data[f'{col}_Predicted'], label='Predicted (7 days later)', alpha=0.7)
-    plt.title(f'{col} - Actual(Today) vs Predicted(7 days later)')
+    # Day7 예측값을 대표로 표시
+    plt.plot(pd.to_datetime(result_data['날짜']), result_data[f'{col}_Day7'], label='Predicted (Day 7)', alpha=0.7)
+    plt.title(f'{col} - Actual(Today) vs Predicted(Day 7)')
     plt.xlabel('Date (Today)')
     plt.ylabel('Price')
     plt.legend()
@@ -267,3 +287,4 @@ for col in sample_stocks:
     plt.show()
 
 print("\n✅ All done! Check the downloaded 'predicted_stock.csv' file.")
+print(f"   CSV contains: 날짜, and for each stock: Day1~Day7 predictions + Actual")

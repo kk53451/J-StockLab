@@ -1,8 +1,8 @@
 """
 J-StockLab: 일본 주식 예측 - 평가 리포트 및 매수/매도 추천
 
-프로젝트: Nikkei 225 상위 20개 종목의 7일 후 주가 예측 평가
-- 평가 지표: MAE, MSE, RMSE, MAPE, Accuracy
+프로젝트: Nikkei 225 상위 20개 종목의 1~7일 후 주가 예측 평가
+- 평가 지표: MAE, MSE, RMSE, MAPE, Accuracy (각 Day별)
 - 상승/하락 분석 및 매수/매도 추천
 - 파일 직접 업로드 방식 (Google Drive 불필요)
 
@@ -18,9 +18,10 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 ######################
 # (1) Evaluation Function
 ######################
-def evaluate_predictions(data, target_columns, forecast_horizon):
+def evaluate_predictions(data, target_columns, num_forecast_days):
     """
     실제값과 예측값을 비교하여 다양한 평가 지표를 계산합니다.
+    각 Day(1~7일)별로 평가 지표를 계산합니다.
 
     - MAE (Mean Absolute Error): 평균 절대 오차
       (낮을수록 좋음, 원본 데이터와 동일한 단위)
@@ -36,54 +37,79 @@ def evaluate_predictions(data, target_columns, forecast_horizon):
     metrics = []
 
     for col in target_columns:
-        predicted_col = f'{col}_Predicted'
         actual_col = f'{col}_Actual'
 
-        # 컬럼 존재 여부 확인
-        if predicted_col not in data.columns or actual_col not in data.columns:
-            print(f"Skipping {col}: Columns not found in data")
+        # Actual 컬럼 존재 여부 확인
+        if actual_col not in data.columns:
+            print(f"Skipping {col}: Actual column not found in data")
             continue
 
-        # 예측값 및 실제값 추출
-        predicted = data[predicted_col]
-        # 7일 후의 실제값과 비교하기 위해 shift 적용
-        actual = data[actual_col].shift(-forecast_horizon)
+        # 각 Day별로 평가 (Day7 기준으로 메인 평가)
+        day_metrics = {}
+        for day in range(1, num_forecast_days + 1):
+            predicted_col = f'{col}_Day{day}'
 
-        # 유효한 데이터만 사용 (NaN 제거)
-        valid_idx = ~predicted.isna() & ~actual.isna()
-        predicted = predicted[valid_idx]
-        actual = actual[valid_idx]
+            if predicted_col not in data.columns:
+                continue
 
-        if len(predicted) == 0:
+            # 예측값 및 실제값 추출
+            predicted = data[predicted_col]
+            # N일 후의 실제값과 비교하기 위해 shift 적용
+            actual = data[actual_col].shift(-day)
+
+            # 유효한 데이터만 사용 (NaN 제거)
+            valid_idx = ~predicted.isna() & ~actual.isna()
+            predicted_valid = predicted[valid_idx]
+            actual_valid = actual[valid_idx]
+
+            if len(predicted_valid) == 0:
+                continue
+
+            # 평가 지표 계산
+            mae = mean_absolute_error(actual_valid, predicted_valid)
+            mse = mean_squared_error(actual_valid, predicted_valid)
+            rmse = mse ** 0.5
+            mape = (abs((actual_valid - predicted_valid) / actual_valid).mean()) * 100
+            accuracy = 100 - mape
+
+            day_metrics[day] = {
+                'MAE': mae,
+                'MSE': mse,
+                'RMSE': rmse,
+                'MAPE': mape,
+                'Accuracy': accuracy
+            }
+
+        if not day_metrics:
             print(f"Skipping {col}: No valid prediction/actual pairs.")
             continue
 
-        # 평가 지표 계산
-        mae = mean_absolute_error(actual, predicted)
-        mse = mean_squared_error(actual, predicted)
-        rmse = mse ** 0.5
-        mape = (abs((actual - predicted) / actual).mean()) * 100
-        accuracy = 100 - mape
+        # Day7 기준 메인 평가 + 전체 Day 평균
+        avg_mape = np.mean([d['MAPE'] for d in day_metrics.values()])
+        avg_accuracy = np.mean([d['Accuracy'] for d in day_metrics.values()])
 
-        metrics.append({
+        result = {
             'Stock': col,
-            'MAE': mae,
-            'MSE': mse,
-            'RMSE': rmse,
-            'MAPE (%)': mape,
-            'Accuracy (%)': accuracy
-        })
+            'MAE_Day7': day_metrics.get(7, {}).get('MAE', np.nan),
+            'RMSE_Day7': day_metrics.get(7, {}).get('RMSE', np.nan),
+            'MAPE_Day7 (%)': day_metrics.get(7, {}).get('MAPE', np.nan),
+            'Accuracy_Day7 (%)': day_metrics.get(7, {}).get('Accuracy', np.nan),
+            'Avg_MAPE (%)': avg_mape,
+            'Avg_Accuracy (%)': avg_accuracy
+        }
+
+        metrics.append(result)
 
     return pd.DataFrame(metrics)
 
 ###############################
 # (2) Future Rise Analysis
 ###############################
-def analyze_rise_predictions(data, target_columns):
+def analyze_rise_predictions(data, target_columns, num_forecast_days=7):
     """
-    가장 최근 데이터 기준으로 7일 후 상승/하락 예측 분석
+    가장 최근 데이터 기준으로 1~7일 후 상승/하락 예측 분석
     - 마지막 행의 실제 주가와 예측 주가를 비교
-    - 상승 확률(%) 계산
+    - 상승 확률(%) 계산 (Day7 기준)
     """
 
     last_row = data.iloc[-1]
@@ -91,7 +117,8 @@ def analyze_rise_predictions(data, target_columns):
 
     for col in target_columns:
         last_actual_price = last_row.get(f'{col}_Actual', np.nan)
-        predicted_future_price = last_row.get(f'{col}_Predicted', np.nan)
+        # Day7 예측값을 Predicted Future Price로 사용 (기존 호환성 유지)
+        predicted_future_price = last_row.get(f'{col}_Day{num_forecast_days}', np.nan)
 
         # 상승/하락 및 상승 확률 계산
         if pd.notna(last_actual_price) and pd.notna(predicted_future_price):
@@ -101,13 +128,19 @@ def analyze_rise_predictions(data, target_columns):
             predicted_rise = np.nan
             rise_probability = np.nan
 
-        results.append({
+        result = {
             'Stock': col,
             'Last Actual Price': last_actual_price,
             'Predicted Future Price': predicted_future_price,
             'Predicted Rise': predicted_rise,
             'Rise Probability (%)': rise_probability
-        })
+        }
+
+        # 각 Day별 예측값 추가 (Day1 ~ Day7)
+        for day in range(1, num_forecast_days + 1):
+            result[f'Day{day}_Price'] = last_row.get(f'{col}_Day{day}', np.nan)
+
+        results.append(result)
 
     return pd.DataFrame(results)
 
@@ -176,16 +209,16 @@ target_columns = [
     'NTT', 'Mitsui & Co', 'Recruit Holdings', 'Tokio Marine'
 ]
 
-forecast_horizon = 7  # 7일 후 예측
+num_forecast_days = 7  # 예측 일수 (1~7일)
 
 print(f"\nTarget stocks: {len(target_columns)} stocks")
-print(f"Forecast horizon: {forecast_horizon} days\n")
+print(f"Forecast days: 1~{num_forecast_days} days\n")
 
 # 1) 모델 평가
 print("=" * 80)
 print("Step 1: Evaluating prediction accuracy...")
 print("=" * 80)
-evaluation_results = evaluate_predictions(data, target_columns, forecast_horizon)
+evaluation_results = evaluate_predictions(data, target_columns, num_forecast_days)
 print("\n============ Evaluation Results ============")
 print(evaluation_results.to_string(index=False))
 
@@ -193,7 +226,7 @@ print(evaluation_results.to_string(index=False))
 print("\n" + "=" * 80)
 print("Step 2: Analyzing future price movements...")
 print("=" * 80)
-rise_results = analyze_rise_predictions(data, target_columns)
+rise_results = analyze_rise_predictions(data, target_columns, num_forecast_days)
 print("\n============ Rise Predictions ============")
 print(rise_results.to_string(index=False))
 
@@ -210,13 +243,19 @@ final_results = final_results.sort_values(by='Rise Probability (%)', ascending=F
 final_results['Recommendation'] = final_results.apply(generate_recommendation, axis=1)
 final_results['Analysis'] = final_results.apply(generate_analysis, axis=1)
 
-# 컬럼 순서 재정렬
-column_order = [
+# 컬럼 순서 재정렬 (기본 컬럼 + Day별 가격)
+base_columns = [
     'Stock',
-    'MAE', 'MSE', 'RMSE', 'MAPE (%)', 'Accuracy (%)',
+    'MAE_Day7', 'RMSE_Day7', 'MAPE_Day7 (%)', 'Accuracy_Day7 (%)',
+    'Avg_MAPE (%)', 'Avg_Accuracy (%)',
     'Last Actual Price', 'Predicted Future Price', 'Predicted Rise', 'Rise Probability (%)',
     'Recommendation', 'Analysis'
 ]
+# Day별 가격 컬럼 추가
+day_price_columns = [f'Day{day}_Price' for day in range(1, num_forecast_days + 1)]
+column_order = base_columns + day_price_columns
+# 존재하는 컬럼만 선택
+column_order = [col for col in column_order if col in final_results.columns]
 final_results = final_results[column_order]
 
 # 6) CSV 파일로 저장
@@ -241,8 +280,9 @@ print("\n" + "=" * 80)
 print("=============== Summary Statistics ===============")
 print("=" * 80)
 print(f"\nTotal stocks analyzed: {len(final_results)}")
-print(f"Average Accuracy: {final_results['Accuracy (%)'].mean():.2f}%")
-print(f"Average MAPE: {final_results['MAPE (%)'].mean():.2f}%")
+print(f"Average Accuracy (Day7): {final_results['Accuracy_Day7 (%)'].mean():.2f}%")
+print(f"Average MAPE (Day7): {final_results['MAPE_Day7 (%)'].mean():.2f}%")
+print(f"Average Accuracy (All Days): {final_results['Avg_Accuracy (%)'].mean():.2f}%")
 print(f"\nRecommendation Distribution:")
 print(final_results['Recommendation'].value_counts())
 print(f"\nTop 5 stocks by Rise Probability:")

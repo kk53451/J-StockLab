@@ -26,7 +26,7 @@ Phase 2: 데이터 수집 및 전처리 (2주차)
 Phase 3: Transformer 모델링 (3-4주차)
   ├─ Step 3-1: Transformer 모델 구조 설계 (predict.py)
   ├─ Step 3-2: 데이터 전처리 및 스케일링
-  ├─ Step 3-3: Transformer 모델 학습 (7일 후 예측)
+  ├─ Step 3-3: Transformer 모델 학습 (1~7일 후 동시 예측)
   └─ Step 3-4: predicted_stock.csv 생성
 
 Phase 4: 평가 및 웹 서비스 (5주차)
@@ -40,7 +40,7 @@ Phase 4: 평가 및 웹 서비스 (5주차)
 
 ## 🎯 프로젝트 개요
 
-본 프로젝트는 **Transformer 딥러닝 모델**을 활용하여 일본 주식시장의 주요 지수와 Nikkei 225 상위 20개 종목의 7일 후 주가를 예측한다. FRED API를 통한 경제 지표와 Yahoo Finance의 주식 데이터를 통합하여 높은 예측 정확도를 목표로 한다.
+본 프로젝트는 **Transformer 딥러닝 모델**을 활용하여 일본 주식시장의 주요 지수와 Nikkei 225 상위 20개 종목의 1~7일 후 주가를 예측한다. FRED API를 통한 경제 지표와 Yahoo Finance의 주식 데이터를 통합하여 높은 예측 정확도를 목표로 한다.
 
 ### 핵심 파일 구조
 
@@ -56,7 +56,7 @@ J-StockLab/
 │   └── main.py
 ├── web/                             # 프론트엔드
 │   └── index.html
-├── predicted_stock.csv              # 예측 결과 (3,957 rows, 41 columns)
+├── predicted_stock.csv              # 예측 결과 (3,957 rows, 161 columns: 날짜 + 20종목 × 8)
 ├── 주가예측하기_new.ipynb           # Google Colab 노트북
 ├── requirements.txt
 ├── README.md
@@ -373,13 +373,15 @@ Merged (Add)
   ↓
 Dense(128, relu) → Dropout(0.2) → GlobalAveragePooling1D
   ↓
-Output: 20개 종목의 7일 후 예측 가격
+Output: 140개 출력 (20종목 × 7일 예측)
 ```
 
 **핵심 파라미터**:
 
 - `lookback = 90` (과거 90일 데이터 사용)
-- `forecast_horizon = 7` (7일 후 예측)
+- `forecast_horizon = 7` (1~7일 후 동시 예측)
+- `num_forecast_days = 7` (예측할 일수)
+- `target_size = 140` (20종목 × 7일)
 - `num_heads = 8` (Multi-Head Attention)
 - `ff_dim = 256` (Feed-Forward Dimension)
 - `epochs = 50`
@@ -453,20 +455,27 @@ econ_scaler = MinMaxScaler()
 data_scaled[target_columns] = stock_scaler.fit_transform(data[target_columns])
 data_scaled[economic_features] = econ_scaler.fit_transform(data[economic_features])
 
-# 4. 시퀀스 생성 (lookback=90, forecast=7)
+# 4. 시퀀스 생성 (lookback=90, forecast=1~7일)
 for i in range(lookback, len(data_scaled) - forecast_horizon):
     X_stock = data_scaled[target_columns].iloc[i-lookback:i]
     X_econ = data_scaled[economic_features].iloc[i-lookback:i]
-    y = data_scaled[target_columns].iloc[i+forecast_horizon-1]
+    # 1일 후 ~ 7일 후까지의 주가를 모두 타겟으로 설정
+    y_vals = []
+    for day in range(1, num_forecast_days + 1):
+        y_vals.append(data_scaled[target_columns].iloc[i + day].to_numpy())
+    y = np.concatenate(y_vals)  # (20*7=140,) 형태로 flatten
 
 # 5. 모델 학습
-model = build_transformer_with_two_inputs(...)
+model = build_transformer_with_two_inputs(..., target_size=140)
 model.compile(optimizer=Adam(lr=0.0001), loss='mse', metrics=['mae'])
 model.fit([X_stock_train, X_econ_train], y_train, epochs=50, batch_size=32)
 
 # 6. 예측
 predicted_prices = model.predict([X_stock_full, X_econ_full])
-predicted_prices_actual = stock_scaler.inverse_transform(predicted_prices)
+# reshape하여 각 day별로 inverse_transform 적용
+predicted_reshaped = predicted_prices.reshape(pred_len, num_forecast_days, len(target_columns))
+for day in range(num_forecast_days):
+    predicted_prices_actual[:, day, :] = stock_scaler.inverse_transform(predicted_reshaped[:, day, :])
 
 # 7. 결과 저장
 result_data.to_csv('predicted_stock.csv', index=False)
@@ -480,15 +489,17 @@ result_data.to_csv('predicted_stock.csv', index=False)
 **출력 형식**:
 
 ```
-날짜,Toyota_Predicted,Toyota_Actual,Sony Group_Predicted,Sony Group_Actual,...
-2024-01-01,2500.5,2480.0,12000.3,11950.0,...
-2024-01-02,2520.1,2510.0,12100.5,12050.0,...
+날짜,Toyota_Day1,Toyota_Day2,...,Toyota_Day7,Toyota_Actual,Sony Group_Day1,...
+2024-01-01,2500.5,2510.2,...,2550.5,2480.0,12000.3,...
+2024-01-02,2520.1,2530.5,...,2570.2,2510.0,12100.5,...
 ...
 ```
 
 **체크포인트**:
 
-- ✅ 예측값과 실제값 컬럼 모두 존재
+- ✅ 각 종목별 Day1~Day7 예측값 컬럼 존재
+- ✅ 각 종목별 Actual (현재가) 컬럼 존재
+- ✅ 총 161개 컬럼 (날짜 + 20종목 × 8)
 - ✅ 날짜 순서대로 정렬
 - ✅ 모든 20개 종목에 대한 예측값 포함
 
@@ -557,9 +568,11 @@ result_data.to_csv('predicted_stock.csv', index=False)
 **컬럼 구성**:
 
 ```
-Stock | MAE | MSE | RMSE | MAPE(%) | Accuracy(%) |
+Stock | MAE_Day7 | RMSE_Day7 | MAPE_Day7(%) | Accuracy_Day7(%) |
+Avg_MAPE(%) | Avg_Accuracy(%) |
 Last Actual Price | Predicted Future Price | Predicted Rise |
-Rise Probability(%) | Recommendation | Analysis
+Rise Probability(%) | Recommendation | Analysis |
+Day1_Price | Day2_Price | Day3_Price | Day4_Price | Day5_Price | Day6_Price | Day7_Price
 ```
 
 **실행 방법** (Google Colab):
@@ -570,7 +583,9 @@ Rise Probability(%) | Recommendation | Analysis
 4. 자동으로 final_stock_analysis.csv 다운로드
 
 **출력 결과**:
-- 평가 지표: MAE, MSE, RMSE, MAPE, Accuracy
+- 평가 지표: MAE, RMSE, MAPE, Accuracy (Day7 기준 + 전체 Day 평균)
+  - 참고: MSE는 RMSE 계산용으로 내부에서 사용
+- Day1~Day7 가격 예측값
 - 상승/하락 예측: Rise Probability (%)
 - 매수/매도 추천: STRONG BUY (>2%), BUY (0~2%), SELL (<0%)
 - 요약 통계: 평균 정확도, 추천 분포, Top 5 종목
@@ -719,8 +734,9 @@ open web/index.html
 
 - [x] `eda/predict.py` 작성 (Google Colab용)
 - [x] Transformer Dual Input 모델 구현 (stock stream + economic stream)
-- [x] 모델 학습 (50 epochs, 90-day lookback, 7-day forecast)
-- [x] `predicted_stock.csv` 생성 (약 3,900+ rows, 41 columns)
+- [x] 모델 학습 (50 epochs, 90-day lookback, 1~7일 동시 예측)
+- [x] 출력 크기 140 (20종목 × 7일)
+- [x] `predicted_stock.csv` 생성 (약 3,900+ rows, 161 columns)
 - [x] 예측 결과 시각화 (대표 5개 종목 그래프)
 - [x] 영문 종목명 사용으로 matplotlib 한글 폰트 문제 해결
 - [x] Google Colab 직접 파일 업로드 방식 적용
@@ -728,13 +744,15 @@ open web/index.html
 ### Phase 4 (평가 및 웹 서비스)
 
 - [x] `eda/report.py` 작성 (Google Colab용)
-- [x] 평가 메트릭 계산 (MAE, MSE, RMSE, MAPE, Accuracy)
+- [x] 평가 메트릭 계산 (MAE, RMSE, MAPE, Accuracy - Day7 기준 + 전체 Day 평균)
+- [x] Day1~Day7 가격 예측값 포함
 - [x] Buy/Sell 추천 로직 구현 (STRONG BUY/BUY/SELL)
 - [x] `final_stock_analysis.csv` 생성 (프로젝트 루트)
 - [x] Google Colab 직접 파일 업로드 방식 적용 (report.py)
 - [x] 주가예측하기_new.ipynb에 report.py 셀 추가
 - [ ] FastAPI 예측 엔드포인트 추가
-- [ ] 웹 인터페이스 업데이트
+- [ ] Next.js 프론트엔드 구현
+- [ ] Vercel 배포
 - [ ] 통합 테스트
 
 ---

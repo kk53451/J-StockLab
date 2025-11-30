@@ -25,7 +25,7 @@
 
 ## 문제 정의
 
-본 프로젝트의 목표는 **Transformer 딥러닝 모델을 활용하여 일본 주식시장의 주요 지수와 Nikkei 225 상위 20개 종목의 7일 후 주가를 예측**하고 이를 시각화하는 것이다.
+본 프로젝트의 목표는 **Transformer 딥러닝 모델을 활용하여 일본 주식시장의 주요 지수와 Nikkei 225 상위 20개 종목의 1~7일 후 주가를 예측**하고 이를 시각화하는 것이다.
 
 우리는 **Nikkei 225**, **TOPIX ETF**, **Nikkei 300** 세 개의 주요 지수를 중심으로 데이터를 수집하고, 딥러닝 Transformer 모델을 적용하여 단기 주가 변동을 예측한다. 또한 Nikkei 225에 포함된 **시가총액 상위 20개 종목**의 데이터를 활용하여 실제 거래 가능한 종목에 대한 예측을 제공한다.
 
@@ -34,7 +34,7 @@
 - **Transformer 모델**: 시계열 데이터에 특화된 딥러닝 아키텍처 사용
 - **Dual Input Stream**: 주식 데이터와 경제 지표를 별도 스트림으로 학습
 - **FRED API 통합**: 일본 + 미국 경제 지표 (금리, 인플레이션, GDP, 생산지수 등) 반영
-- **7일 후 예측**: 단기 투자 전략에 활용 가능한 예측 기간
+- **1~7일 후 예측**: 단기 투자 전략에 활용 가능한 다중 예측 기간
 - **Buy/Sell 추천**: 예측 결과를 기반으로 한 투자 추천 시스템
 
 ### 평가 지표
@@ -48,9 +48,10 @@
 
 1. **Transformer 기반 딥러닝**: 전통적 ML 대신 최신 딥러닝 아키텍처 사용
 2. **일본 시장 특화**: 한국어로 제공되는 일본 주식 예측 서비스 구현
-3. **다중 경제 지표 반영**: FRED API를 통한 27개 경제 지표 통합 (일본 8개 + 미국 10개 + yfinance 9개)
-4. **실시간 Buy/Sell 추천**: 예측 결과를 기반으로 한 자동 투자 추천
-5. **웹 기반 시각화**: FastAPI + HTML로 직관적인 UI 제공
+3. **다중 시점 예측**: 1~7일 후 주가를 동시에 예측하여 추세 파악 가능
+4. **다중 경제 지표 반영**: FRED API를 통한 27개 경제 지표 통합 (일본 8개 + 미국 10개 + yfinance 9개)
+5. **실시간 Buy/Sell 추천**: 예측 결과를 기반으로 한 자동 투자 추천
+6. **웹 기반 시각화**: FastAPI + Next.js 기반 Vercel 배포
 
 ---
 
@@ -185,8 +186,8 @@
 │                         ▼                                   │
 │              ┌─────────────────────┐                        │
 │              │  Output Layer       │                        │
-│              │  (20 stocks)        │                        │
-│              │  7일 후 예측 가격   │                        │
+│              │  (140 outputs)      │                        │
+│              │  20종목 × 7일 예측  │                        │
 │              └─────────────────────┘                        │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -194,7 +195,8 @@
 ### 하이퍼파라미터
 
 - **lookback**: 90일 (과거 90일 데이터 사용)
-- **forecast_horizon**: 7일 (7일 후 예측)
+- **forecast_horizon**: 7일 (1~7일 후 동시 예측)
+- **output_size**: 140 (20종목 × 7일)
 - **num_heads**: 8 (Multi-Head Attention)
 - **ff_dim**: 256 (Feed-Forward Dimension)
 - **epochs**: 50
@@ -238,8 +240,8 @@ J-StockLab/
 │
 ├── models/                       # 학습된 모델 저장 (선택)
 │
-├── predicted_stock.csv           # 예측 결과 (약 3,900+ rows, 41 columns)
-├── final_stock_analysis.csv      # 최종 분석 리포트 (20 rows, 12 columns)
+├── predicted_stock.csv           # 예측 결과 (약 3,900+ rows, 161 columns: 날짜 + 20종목 × 8)
+├── final_stock_analysis.csv      # 최종 분석 리포트 (20 rows, Day1~Day7 가격 포함)
 ├── 주가예측하기_new.ipynb        # Google Colab 노트북 (Cell 0: predict.py, Cell 1: report.py)
 ├── requirements.txt              # 필요한 라이브러리
 ├── README.md                     # 프로젝트 설명
@@ -289,16 +291,17 @@ J-StockLab/
 
 2. **예측 수행** ✅
    - 90일 lookback window
-   - 7일 후 예측 (forecast_horizon=7)
-   - predicted_stock.csv 생성 (약 3,900+ rows, 41 columns)
+   - 1~7일 후 동시 예측 (forecast_horizon=7, output_size=140)
+   - predicted_stock.csv 생성 (약 3,900+ rows, 161 columns: 날짜 + 20종목 × 8)
    - Google Colab 직접 파일 업로드 방식 적용
 
 ### Phase 4: 평가 및 웹 서비스
 
 1. **report.py 작성** ✅
-   - MAE, MSE, RMSE, MAPE, Accuracy 계산
+   - MAE, MSE, RMSE, MAPE, Accuracy 계산 (Day7 기준 + 전체 Day 평균)
    - 상승/하락 예측 및 확률 계산 (Rise Probability %)
    - Buy/Sell 추천 로직 (STRONG BUY/BUY/SELL)
+   - Day1~Day7 가격 예측값 포함
    - final_stock_analysis.csv 생성
    - Google Colab 직접 파일 업로드 방식 적용
    - 주가예측하기_new.ipynb에 Cell 1로 추가
@@ -326,8 +329,9 @@ J-StockLab/
 - **Web Framework**: FastAPI, Uvicorn
 
 ### Frontend
-- **HTML5, CSS3, JavaScript**
-- **Visualization**: matplotlib, seaborn, plotly
+- **Next.js** (React 기반 프레임워크)
+- **Vercel** 배포
+- **Visualization**: matplotlib, seaborn, plotly (분석용), Recharts/Chart.js (웹용)
 
 ### APIs
 - **Yahoo Finance**: 주식 데이터
@@ -386,7 +390,8 @@ python stock_japan.py  # 일본 버전 사용 (stock.py는 미국 참고용)
 4. 평가 완료 후 자동으로 `final_stock_analysis.csv` 파일 다운로드
 
 **출력 내용**:
-- 평가 지표: MAE, MSE, RMSE, MAPE, Accuracy
+- 평가 지표: MAE, RMSE, MAPE, Accuracy (Day7 기준 + 전체 Day 평균)
+- Day1~Day7 가격 예측값
 - 상승/하락 예측 및 확률 (Rise Probability %)
 - 매수/매도 추천 (STRONG BUY/BUY/SELL)
 - 요약 통계 (평균 정확도, 추천 분포, Top 5 종목)
@@ -454,13 +459,13 @@ FastAPI를 활용한 RESTful API 설계와 간단한 웹 인터페이스 구현�
 
 1. **일본 고유 지표 제한적**: FRED에서 제공되는 일본 지표 (8개) 외 추가 지표 (일본 CPI 최신 데이터 등) 일부 누락
 2. **뉴스/감성 분석 미포함**: 기업 공시, 뉴스 등 비정형 데이터는 범위 밖
-3. **단기 예측 한정**: 7일 후 예측만 제공 (중장기 예측 없음)
+3. **단기 예측 한정**: 1~7일 후 예측만 제공 (중장기 예측 없음)
 4. **개별 기업 펀더멘털 미반영**: 재무제표, 실적 발표 등은 고려하지 않음
 
 ### 향후 개선 방향
 
 1. **일본 경제 지표 확장**: Bank of Japan API, e-Stat API 등을 통해 추가 일본 고유 지표 통합
-2. **다양한 예측 기간**: 1일, 7일, 30일 등 다양한 기간 선택 가능
+2. **다양한 예측 기간**: 30일, 90일 등 중장기 예측 추가
 3. **실시간 업데이트**: 장 마감 후 자동 데이터 수집 및 재학습
 4. **포트폴리오 최적화**: 예측 결과를 기반으로 한 포트폴리오 추천
 
