@@ -48,19 +48,34 @@ Phase 4: 평가 및 웹 서비스 (5주차)
 J-StockLab/
 ├── eda/                             # 데이터 수집 및 분석
 │   ├── stock_japan.py               # FRED + yfinance 데이터 수집 (일본용)
-│   ├── predict.py                   # Transformer 모델 학습 및 예측 (Colab용)
+│   ├── predict_TF.py                # Transformer 모델 학습 및 예측 (Colab용)
+│   ├── predict_LSTM.py              # LSTM 베이스라인 모델 (Colab용)
+│   ├── predict_LR.py                # Linear Regression 베이스라인 (Colab용)
 │   ├── report.py                    # 평가 메트릭 및 Buy/Sell 추천
-│   ├── total.csv                    # 통합 데이터 (4,047 rows, 48 columns)
-│   └── final_stock_analysis.csv     # 최종 분석 리포트
+│   ├── total.csv                    # 통합 데이터 (~4,000+ rows, 48 columns)
+│   └── test_result/                 # 테스트 결과
 ├── api/                             # FastAPI 서버
 │   └── main.py
 ├── web/                             # 프론트엔드
 │   └── index.html
-├── predicted_stock.csv              # 예측 결과 (3,957 rows, 161 columns: 날짜 + 20종목 × 8)
-├── 주가예측하기_new.ipynb           # Google Colab 노트북
+│
+├── # 모델별 결과 파일
+├── predicted_stock_TF.csv           # Transformer 예측 결과
+├── predicted_stock_LSTM.csv         # LSTM 예측 결과
+├── predicted_stock_LR.csv           # Linear Regression 예측 결과
+├── final_stock_analysis_TF.csv      # Transformer 분석 리포트
+├── final_stock_analysis_LSTM.csv    # LSTM 분석 리포트
+├── final_stock_analysis_LR.csv      # LR 분석 리포트
+│
+├── # Colab 노트북
+├── 주식예측하기_TF.ipynb            # Transformer Colab 노트북
+├── 주가예측하기_LSTM.ipynb          # LSTM Colab 노트북
+├── 주가예측하기_LR.ipynb            # Linear Regression Colab 노트북
+│
 ├── requirements.txt
 ├── README.md
 ├── IMPLEMENTATION_PLAN.md           # 구현 가이드
+├── FRONTEND_PLAN.md                 # 프론트엔드 구현 계획
 ├── INDICATORS.md                    # 경제 지표 설명
 └── NIKKEI225_SECTORS.md             # Nikkei 225 종목 정보
 ```
@@ -346,13 +361,11 @@ stock_japan.py는 stock.py의 프로세스를 **거의 그대로 재사용**:
 
 ---
 
-## 🤖 Phase 3: Transformer 모델링
+## 🤖 Phase 3: 모델링 (Transformer + 베이스라인)
 
-### Step 3-1: Transformer 모델 구조 설계
+### Step 3-1: 모델 구조 설계
 
-#### 3.1.1 `eda/predict.py` 작성
-
-**목표**: Transformer 모델 학습 및 예측 스크립트 작성
+#### 3.1.1 `eda/predict_TF.py` - Transformer 모델 (메인)
 
 **모델 아키텍처**:
 
@@ -376,17 +389,54 @@ Dense(128, relu) → Dropout(0.2) → GlobalAveragePooling1D
 Output: 140개 출력 (20종목 × 7일 예측)
 ```
 
-**핵심 파라미터**:
+#### 3.1.2 `eda/predict_LSTM.py` - LSTM 베이스라인
 
-- `lookback = 90` (과거 90일 데이터 사용)
-- `forecast_horizon = 7` (1~7일 후 동시 예측)
-- `num_forecast_days = 7` (예측할 일수)
-- `target_size = 140` (20종목 × 7일)
-- `num_heads = 8` (Multi-Head Attention)
-- `ff_dim = 256` (Feed-Forward Dimension)
-- `epochs = 50`
-- `batch_size = 32`
-- `learning_rate = 0.0001`
+**모델 아키텍처**:
+
+```
+Input 1: Stock Data (20개 종목)
+  ↓
+LSTM(64) → Dropout(0.2) → LSTM(64) → Dropout(0.2)
+  ↓
+Dense(64, relu)
+
+Input 2: Economic Data (27개 지표)
+  ↓
+LSTM(64) → Dropout(0.2) → LSTM(64) → Dropout(0.2)
+  ↓
+Dense(64, relu)
+
+Merged (Concatenate)
+  ↓
+Dense(128, relu) → Dropout(0.2)
+  ↓
+Output: 140개 출력 (20종목 × 7일 예측)
+```
+
+#### 3.1.3 `eda/predict_LR.py` - Linear Regression 베이스라인
+
+**모델 아키텍처**:
+
+```
+Input: 90일 × 47개 피처 = 4,230차원 (flatten)
+  ↓
+sklearn LinearRegression (MultiOutputRegressor)
+  ↓
+Output: 140개 출력 (20종목 × 7일 예측)
+```
+
+**참고**: Linear Regression은 과적합(Overfitting) 발생. 시계열 예측에 부적합.
+
+### 공통 핵심 파라미터
+
+| 파라미터 | Transformer | LSTM | Linear Regression |
+|----------|-------------|------|-------------------|
+| lookback | 90일 | 90일 | 90일 |
+| forecast_horizon | 7일 | 7일 | 7일 |
+| target_size | 140 | 140 | 140 |
+| epochs | 50 | 50 | - |
+| batch_size | 32 | 32 | - |
+| learning_rate | 0.0001 | 0.0001 | - |
 
 ---
 
@@ -484,9 +534,9 @@ result_data.to_csv('predicted_stock.csv', index=False)
 
 ---
 
-### Step 3-4: predicted_stock.csv 생성
+### Step 3-4: 모델별 predicted_stock_*.csv 생성
 
-**출력 형식**:
+**출력 형식** (3개 모델 동일):
 
 ```
 날짜,Toyota_Day1,Toyota_Day2,...,Toyota_Day7,Toyota_Actual,Sony Group_Day1,...
@@ -494,6 +544,14 @@ result_data.to_csv('predicted_stock.csv', index=False)
 2024-01-02,2520.1,2530.5,...,2570.2,2510.0,12100.5,...
 ...
 ```
+
+**생성 파일**:
+
+| 모델 | 파일명 | 비고 |
+|------|--------|------|
+| Transformer | predicted_stock_TF.csv | 메인 모델 |
+| LSTM | predicted_stock_LSTM.csv | 베이스라인 |
+| Linear Regression | predicted_stock_LR.csv | 베이스라인 (과적합) |
 
 **체크포인트**:
 
@@ -505,27 +563,41 @@ result_data.to_csv('predicted_stock.csv', index=False)
 
 ---
 
-## 📝 predict.py: 미국 버전 vs 일본 버전 주요 변경 사항
+## 📝 모델별 구현 비교
 
-### 변경된 항목
+### Transformer vs LSTM vs Linear Regression
 
-| 항목 | 미국 버전 | 일본 버전 | 변경 이유 |
-|------|----------|----------|----------|
-| **실행 환경** | 로컬 Python | Google Colab | GPU 활용 및 접근성 향상 |
-| **파일 업로드** | 로컬 경로 직접 로드 | `files.upload()` 직접 업로드 | Colab 환경 적합 |
-| **target_columns** | 나스닥 100 상위 20개<br>(미국 종목) | Nikkei 225 상위 20개<br>(일본 종목, 영문명) | 프로젝트 대상 변경 |
-| **economic_features** | 미국 경제 지표 중심<br>(18개) | 일본 8개 + 미국 10개<br>+ yfinance 9개 (총 27개) | 일본 시장 특화 |
-| **종목명** | 영문 (Apple, Microsoft 등) | 영문 (Toyota, Sony Group 등) | matplotlib 한글 폰트 문제 해결 |
-| **결과 다운로드** | 로컬 저장 | `files.download()` | Colab 파일 다운로드 |
-| **시각화 종목** | 5개 대표 종목 | Toyota, Sony Group, Nintendo,<br>SoftBank Group, Fast Retailing | 일본 대표 종목 |
+| 항목 | Transformer | LSTM | Linear Regression |
+|------|-------------|------|-------------------|
+| **파일명** | predict_TF.py | predict_LSTM.py | predict_LR.py |
+| **프레임워크** | TensorFlow/Keras | TensorFlow/Keras | sklearn |
+| **입력 구조** | Dual Input (분리) | Dual Input (분리) | Single Input (flatten) |
+| **인코더** | Transformer × 4 | LSTM × 2 | - |
+| **Merge 방식** | Add | Concatenate | - |
+| **학습 시간** | ~15분 (GPU) | ~10분 (GPU) | ~2초 |
+| **GPU 필요** | ✅ 권장 | ✅ 권장 | ❌ 불필요 |
 
-### 동일한 부분
+### 모델 성능 비교 결과 ✅
 
-- ✅ **모델 아키텍처**: Transformer Dual Input (stock stream + economic stream)
-- ✅ **하이퍼파라미터**: lookback=90, forecast_horizon=7, num_heads=8, ff_dim=256, epochs=50
-- ✅ **데이터 전처리**: MinMaxScaler, ffill/bfill, 시퀀스 생성 로직
-- ✅ **학습 방식**: Adam optimizer, MSE loss, batch_size=32
-- ✅ **출력 형식**: predicted_stock.csv (날짜 + 종목별 Predicted/Actual 컬럼)
+| 모델 | 평균 정확도 | 평균 MAPE | 상태 |
+|------|------------|-----------|------|
+| **Transformer** | ~91% | ~8.8% | ✅ 정상 |
+| **LSTM** | ~94% | ~6.2% | ✅ 정상 |
+| **Linear Regression** | ~99.9%* | ~0.01%* | ⚠️ 과적합 |
+
+**분석**:
+- Linear Regression의 MAE가 ~1e-12 수준으로 비현실적인 정확도
+- 고차원 입력(4,230차원)에 대한 심각한 과적합 발생
+- 결론: Linear Regression은 시계열 예측에 부적합
+
+### 공통 사항 (3개 모델)
+
+- ✅ **실행 환경**: Google Colab
+- ✅ **파일 업로드**: `files.upload()` 직접 업로드
+- ✅ **하이퍼파라미터**: lookback=90, forecast_horizon=7
+- ✅ **데이터 전처리**: MinMaxScaler, ffill/bfill
+- ✅ **출력 형식**: predicted_stock_*.csv (날짜 + 종목별 Day1~7 + Actual)
+- ✅ **결과 다운로드**: `files.download()`
 
 ### 핵심 개선 사항
 
@@ -533,14 +605,15 @@ result_data.to_csv('predicted_stock.csv', index=False)
 2. **직접 파일 업로드 방식**: Google Drive 마운트 권한 문제 해결
 3. **영문 종목명 사용**: matplotlib 한글 폰트 설치 불필요
 4. **경제 지표 확장**: 일본 경제 지표 8개 추가로 예측 정확도 향상
+5. **베이스라인 모델 추가**: LSTM, Linear Regression으로 Transformer 성능 검증
 
 ---
 
 ## 📈 Phase 4: 평가 및 웹 서비스
 
-### Step 4-1: 모델 평가 및 리포트 생성
+### Step 4-1: 모델 평가 및 리포트 생성 ✅
 
-#### 4.1.1 `eda/report.py` 작성
+#### 4.1.1 `eda/report.py` 작성 ✅
 
 **평가 메트릭**:
 
@@ -561,9 +634,13 @@ result_data.to_csv('predicted_stock.csv', index=False)
 - `Rise Probability > 0%` → **BUY**
 - `Rise Probability < 0%` → **SELL**
 
-**출력 파일**:
+**모델별 출력 파일** ✅:
 
-- `eda/final_stock_analysis.csv`
+| 모델 | 입력 파일 | 출력 파일 |
+|------|----------|----------|
+| Transformer | predicted_stock_TF.csv | final_stock_analysis_TF.csv |
+| LSTM | predicted_stock_LSTM.csv | final_stock_analysis_LSTM.csv |
+| Linear Regression | predicted_stock_LR.csv | final_stock_analysis_LR.csv |
 
 **컬럼 구성**:
 
@@ -575,16 +652,14 @@ Rise Probability(%) | Recommendation | Analysis |
 Day1_Price | Day2_Price | Day3_Price | Day4_Price | Day5_Price | Day6_Price | Day7_Price
 ```
 
-**실행 방법** (Google Colab):
+**실행 방법** (Google Colab) ✅:
 
-1. 주가예측하기_new.ipynb의 Cell 1 실행
-2. 또는 report.py 코드를 Colab 노트북에 복사
-3. predicted_stock.csv 파일 업로드 (팝업)
-4. 자동으로 final_stock_analysis.csv 다운로드
+1. 각 노트북(주식예측하기_TF.ipynb, 주가예측하기_LSTM.ipynb, 주가예측하기_LR.ipynb)의 Cell 1 실행
+2. 해당 predicted_stock_*.csv 파일 업로드 (팝업)
+3. 자동으로 final_stock_analysis_*.csv 다운로드
 
-**출력 결과**:
+**출력 결과** ✅:
 - 평가 지표: MAE, RMSE, MAPE, Accuracy (Day7 기준 + 전체 Day 평균)
-  - 참고: MSE는 RMSE 계산용으로 내부에서 사용
 - Day1~Day7 가격 예측값
 - 상승/하락 예측: Rise Probability (%)
 - 매수/매도 추천: STRONG BUY (>2%), BUY (0~2%), SELL (<0%)
@@ -713,14 +788,14 @@ open web/index.html
 
 ## ✅ Phase별 체크리스트
 
-### Phase 1
+### Phase 1 ✅
 
-- [ ] Python 환경 및 라이브러리 설치
-- [ ] yfinance로 3개 지수 데이터 수집 성공
-- [ ] FastAPI 서버 구동 및 API 테스트
-- [ ] HTML 페이지에서 API 호출 확인
+- [x] Python 환경 및 라이브러리 설치
+- [x] yfinance로 3개 지수 데이터 수집 성공
+- [x] FastAPI 서버 구동 및 API 테스트
+- [x] HTML 페이지에서 API 호출 확인
 
-### Phase 2 (데이터 수집 및 전처리)
+### Phase 2 (데이터 수집 및 전처리) ✅
 
 - [x] `eda/stock_japan.py` 작성
 - [x] FRED API 키 설정 및 18개 지표 수집
@@ -730,28 +805,47 @@ open web/index.html
 - [x] 데이터 검증 (결측치 0%, 데이터 품질 확인)
 - [x] 결측치 처리 로직 개선 (ffill 후 dropna로 순서 변경)
 
-### Phase 3 (Transformer 모델링)
+### Phase 3 (모델링: Transformer + 베이스라인) ✅
 
-- [x] `eda/predict.py` 작성 (Google Colab용)
+**Transformer (메인 모델)**:
+- [x] `eda/predict_TF.py` 작성 (Google Colab용)
 - [x] Transformer Dual Input 모델 구현 (stock stream + economic stream)
 - [x] 모델 학습 (50 epochs, 90-day lookback, 1~7일 동시 예측)
+- [x] `predicted_stock_TF.csv` 생성
+
+**LSTM (베이스라인)**:
+- [x] `eda/predict_LSTM.py` 작성 (Google Colab용)
+- [x] LSTM Dual Input 모델 구현
+- [x] `predicted_stock_LSTM.csv` 생성
+
+**Linear Regression (베이스라인)**:
+- [x] `eda/predict_LR.py` 작성 (Google Colab용)
+- [x] sklearn LinearRegression 구현
+- [x] `predicted_stock_LR.csv` 생성
+- [x] 과적합(Overfitting) 문제 확인 및 문서화
+
+**공통**:
 - [x] 출력 크기 140 (20종목 × 7일)
-- [x] `predicted_stock.csv` 생성 (약 3,900+ rows, 161 columns)
 - [x] 예측 결과 시각화 (대표 5개 종목 그래프)
 - [x] 영문 종목명 사용으로 matplotlib 한글 폰트 문제 해결
 - [x] Google Colab 직접 파일 업로드 방식 적용
 
-### Phase 4 (평가 및 웹 서비스)
+### Phase 4-1 (평가 리포트) ✅
 
 - [x] `eda/report.py` 작성 (Google Colab용)
 - [x] 평가 메트릭 계산 (MAE, RMSE, MAPE, Accuracy - Day7 기준 + 전체 Day 평균)
 - [x] Day1~Day7 가격 예측값 포함
 - [x] Buy/Sell 추천 로직 구현 (STRONG BUY/BUY/SELL)
-- [x] `final_stock_analysis.csv` 생성 (프로젝트 루트)
+- [x] 모델별 `final_stock_analysis_*.csv` 생성 (TF, LSTM, LR)
 - [x] Google Colab 직접 파일 업로드 방식 적용 (report.py)
-- [x] 주가예측하기_new.ipynb에 report.py 셀 추가
+- [x] 각 모델별 Colab 노트북 작성 (주식예측하기_TF.ipynb, 주가예측하기_LSTM.ipynb, 주가예측하기_LR.ipynb)
+
+### Phase 4-2 (웹 서비스) - 진행 예정
+
 - [ ] FastAPI 예측 엔드포인트 추가
+- [ ] 모델 비교 API 구현
 - [ ] Next.js 프론트엔드 구현
+- [ ] 대시보드 페이지 (모델 비교 차트 포함)
 - [ ] Vercel 배포
 - [ ] 통합 테스트
 

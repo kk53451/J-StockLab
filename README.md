@@ -31,7 +31,8 @@
 
 ### 핵심 특징
 
-- **Transformer 모델**: 시계열 데이터에 특화된 딥러닝 아키텍처 사용
+- **Transformer 모델**: 시계열 데이터에 특화된 딥러닝 아키텍처 사용 (메인 모델)
+- **베이스라인 모델 비교**: Linear Regression, LSTM과의 성능 비교 분석
 - **Dual Input Stream**: 주식 데이터와 경제 지표를 별도 스트림으로 학습
 - **FRED API 통합**: 일본 + 미국 경제 지표 (금리, 인플레이션, GDP, 생산지수 등) 반영
 - **1~7일 후 예측**: 단기 투자 전략에 활용 가능한 다중 예측 기간
@@ -47,11 +48,12 @@
 ### 차별화 포인트
 
 1. **Transformer 기반 딥러닝**: 전통적 ML 대신 최신 딥러닝 아키텍처 사용
-2. **일본 시장 특화**: 한국어로 제공되는 일본 주식 예측 서비스 구현
-3. **다중 시점 예측**: 1~7일 후 주가를 동시에 예측하여 추세 파악 가능
-4. **다중 경제 지표 반영**: FRED API를 통한 27개 경제 지표 통합 (일본 8개 + 미국 10개 + yfinance 9개)
-5. **실시간 Buy/Sell 추천**: 예측 결과를 기반으로 한 자동 투자 추천
-6. **웹 기반 시각화**: FastAPI + Next.js 기반 Vercel 배포
+2. **베이스라인 모델 비교 분석**: Linear Regression, LSTM과 성능 비교로 Transformer 우수성 검증
+3. **일본 시장 특화**: 한국어로 제공되는 일본 주식 예측 서비스 구현
+4. **다중 시점 예측**: 1~7일 후 주가를 동시에 예측하여 추세 파악 가능
+5. **다중 경제 지표 반영**: FRED API를 통한 27개 경제 지표 통합 (일본 8개 + 미국 10개 + yfinance 9개)
+6. **실시간 Buy/Sell 추천**: 예측 결과를 기반으로 한 자동 투자 추천
+7. **웹 기반 시각화**: FastAPI + Next.js 기반 Vercel 배포
 
 ---
 
@@ -146,7 +148,7 @@
 
 ## 모델 아키텍처
 
-### Transformer Dual Input Model
+### 1. Transformer Dual Input Model (메인 모델)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -192,18 +194,43 @@
 └─────────────────────────────────────────────────────────────┘
 ```
 
+### 2. 베이스라인 모델
+
+#### LSTM Dual Input Model
+- Stock Stream: LSTM(64) × 2 layers + Dropout(0.2)
+- Economic Stream: LSTM(64) × 2 layers + Dropout(0.2)
+- Merge: Concatenate → Dense(128) → Output(140)
+
+#### Linear Regression
+- Input: 90일 × 47개 피처 = 4,230차원 (flatten)
+- Output: 140개 (20종목 × 7일)
+- sklearn MultiOutputRegressor 사용
+
+### 모델 성능 비교
+
+| 모델 | 평균 정확도 (Avg Accuracy) | 평균 MAPE | 특징 |
+|------|---------------------------|-----------|------|
+| **Transformer** | 91.2% | 8.8% | 가장 균형 잡힌 예측, Attention 메커니즘 활용 |
+| **LSTM** | 93.8% | 6.2% | 시계열 패턴 학습에 강점 |
+| **Linear Regression** | 99.9%* | 0.01%* | *과적합 (Overfitting) - 신뢰 불가 |
+
+**분석 결과**:
+- **Linear Regression**: MAE가 ~1e-12 수준으로 비현실적인 정확도를 보임. 이는 고차원 입력(4,230차원)에 대한 심각한 과적합을 나타냄. 시계열 예측에 부적합.
+- **LSTM**: 안정적인 예측 성능. 시계열 데이터의 순차적 패턴을 잘 학습.
+- **Transformer**: LSTM과 유사한 성능. Attention 메커니즘을 통해 장기 의존성 학습에 강점.
+
 ### 하이퍼파라미터
 
-- **lookback**: 90일 (과거 90일 데이터 사용)
-- **forecast_horizon**: 7일 (1~7일 후 동시 예측)
-- **output_size**: 140 (20종목 × 7일)
-- **num_heads**: 8 (Multi-Head Attention)
-- **ff_dim**: 256 (Feed-Forward Dimension)
-- **epochs**: 50
-- **batch_size**: 32
-- **learning_rate**: 0.0001
-- **optimizer**: Adam
-- **loss**: MSE (Mean Squared Error)
+| 파라미터 | Transformer | LSTM | Linear Regression |
+|----------|-------------|------|-------------------|
+| lookback | 90일 | 90일 | 90일 |
+| forecast_horizon | 7일 | 7일 | 7일 |
+| output_size | 140 | 140 | 140 |
+| epochs | 50 | 50 | - |
+| batch_size | 32 | 32 | - |
+| learning_rate | 0.0001 | 0.0001 | - |
+| optimizer | Adam | Adam | - |
+| loss | MSE | MSE | - |
 
 ---
 
@@ -214,7 +241,9 @@ J-StockLab/
 ├── eda/                           # 데이터 수집 및 분석
 │   ├── stock.py                  # 미국 버전 (참고용)
 │   ├── stock_japan.py            # 일본 버전 (메인 사용)
-│   ├── predict.py                # Transformer 모델 학습 및 예측 (Colab용)
+│   ├── predict_TF.py             # Transformer 모델 학습 및 예측 (Colab용)
+│   ├── predict_LSTM.py           # LSTM 베이스라인 모델 (Colab용)
+│   ├── predict_LR.py             # Linear Regression 베이스라인 모델 (Colab용)
 │   ├── report.py                 # 평가 메트릭 및 Buy/Sell 추천 (Colab용)
 │   ├── total.csv                 # 통합 데이터 (약 4,000+ rows, 48 columns)
 │   └── test_result/              # 테스트 결과 저장
@@ -240,12 +269,27 @@ J-StockLab/
 │
 ├── models/                       # 학습된 모델 저장 (선택)
 │
-├── predicted_stock.csv           # 예측 결과 (약 3,900+ rows, 161 columns: 날짜 + 20종목 × 8)
-├── final_stock_analysis.csv      # 최종 분석 리포트 (20 rows, Day1~Day7 가격 포함)
-├── 주가예측하기_new.ipynb        # Google Colab 노트북 (Cell 0: predict.py, Cell 1: report.py)
+├── # Transformer 결과
+├── predicted_stock_TF.csv        # Transformer 예측 결과
+├── final_stock_analysis_TF.csv   # Transformer 분석 리포트
+│
+├── # LSTM 결과
+├── predicted_stock_LSTM.csv      # LSTM 예측 결과
+├── final_stock_analysis_LSTM.csv # LSTM 분석 리포트
+│
+├── # Linear Regression 결과
+├── predicted_stock_LR.csv        # LR 예측 결과
+├── final_stock_analysis_LR.csv   # LR 분석 리포트
+│
+├── # Colab 노트북
+├── 주식예측하기_TF.ipynb         # Transformer Colab 노트북
+├── 주가예측하기_LSTM.ipynb       # LSTM Colab 노트북
+├── 주가예측하기_LR.ipynb         # Linear Regression Colab 노트북
+│
 ├── requirements.txt              # 필요한 라이브러리
 ├── README.md                     # 프로젝트 설명
 ├── IMPLEMENTATION_PLAN.md        # 구현 가이드
+├── FRONTEND_PLAN.md              # 프론트엔드 구현 계획
 ├── INDICATORS.md                 # 경제 지표 설명
 └── NIKKEI225_SECTORS.md          # Nikkei 225 섹터 정보
 ```
@@ -282,39 +326,56 @@ J-StockLab/
 
 ### Phase 3: Transformer 모델링 ✅
 
-1. **predict.py 작성** ✅
+1. **predict_TF.py 작성** ✅
    - Transformer Encoder 구현
    - Dual Input Stream 설계 (stock stream + economic stream)
    - 데이터 전처리 및 스케일링 (MinMaxScaler)
    - 모델 학습 (50 epochs, Google Colab)
    - 영문 종목명 사용으로 matplotlib 한글 폰트 문제 해결
 
-2. **예측 수행** ✅
+2. **베이스라인 모델 구현** ✅
+   - **predict_LSTM.py**: LSTM Dual Input 모델 (Transformer와 동일 구조)
+   - **predict_LR.py**: Linear Regression 베이스라인 (sklearn)
+   - 모든 모델 동일 하이퍼파라미터 사용 (lookback=90, forecast=7)
+
+3. **예측 수행** ✅
    - 90일 lookback window
    - 1~7일 후 동시 예측 (forecast_horizon=7, output_size=140)
-   - predicted_stock.csv 생성 (약 3,900+ rows, 161 columns: 날짜 + 20종목 × 8)
+   - 각 모델별 predicted_stock_*.csv 생성
    - Google Colab 직접 파일 업로드 방식 적용
 
-### Phase 4: 평가 및 웹 서비스
+### Phase 4-1: 평가 리포트 ✅
 
 1. **report.py 작성** ✅
    - MAE, MSE, RMSE, MAPE, Accuracy 계산 (Day7 기준 + 전체 Day 평균)
    - 상승/하락 예측 및 확률 계산 (Rise Probability %)
    - Buy/Sell 추천 로직 (STRONG BUY/BUY/SELL)
    - Day1~Day7 가격 예측값 포함
-   - final_stock_analysis.csv 생성
+   - 각 모델별 final_stock_analysis_*.csv 생성
    - Google Colab 직접 파일 업로드 방식 적용
-   - 주가예측하기_new.ipynb에 Cell 1로 추가
 
-2. **FastAPI 확장**
+2. **모델별 평가 완료** ✅
+   - Transformer: final_stock_analysis_TF.csv (평균 정확도 ~91%)
+   - LSTM: final_stock_analysis_LSTM.csv (평균 정확도 ~94%)
+   - Linear Regression: final_stock_analysis_LR.csv (과적합으로 신뢰 불가)
+
+3. **Colab 노트북 작성** ✅
+   - 주식예측하기_TF.ipynb (Cell 0: predict, Cell 1: report)
+   - 주가예측하기_LSTM.ipynb (Cell 0: predict, Cell 1: report)
+   - 주가예측하기_LR.ipynb (Cell 0: predict, Cell 1: report)
+
+### Phase 4-2: 웹 서비스 (진행 예정)
+
+1. **FastAPI 확장**
    - `/api/predictions` - 전체 종목 예측 결과
    - `/api/predictions/{stock_name}` - 개별 종목 예측
    - `/api/analysis` - 최종 분석 리포트
 
-3. **웹 인터페이스 업데이트**
+2. **웹 인터페이스 업데이트**
    - 예측 결과 테이블
    - 개별 종목 상세 보기
    - 대시보드 (평균 정확도, Buy 추천 수 등)
+   - 모델 비교 차트
 
 ---
 
@@ -372,22 +433,34 @@ python stock_japan.py  # 일본 버전 사용 (stock.py는 미국 참고용)
 
 ### 4. 모델 학습 및 예측 (Google Colab 사용)
 
-**Google Colab에서 실행**:
-1. `주가예측하기_new.ipynb` 파일을 Google Colab에 업로드
-2. 또는 `predict.py` 코드를 Colab 노트북에 복사
-3. Colab 상단 메뉴: **런타임 > 런타임 유형 변경 > T4 GPU** 선택
-4. 코드 실행 시 `total.csv` 업로드 요청 팝업에서 파일 선택하여 업로드
-5. 학습 완료 후 자동으로 `predicted_stock.csv` 파일 다운로드
+**Google Colab에서 실행** (3개 모델 각각):
 
-생성 파일: `predicted_stock.csv` (프로젝트 루트에 저장)
+| 모델 | 노트북 파일 | predict 코드 | 출력 파일 |
+|------|------------|-------------|----------|
+| Transformer | 주식예측하기_TF.ipynb | predict_TF.py | predicted_stock_TF.csv |
+| LSTM | 주가예측하기_LSTM.ipynb | predict_LSTM.py | predicted_stock_LSTM.csv |
+| Linear Regression | 주가예측하기_LR.ipynb | predict_LR.py | predicted_stock_LR.csv |
+
+**실행 방법**:
+1. 해당 노트북 파일을 Google Colab에 업로드
+2. Colab 상단 메뉴: **런타임 > 런타임 유형 변경 > T4 GPU** 선택 (Transformer, LSTM)
+3. Cell 0 실행 시 `total.csv` 업로드 요청 팝업에서 파일 선택하여 업로드
+4. 학습 완료 후 자동으로 `predicted_stock_*.csv` 파일 다운로드
 
 ### 5. 평가 리포트 생성 (Google Colab 사용)
 
-**Google Colab에서 실행**:
-1. 주가예측하기_new.ipynb의 Cell 1 실행 (report.py 코드)
-2. 또는 report.py 코드를 Colab 노트북에 복사
-3. 코드 실행 시 `predicted_stock.csv` 업로드 요청 팝업에서 파일 선택하여 업로드
-4. 평가 완료 후 자동으로 `final_stock_analysis.csv` 파일 다운로드
+**Google Colab에서 실행** (각 노트북의 Cell 1):
+
+| 모델 | 입력 파일 | 출력 파일 |
+|------|----------|----------|
+| Transformer | predicted_stock_TF.csv | final_stock_analysis_TF.csv |
+| LSTM | predicted_stock_LSTM.csv | final_stock_analysis_LSTM.csv |
+| Linear Regression | predicted_stock_LR.csv | final_stock_analysis_LR.csv |
+
+**실행 방법**:
+1. 각 노트북의 Cell 1 실행 (report.py 코드)
+2. 코드 실행 시 해당 `predicted_stock_*.csv` 파일 업로드
+3. 평가 완료 후 자동으로 `final_stock_analysis_*.csv` 파일 다운로드
 
 **출력 내용**:
 - 평가 지표: MAE, RMSE, MAPE, Accuracy (Day7 기준 + 전체 Day 평균)
@@ -395,8 +468,6 @@ python stock_japan.py  # 일본 버전 사용 (stock.py는 미국 참고용)
 - 상승/하락 예측 및 확률 (Rise Probability %)
 - 매수/매도 추천 (STRONG BUY/BUY/SELL)
 - 요약 통계 (평균 정확도, 추천 분포, Top 5 종목)
-
-생성 파일: `final_stock_analysis.csv` (프로젝트 루트에 저장)
 
 ### 6. FastAPI 서버 실행
 
