@@ -30,10 +30,11 @@ Phase 3: Transformer 모델링 (3-4주차)
   └─ Step 3-4: predicted_stock.csv 생성
 
 Phase 4: 평가 및 웹 서비스 (5주차)
-  ├─ Step 4-1: 모델 평가 및 리포트 생성 (report.py)
-  ├─ Step 4-2: FastAPI 예측 API 개발
-  ├─ Step 4-3: 프론트엔드 구현
-  └─ Step 4-4: 통합 테스트 및 배포
+  ├─ Step 4-1: 모델 평가 및 리포트 생성 (report.py) ✅
+  ├─ Step 4-2: FastAPI 예측 API 개발 ✅
+  ├─ Step 4-3: Next.js 프론트엔드 MVP 구현 ✅
+  ├─ Step 4-4: 시장 현황 & 경제 지표 기능 ✅
+  └─ Step 4-5: 통합 테스트 및 배포
 ```
 
 ---
@@ -55,9 +56,17 @@ J-StockLab/
 │   ├── total.csv                    # 통합 데이터 (~4,000+ rows, 48 columns)
 │   └── test_result/                 # 테스트 결과
 ├── api/                             # FastAPI 서버
-│   └── main.py
-├── web/                             # 프론트엔드
-│   └── index.html
+│   └── main.py                      # API 엔드포인트 (대시보드, 종목, 지표, 시장)
+├── web/                             # Next.js 프론트엔드
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── page.tsx             # 대시보드 (메인 페이지)
+│   │   │   ├── stocks/page.tsx      # 종목 리스트
+│   │   │   ├── stocks/[name]/page.tsx # 종목 상세
+│   │   │   └── indicators/page.tsx  # 경제 지표
+│   │   ├── components/              # 공유 컴포넌트
+│   │   └── lib/api.ts               # API 호출 함수
+│   └── package.json
 │
 ├── # 모델별 결과 파일
 ├── predicted_stock_TF.csv           # Transformer 예측 결과
@@ -840,14 +849,50 @@ open web/index.html
 - [x] Google Colab 직접 파일 업로드 방식 적용 (report.py)
 - [x] 각 모델별 Colab 노트북 작성 (주식예측하기_TF.ipynb, 주가예측하기_LSTM.ipynb, 주가예측하기_LR.ipynb)
 
-### Phase 4-2 (웹 서비스) - 진행 예정
+### Phase 4-2 (FastAPI 예측 API) ✅
 
-- [ ] FastAPI 예측 엔드포인트 추가
-- [ ] 모델 비교 API 구현
-- [ ] Next.js 프론트엔드 구현
-- [ ] 대시보드 페이지 (모델 비교 차트 포함)
-- [ ] Vercel 배포
+- [x] `/api/dashboard?model=TF` - 대시보드 요약 (모델 선택 지원)
+- [x] `/api/stocks?model=TF` - 종목 리스트 (정렬/필터)
+- [x] `/api/stocks/{name}?model=TF` - 종목 상세
+- [x] `/api/stocks/{name}/chart?model=TF&days=90` - 차트 데이터
+- [x] `/api/stocks/{name}/compare-models` - 모델 간 비교
+- [x] `/api/models/compare` - 모델 성능 비교
+- [x] `/api/data/status` - 데이터 최신화 정보
+
+### Phase 4-3 (Next.js 프론트엔드 MVP) ✅
+
+- [x] Next.js 15 + TypeScript + Tailwind CSS 프로젝트 구축
+- [x] 대시보드 페이지 (모델 선택 드롭다운, 성능 비교 차트, 데이터 기준일)
+- [x] 종목 리스트 페이지 (정렬/필터/검색)
+- [x] 종목 상세 페이지 (90일 차트 + 7일 예측, 모델 간 비교 테이블)
+- [x] 다크모드 지원 (next-themes)
+- [x] 반응형 디자인
+
+### Phase 4-4 (시장 현황 & 경제 지표) ✅
+
+**백엔드 API**:
+- [x] `/api/market` - 시장 현황 (닛케이 225, S&P 500, 엔/달러, VIX, 금)
+- [x] `/api/indicators?days=730` - 경제 지표 데이터
+  - 일본 지표 8개: GDP, 실업률, 국채, 금리, 산업생산, 무역수지, 소비자신뢰, BOJ총자산
+  - 미국 지표 10개: 인플레이션, 금리차, 기준금리, 국채, 소비자심리, 실업률, CPI, GDP, 금융스트레스
+  - 시장 지표 9개: 닛케이, TOPIX, S&P500, 나스닥, VIX, 금, 달러인덱스, 엔/달러
+- [x] 지표별 메타데이터: 단위(%, $, ¥, 억엔, pt), 빈도(daily/weekly/monthly/quarterly)
+- [x] 일본 무역수지 단위 변환 (엔 → 억엔)
+
+**프론트엔드**:
+- [x] 대시보드 시장 현황 카드 (닛케이 225, S&P 500, 엔/달러, VIX, 금)
+- [x] 경제 지표 페이지 (`/indicators`)
+  - 탭 구성: 일본 경제지표 | 미국 경제지표 | 시장 지표
+  - 빈도별 자동 기간 조절: 일간 3개월, 월간 1년, 분기 2년
+  - X축 날짜 포맷: 일간/주간 MM-DD, 월간/분기 YYYY-MM
+  - Recharts 차트 (step 타입, 툴팁)
+
+### Phase 4-5 (통합 테스트 및 배포) - 진행 예정
+
+- [ ] Vercel 프론트엔드 배포
+- [ ] 백엔드 배포 (Railway/Render 등)
 - [ ] 통합 테스트
+- [ ] 문서 최종 정리
 
 ---
 

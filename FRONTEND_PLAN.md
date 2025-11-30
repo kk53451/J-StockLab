@@ -360,36 +360,40 @@ GET /api/data/status
 
 ## 🚀 구현 우선순위
 
-### Phase 1 (MVP) - 핵심 기능
+### Phase 1 (MVP) - 핵심 기능 ✅ 완료
 
-1. `GET /api/models/compare` - 모델 비교
-2. `GET /api/dashboard?model=TF` - 대시보드 요약 (모델 선택 지원)
-3. `GET /api/stocks?model=TF` - 종목 리스트 (정렬/필터, 모델 선택)
-4. `GET /api/stocks/{name}?model=TF` - 종목 상세
-5. `GET /api/stocks/{name}/chart?model=TF` - 차트 데이터
-6. `GET /api/stocks/{name}/compare-models` - 모델 간 종목별 비교 (신규)
-7. `GET /api/data/status` - 데이터 최신화 정보 (신규)
+1. `GET /api/models/compare` - 모델 비교 ✅
+2. `GET /api/dashboard?model=TF` - 대시보드 요약 (모델 선택 지원) ✅
+3. `GET /api/stocks?model=TF` - 종목 리스트 (정렬/필터, 모델 선택) ✅
+4. `GET /api/stocks/{name}?model=TF` - 종목 상세 ✅
+5. `GET /api/stocks/{name}/chart?model=TF` - 차트 데이터 ✅
+6. `GET /api/stocks/{name}/compare-models` - 모델 간 종목별 비교 ✅
+7. `GET /api/data/status` - 데이터 최신화 정보 ✅
 
-**프론트엔드**:
+**프론트엔드** ✅:
 - 대시보드 페이지 (모델 선택 드롭다운, 성능 비교 차트, 데이터 기준일 표시)
-- 종목 리스트 페이지
-- 종목 상세 페이지 (차트 포함, 모델 간 비교 테이블)
+- 종목 리스트 페이지 (정렬/필터/검색)
+- 종목 상세 페이지 (90일 차트 + 7일 예측, 모델 간 비교 테이블)
 - 다크모드 토글
 
-### Phase 2 - 시장 & 지표
+### Phase 2 - 시장 & 지표 ✅ 완료
 
-8. `GET /api/market` - 시장 현황
-9. `GET /api/indicators` - 경제 지표
-10. `GET /api/indicators/latest` - 최신 지표값
+8. `GET /api/market` - 시장 현황 ✅
+9. `GET /api/indicators?days=730` - 경제 지표 ✅
 
-**프론트엔드**:
+**프론트엔드** ✅:
+- 대시보드 시장 현황 카드 (닛케이225, S&P500, 엔/달러, VIX, 금)
 - 경제 지표 페이지
+  - 탭 구성: 일본 경제지표 | 미국 경제지표 | 시장 지표
+  - 지표 메타데이터: 단위(%, $, ¥, 억엔, pt), 빈도(일간/주간/월간/분기)
+  - 빈도별 자동 기간 조절: 일간 3개월, 월간 1년, 분기 2년
+  - X축 날짜 포맷: 일간/주간 MM-DD, 월간/분기 YYYY-MM
 
-### Phase 3 - 고급 기능
+### Phase 3 - 고급 기능 (진행 예정)
 
-11. `GET /api/compare?model=TF&stocks=...` - 종목 비교 (동일 모델 내)
-12. `GET /api/history/{stock_name}?model=TF` - 히스토리 조회
-13. `GET /api/backtest/{stock_name}?model=TF` - 백테스팅
+10. `GET /api/compare?model=TF&stocks=...` - 종목 비교 (동일 모델 내)
+11. `GET /api/history/{stock_name}?model=TF` - 히스토리 조회
+12. `GET /api/backtest/{stock_name}?model=TF` - 백테스팅
 
 **프론트엔드**:
 - 종목 비교 페이지
@@ -478,6 +482,29 @@ J-StockLab/
 - 데이터 갱신은 Colab에서 수동으로 진행 후 CSV 교체
 - **베이스라인 모델 비교 완료**: LSTM, Linear Regression 결과 생성됨
 - **Linear Regression 주의**: 과적합(Overfitting)으로 실제 예측에 사용 불가 (참고용)
+
+## ✅ 구현 완료 현황 (2025-12-01 기준)
+
+### 백엔드 (FastAPI)
+- [x] 대시보드 API (`/api/dashboard`)
+- [x] 종목 리스트/상세/차트 API (`/api/stocks/*`)
+- [x] 모델 비교 API (`/api/models/compare`)
+- [x] 데이터 상태 API (`/api/data/status`)
+- [x] 시장 현황 API (`/api/market`)
+- [x] 경제 지표 API (`/api/indicators`)
+  - 지표별 메타데이터 (단위, 빈도)
+  - 일본 무역수지 단위 변환 (엔 → 억엔)
+
+### 프론트엔드 (Next.js)
+- [x] 대시보드 페이지 (모델 선택, 시장 현황 카드)
+- [x] 종목 리스트 페이지 (검색, 정렬, 필터)
+- [x] 종목 상세 페이지 (차트, 모델 비교)
+- [x] 경제 지표 페이지
+  - 탭: 일본 | 미국 | 시장
+  - 빈도별 기간 자동 조절
+  - 날짜 포맷 (MM-DD / YYYY-MM)
+- [x] 다크모드 지원
+- [x] 반응형 디자인
 
 ---
 
