@@ -144,6 +144,69 @@
 
 **참고**: 미국 프로젝트는 핵심 지표가 모두 일간 데이터라 dropna → ffill 순서여도 문제없었으나, 일본 프로젝트는 핵심 지표에 월간 데이터(일본 10년 국채 수익률, 일본 3개월 은행간 금리)가 포함되어 ffill → dropna 순서로 변경 필요
 
+### 피처 엔지니어링 (파생변수 생성)
+
+본 프로젝트에서 생성한 파생변수는 다음과 같다:
+
+#### 1. Lookback Window 시퀀스 (시간 지연 피처)
+
+| 파생변수 | 설명 | 선택 근거 |
+|---------|------|----------|
+| **90일 Lookback Window** | 과거 90일 데이터를 하나의 시퀀스로 변환 | 약 3개월(1분기) 패턴을 학습하기 위함. 주식 시장의 분기별 실적 발표 주기 반영 |
+| **Stock Sequence** | (90일 × 20종목) = 1,800개 피처 | 종목 간 상관관계와 시간적 패턴 동시 학습 |
+| **Economic Sequence** | (90일 × 27지표) = 2,430개 피처 | 경제 지표의 시간적 변화 추세 학습 |
+
+```python
+# 코드 예시 (predict_TF.py)
+lookback = 90  # 과거 90일 데이터 사용
+X_stock_seq = data_scaled[target_columns].iloc[i - lookback:i].to_numpy()  # (90, 20)
+X_econ_seq = data_scaled[economic_features].iloc[i - lookback:i].to_numpy()  # (90, 27)
+```
+
+#### 2. MinMaxScaler 정규화
+
+| 파생변수 | 설명 | 선택 근거 |
+|---------|------|----------|
+| **정규화된 주가** | 원본 주가를 0~1 범위로 변환 | 종목 간 가격 스케일 차이 제거 (예: Toyota ~2,500엔 vs Keyence ~60,000엔) |
+| **정규화된 경제지표** | 원본 지표를 0~1 범위로 변환 | 지표 간 단위 차이 제거 (예: GDP vs 금리) |
+
+```python
+# 코드 예시
+stock_scaler = MinMaxScaler()
+econ_scaler = MinMaxScaler()
+data_scaled[target_columns] = stock_scaler.fit_transform(data[target_columns])
+data_scaled[economic_features] = econ_scaler.fit_transform(data[economic_features])
+```
+
+#### 3. Multi-horizon Target (다중 예측 타겟)
+
+| 파생변수 | 설명 | 선택 근거 |
+|---------|------|----------|
+| **1~7일 후 주가 벡터** | 20종목 × 7일 = 140차원 타겟 | 단일 시점이 아닌 1주일 추세 예측으로 투자 판단에 유용 |
+
+```python
+# 코드 예시
+for day in range(1, 8):  # Day1 ~ Day7
+    y_vals.append(data_scaled[target_columns].iloc[i + day].to_numpy())
+y_val = np.concatenate(y_vals)  # (140,) 형태
+```
+
+#### 4. Dual Input Stream 분리
+
+| 파생변수 | 설명 | 선택 근거 |
+|---------|------|----------|
+| **Stock Stream** | 주식 데이터만 분리하여 별도 인코딩 | 주가 패턴과 경제 지표 패턴을 독립적으로 학습 후 결합 |
+| **Economic Stream** | 경제 지표만 분리하여 별도 인코딩 | 서로 다른 특성의 데이터를 각각 최적화하여 학습 |
+
+#### 파생변수 선택 근거 요약
+
+| 선택 항목 | 값 | 근거 |
+|----------|---|------|
+| **Lookback 90일** | 약 3개월 | 분기 실적 발표 주기, 계절적 패턴 반영 |
+| **Forecast 7일** | 1주일 | 단기 투자 전략에 적합, 장기 예측의 불확실성 회피 |
+| **MinMaxScaler** | 0~1 정규화 | 신경망 학습 안정성, 종목/지표 간 스케일 통일 |
+| **Dual Input** | 주식 + 경제 분리 | 이질적 데이터의 독립적 특징 추출 후 결합 |
+
 ---
 
 ## 모델 아키텍처

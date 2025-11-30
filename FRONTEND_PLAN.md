@@ -114,9 +114,10 @@ GET /api/stocks?filter=STRONG_BUY
 
 ```
 GET /api/stocks/{stock_name}
+GET /api/stocks/{stock_name}?model=TF  # 모델 선택 (TF, LSTM, LR)
 ```
 
-**반환 데이터** (from `final_stock_analysis.csv` + `predicted_stock.csv`):
+**반환 데이터** (from `final_stock_analysis_*.csv` + `predicted_stock_*.csv`):
 - 기본 정보: 현재가, 예측가, 추천, 분석 코멘트
 - 평가 지표: MAE, RMSE, MAPE, Accuracy
 - Day1~Day7 예측가 배열
@@ -129,9 +130,10 @@ GET /api/stocks/{stock_name}
 
 ```
 GET /api/stocks/{stock_name}/chart?days=90
+GET /api/stocks/{stock_name}/chart?model=TF&days=90  # 모델 선택
 ```
 
-**반환 데이터** (from `predicted_stock.csv`):
+**반환 데이터** (from `predicted_stock_*.csv`):
 - 날짜 배열
 - Actual 가격 배열 (과거 90일)
 - Day1~Day7 예측값 배열 (미래 7일)
@@ -171,9 +173,10 @@ GET /api/market
 
 ```
 GET /api/compare?stocks=Toyota,Sony Group,Nintendo
+GET /api/compare?model=TF&stocks=Toyota,Sony Group,Nintendo  # 모델 선택
 ```
 
-**반환 데이터** (from `final_stock_analysis.csv` + `predicted_stock.csv`):
+**반환 데이터** (from `final_stock_analysis_*.csv` + `predicted_stock_*.csv`):
 - 선택 종목들의 정확도 비교
 - 상승률 비교
 - 과거 90일 가격 추이 (정규화)
@@ -184,12 +187,88 @@ GET /api/compare?stocks=Toyota,Sony Group,Nintendo
 
 ```
 GET /api/history/{stock_name}?date=2025-11-01
+GET /api/history/{stock_name}?model=TF&date=2025-11-01  # 모델 선택
 GET /api/backtest/{stock_name}?from=2025-01-01&to=2025-11-28
+GET /api/backtest/{stock_name}?model=TF&from=2025-01-01&to=2025-11-28  # 모델 선택
 ```
 
-**반환 데이터** (from `predicted_stock.csv`):
+**반환 데이터** (from `predicted_stock_*.csv`):
 - 특정 날짜의 예측 vs 실제 비교
 - 기간별 예측 정확도 추이
+
+---
+
+### 9. 모델 간 종목별 비교 API (신규)
+
+```
+GET /api/stocks/{stock_name}/compare-models
+```
+
+**반환 데이터** (from `final_stock_analysis_*.csv` 3개 파일):
+- 동일 종목에 대한 TF, LSTM, LR 모델 예측 비교
+- 각 모델별: 예측가, 상승률, 정확도, 추천
+- 모델 간 예측 차이 분석
+
+```json
+{
+  "stock": "Toyota",
+  "last_actual_price": 3133.0,
+  "models": [
+    {
+      "model": "Transformer",
+      "predicted_price": 2945.82,
+      "rise_probability": -5.97,
+      "accuracy": 95.41,
+      "recommendation": "SELL",
+      "status": "reliable"
+    },
+    {
+      "model": "LSTM",
+      "predicted_price": 3050.12,
+      "rise_probability": -2.65,
+      "accuracy": 96.12,
+      "recommendation": "SELL",
+      "status": "reliable"
+    },
+    {
+      "model": "Linear Regression",
+      "predicted_price": 3130.50,
+      "rise_probability": -0.08,
+      "accuracy": 99.95,
+      "recommendation": "SELL",
+      "status": "overfitting"
+    }
+  ]
+}
+```
+
+---
+
+### 10. 데이터 최신화 정보 API (신규)
+
+```
+GET /api/data/status
+```
+
+**반환 데이터** (from CSV 파일 메타데이터):
+- 각 CSV 파일의 마지막 데이터 날짜
+- 파일 수정 시간
+- 데이터 갱신 필요 여부
+
+```json
+{
+  "last_data_date": "2025-11-28",
+  "last_updated": "2025-11-29T10:30:00",
+  "files": {
+    "total_csv": "2025-11-28",
+    "predicted_stock_TF": "2025-11-28",
+    "predicted_stock_LSTM": "2025-11-28",
+    "predicted_stock_LR": "2025-11-28"
+  },
+  "is_stale": false,
+  "message": "데이터가 최신 상태입니다."
+}
+```
 
 ---
 
@@ -197,9 +276,9 @@ GET /api/backtest/{stock_name}?from=2025-01-01&to=2025-11-28
 
 | 페이지 | 사용 API | 주요 기능 |
 |--------|----------|-----------|
-| **대시보드** | `/dashboard`, `/market` | 요약 카드, 지수 현황, 추천 분포 |
+| **대시보드** | `/dashboard`, `/market`, `/data/status` | 요약 카드, 지수 현황, 추천 분포, 데이터 최신화 날짜 |
 | **종목 리스트** | `/stocks` | 테이블, 정렬, 필터 |
-| **종목 상세** | `/stocks/{name}`, `/stocks/{name}/chart` | 차트(90일+7일), 추천, 지표 |
+| **종목 상세** | `/stocks/{name}`, `/stocks/{name}/chart`, `/stocks/{name}/compare-models` | 차트(90일+7일), 추천, 지표, 모델 간 비교 |
 | **경제 지표** | `/indicators` | 지표별 차트, 최신값 |
 | **종목 비교** | `/compare` | 멀티 종목 차트 비교 |
 
@@ -211,9 +290,10 @@ GET /api/backtest/{stock_name}?from=2025-01-01&to=2025-11-28
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  📊 J-StockLab 대시보드                                      │
+│  📊 J-StockLab 대시보드                        [🌙/☀️]       │
 ├─────────────────────────────────────────────────────────────┤
 │  모델 선택: [Transformer ▼] [LSTM] [LR*]    *LR: 과적합 주의 │
+│  📅 데이터 기준: 2025-11-28                                  │
 ├─────────────────────────────────────────────────────────────┤
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐    │
 │  │STRONG BUY│  │   BUY    │  │   SELL   │  │ 평균정확도│    │
@@ -265,6 +345,14 @@ GET /api/backtest/{stock_name}?from=2025-01-01&to=2025-11-28
 ├─────────────────────────────────────────────────────────────┤
 │  분석: Toyota is expected to rise by about 6.95%.          │
 │        Consider buying or holding.                          │
+├─────────────────────────────────────────────────────────────┤
+│  📊 모델 간 비교                                             │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │ 모델          예측가      상승률    정확도    추천     │  │
+│  │ Transformer   ¥2,945     -5.97%    95.4%    SELL     │  │
+│  │ LSTM          ¥3,050     -2.65%    96.1%    SELL     │  │
+│  │ LR (과적합)   ¥3,130     -0.08%    99.9%*   SELL     │  │
+│  └───────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -274,36 +362,38 @@ GET /api/backtest/{stock_name}?from=2025-01-01&to=2025-11-28
 
 ### Phase 1 (MVP) - 핵심 기능
 
-1. `GET /api/models/compare` - 모델 비교 (신규)
+1. `GET /api/models/compare` - 모델 비교
 2. `GET /api/dashboard?model=TF` - 대시보드 요약 (모델 선택 지원)
 3. `GET /api/stocks?model=TF` - 종목 리스트 (정렬/필터, 모델 선택)
-4. `GET /api/stocks/{name}` - 종목 상세
-5. `GET /api/stocks/{name}/chart` - 차트 데이터
+4. `GET /api/stocks/{name}?model=TF` - 종목 상세
+5. `GET /api/stocks/{name}/chart?model=TF` - 차트 데이터
+6. `GET /api/stocks/{name}/compare-models` - 모델 간 종목별 비교 (신규)
+7. `GET /api/data/status` - 데이터 최신화 정보 (신규)
 
 **프론트엔드**:
-- 대시보드 페이지 (모델 선택 드롭다운, 성능 비교 차트)
+- 대시보드 페이지 (모델 선택 드롭다운, 성능 비교 차트, 데이터 기준일 표시)
 - 종목 리스트 페이지
-- 종목 상세 페이지 (차트 포함)
+- 종목 상세 페이지 (차트 포함, 모델 간 비교 테이블)
+- 다크모드 토글
 
 ### Phase 2 - 시장 & 지표
 
-6. `GET /api/market` - 시장 현황
-7. `GET /api/indicators` - 경제 지표
-8. `GET /api/indicators/latest` - 최신 지표값
+8. `GET /api/market` - 시장 현황
+9. `GET /api/indicators` - 경제 지표
+10. `GET /api/indicators/latest` - 최신 지표값
 
 **프론트엔드**:
 - 경제 지표 페이지
 
 ### Phase 3 - 고급 기능
 
-9. `GET /api/compare` - 종목 비교 (동일 모델 내)
-10. `GET /api/history` - 히스토리 조회
-11. `GET /api/backtest` - 백테스팅
+11. `GET /api/compare?model=TF&stocks=...` - 종목 비교 (동일 모델 내)
+12. `GET /api/history/{stock_name}?model=TF` - 히스토리 조회
+13. `GET /api/backtest/{stock_name}?model=TF` - 백테스팅
 
 **프론트엔드**:
 - 종목 비교 페이지
 - 백테스팅 페이지
-- 모델별 성능 분석 페이지
 
 ---
 
@@ -316,8 +406,9 @@ GET /api/backtest/{stock_name}?from=2025-01-01&to=2025-11-28
 
 ### Frontend
 - **Next.js**: React 프레임워크
-- **Tailwind CSS**: 스타일링
+- **Tailwind CSS**: 스타일링 (다크모드 지원)
 - **Recharts / Chart.js**: 차트 라이브러리
+- **next-themes**: 다크모드 토글
 - **Vercel**: 배포
 
 ### 데이터 흐름
@@ -360,12 +451,21 @@ J-StockLab/
 │   ├── components/
 │   │   ├── StockCard.tsx
 │   │   ├── PriceChart.tsx
-│   │   └── RecommendBadge.tsx
+│   │   ├── RecommendBadge.tsx
+│   │   ├── ModelCompareTable.tsx   # 모델 간 비교 테이블
+│   │   ├── DataStatusBadge.tsx     # 데이터 최신화 날짜 표시
+│   │   └── ThemeToggle.tsx         # 다크모드 토글
 │   └── package.json
 │
-├── eda/                      # 기존 (수정 안함)
-├── predicted_stock.csv       # 기존 (읽기만)
-├── final_stock_analysis.csv  # 기존 (읽기만)
+├── eda/                          # 기존 (수정 안함)
+│   └── total.csv                 # 경제지표 + 주가 원본 (~4,000행, 48열)
+│
+├── predicted_stock_TF.csv        # Transformer 예측 결과
+├── predicted_stock_LSTM.csv      # LSTM 예측 결과
+├── predicted_stock_LR.csv        # LR 예측 결과 (과적합)
+├── final_stock_analysis_TF.csv   # Transformer 분석 결과
+├── final_stock_analysis_LSTM.csv # LSTM 분석 결과
+├── final_stock_analysis_LR.csv   # LR 분석 결과 (과적합)
 └── ...
 ```
 
