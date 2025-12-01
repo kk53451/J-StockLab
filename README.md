@@ -294,6 +294,10 @@ y_val = np.concatenate(y_vals)  # (140,) 형태
 
 - **Linear Regression**: MAE가 ~1e-12 수준으로 비현실적. 고차원 입력(4,230차원)에 대한 심각한 과적합. 시계열 예측에 부적합.
 
+**실험을 통한 검증** (experiments/ 폴더 참고):
+- **Bias-Variance Tradeoff 분석**: LSTM 64 units가 최적 균형점임을 확인, Linear Regression 99.9% 정확도가 과적합임을 증명
+- **Hyperparameter Tuning**: Grid Search (8개) + Random Search (6개) 실험으로 현재 설정이 거의 최적임을 확인
+
 ### 하이퍼파라미터
 
 | 파라미터 | Transformer | LSTM | Linear Regression |
@@ -360,6 +364,24 @@ J-StockLab/
 │   │       └── api.ts            # API 호출 함수
 │   ├── package.json
 │   └── tailwind.config.ts
+│
+├── experiments/                  # 실험 (Bias-Variance, Hyperparameter Tuning)
+│   ├── README.md                 # 실험 개요
+│   ├── bias_variance_analysis/   # Bias-Variance Tradeoff 분석
+│   │   ├── README.md
+│   │   ├── bias_variance_analysis.py
+│   │   ├── bias_variance_analysis.ipynb
+│   │   ├── learning_curve_lstm.png
+│   │   ├── bias_variance_decomposition.png
+│   │   ├── learning_curve_lr.png
+│   │   └── model_comparison_bias_variance.png
+│   └── hyperparameter_tuning/    # Hyperparameter Tuning 실험
+│       ├── README.md
+│       ├── hyperparameter_tuning.py
+│       ├── hyperparameter_tuning.ipynb
+│       ├── hyperparameter_analysis.png
+│       ├── top5_configurations.png
+│       └── hyperparameter_tuning_results.csv
 │
 ├── models/                       # 학습된 모델 저장 (선택)
 │
@@ -504,6 +526,19 @@ J-StockLab/
 2. **모델 비교 기능** ✅
    - `/api/models/analysis` - 모델별 상세 분석 API
    - 모델 비교 페이지 (`/models`) - 성능 요약, 정확도/MAPE 비교 차트, 추천 분포, 모델 특성
+
+### Phase 4-5: 실험 및 검증 ✅
+
+1. **Bias-Variance Tradeoff 분석** ✅
+   - Learning Curve 분석: 훈련 데이터 크기에 따른 성능 변화
+   - Model Complexity 분석: LSTM 유닛 수에 따른 Bias-Variance 변화
+   - Linear Regression 과적합 증명
+   - 3개 모델 종합 비교
+
+2. **Hyperparameter Tuning 실험** ✅
+   - Grid Search (8개 조합): 체계적 탐색
+   - Random Search (6개 조합): 효율적 탐색
+   - 현재 설정이 거의 최적임을 확인
 
 ### Phase 5: 배포 (진행 예정)
 

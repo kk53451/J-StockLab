@@ -37,7 +37,8 @@ Phase 4: 평가 및 웹 서비스 (5주차)
   ├─ Step 4-3: Next.js 프론트엔드 MVP 구현 ✅
   ├─ Step 4-4: 시장 현황 & 경제 지표 기능 ✅
   ├─ Step 4-5: 종목 비교 & 모델 비교 기능 ✅
-  └─ Step 4-6: 통합 테스트 및 배포 (진행 예정)
+  ├─ Step 4-6: 실험 및 검증 (Bias-Variance, Hyperparameter Tuning) ✅
+  └─ Step 4-7: 통합 테스트 및 배포 (진행 예정)
 ```
 
 ---
@@ -85,6 +86,17 @@ J-StockLab/
 ├── 주식예측하기_TF.ipynb            # Transformer Colab 노트북
 ├── 주가예측하기_LSTM.ipynb          # LSTM Colab 노트북
 ├── 주가예측하기_LR.ipynb            # Linear Regression Colab 노트북
+│
+├── experiments/                     # 실험 (Bias-Variance, Hyperparameter Tuning)
+│   ├── README.md                    # 실험 개요
+│   ├── bias_variance_analysis/      # Bias-Variance Tradeoff 분석
+│   │   ├── README.md
+│   │   ├── bias_variance_analysis.py
+│   │   └── *.png                    # 결과 이미지
+│   └── hyperparameter_tuning/       # Hyperparameter Tuning 실험
+│       ├── README.md
+│       ├── hyperparameter_tuning.py
+│       └── *.csv, *.png             # 결과 파일
 │
 ├── requirements.txt
 ├── README.md
@@ -920,7 +932,29 @@ open web/index.html
   - 추천 분포 (STRONG BUY, BUY, SELL 파이차트)
   - 모델 특성 (장점, 단점, 설명, 실제 성능 기반 분석)
 
-### Phase 4-6 (통합 테스트 및 배포) - 진행 예정
+### Phase 4-6 (실험 및 검증) ✅
+
+**Bias-Variance Tradeoff 분석** ✅:
+- [x] `experiments/bias_variance_analysis/bias_variance_analysis.py` 작성
+- [x] Learning Curve 분석: 훈련 데이터 크기에 따른 성능 변화
+- [x] Model Complexity 분석: LSTM 유닛 수(16→256)에 따른 Bias-Variance 변화
+- [x] Linear Regression 과적합 증명 (99.9% 정확도가 신뢰 불가함을 시각적 증명)
+- [x] 3개 모델 종합 비교 (LSTM, Transformer, Linear Regression)
+- [x] 결과 이미지 생성: learning_curve_lstm.png, bias_variance_decomposition.png, learning_curve_lr.png, model_comparison_bias_variance.png
+
+**Hyperparameter Tuning 실험** ✅:
+- [x] `experiments/hyperparameter_tuning/hyperparameter_tuning.py` 작성
+- [x] Grid Search (8개 조합): 체계적 하이퍼파라미터 탐색
+- [x] Random Search (6개 조합): 넓은 탐색 공간에서 효율적 탐색
+- [x] 현재 설정이 거의 최적임을 확인 (LSTM 64 units, Dropout 0.2, Batch 32)
+- [x] 결과 파일 생성: hyperparameter_analysis.png, top5_configurations.png, hyperparameter_tuning_results.csv
+
+**핵심 결론**:
+- LSTM 64 units가 Bias-Variance 균형이 가장 좋음
+- Linear Regression 99.9% 정확도는 과적합 (Feature 4,230개 > Sample 3,200개)
+- 현재 하이퍼파라미터 설정이 적절함 (learning_rate=0.001로 개선 가능하나 현재도 충분)
+
+### Phase 4-7 (통합 테스트 및 배포) - 진행 예정
 
 - [ ] Vercel 프론트엔드 배포
 - [ ] 백엔드 배포 (Railway/Render 등)

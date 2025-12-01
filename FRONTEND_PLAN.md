@@ -399,7 +399,20 @@ GET /api/data/status
 - 종목 비교 페이지 (`/compare`) - 최대 5개 종목 동시 비교, 차트 및 성능 지표
 - 모델 비교 페이지 (`/models`) - 성능 요약, 정확도/MAPE 차트, 추천 분포 파이차트, 모델 특성
 
-### Phase 4 - 배포 (진행 예정)
+### Phase 4 - 실험 및 검증 ✅ 완료
+
+**Bias-Variance Tradeoff 분석** ✅:
+- Learning Curve 분석으로 데이터 크기별 성능 변화 확인
+- Model Complexity 분석으로 LSTM 64 units가 최적임을 확인
+- Linear Regression 99.9% 정확도가 과적합임을 시각적 증명
+
+**Hyperparameter Tuning 실험** ✅:
+- Grid Search (8개) + Random Search (6개) 실험
+- 현재 설정이 거의 최적임을 확인
+
+자세한 내용: [experiments/README.md](experiments/README.md)
+
+### Phase 5 - 배포 (진행 예정)
 
 12. Vercel 프론트엔드 배포
 13. 백엔드 배포 (Railway/Render 등)
@@ -547,3 +560,4 @@ J-StockLab/
 - [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) - 전체 구현 가이드
 - [INDICATORS.md](INDICATORS.md) - 경제 지표 설명
 - [NIKKEI225_SECTORS.md](NIKKEI225_SECTORS.md) - 종목 섹터 정보
+- [experiments/README.md](experiments/README.md) - 실험 (Bias-Variance, Hyperparameter Tuning)
