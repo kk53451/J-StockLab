@@ -10,8 +10,8 @@
 
 | 모델 | 예측 파일 | 분석 파일 | 평균 정확도 |
 |------|----------|----------|------------|
-| **Transformer** | `predicted_stock_TF.csv` | `final_stock_analysis_TF.csv` | ~91% |
-| **LSTM** | `predicted_stock_LSTM.csv` | `final_stock_analysis_LSTM.csv` | ~94% |
+| **LSTM** | `predicted_stock_LSTM.csv` | `final_stock_analysis_LSTM.csv` | **94.12%** ✅ 최적 |
+| **Transformer** | `predicted_stock_TF.csv` | `final_stock_analysis_TF.csv` | 91.73% (메인 모델) |
 | **Linear Regression** | `predicted_stock_LR.csv` | `final_stock_analysis_LR.csv` | ~99%* (과적합) |
 
 ### 파일 상세
@@ -280,7 +280,8 @@ GET /api/data/status
 | **종목 리스트** | `/stocks` | 테이블, 정렬, 필터 |
 | **종목 상세** | `/stocks/{name}`, `/stocks/{name}/chart`, `/stocks/{name}/compare-models` | 차트(90일+7일), 추천, 지표, 모델 간 비교 |
 | **경제 지표** | `/indicators` | 지표별 차트, 최신값 |
-| **종목 비교** | `/compare` | 멀티 종목 차트 비교 |
+| **종목 비교** | `/compare` | 멀티 종목 차트 비교 (최대 5개) |
+| **모델 비교** | `/models/analysis` | 성능 요약, 정확도/MAPE 차트, 추천 분포, 모델 특성 |
 
 ---
 
@@ -389,15 +390,23 @@ GET /api/data/status
   - 빈도별 자동 기간 조절: 일간 3개월, 월간 1년, 분기 2년
   - X축 날짜 포맷: 일간/주간 MM-DD, 월간/분기 YYYY-MM
 
-### Phase 3 - 고급 기능 (진행 예정)
+### Phase 3 - 고급 기능 ✅ 완료
 
-10. `GET /api/compare?model=TF&stocks=...` - 종목 비교 (동일 모델 내)
-11. `GET /api/history/{stock_name}?model=TF` - 히스토리 조회
-12. `GET /api/backtest/{stock_name}?model=TF` - 백테스팅
+10. `GET /api/compare?model=TF&stocks=...` - 종목 비교 (동일 모델 내) ✅
+11. `GET /api/models/analysis` - 모델 상세 분석 API ✅
 
-**프론트엔드**:
-- 종목 비교 페이지
-- 백테스팅 페이지
+**프론트엔드** ✅:
+- 종목 비교 페이지 (`/compare`) - 최대 5개 종목 동시 비교, 차트 및 성능 지표
+- 모델 비교 페이지 (`/models`) - 성능 요약, 정확도/MAPE 차트, 추천 분포 파이차트, 모델 특성
+
+### Phase 4 - 배포 (진행 예정)
+
+12. Vercel 프론트엔드 배포
+13. 백엔드 배포 (Railway/Render 등)
+
+**선택적 기능**:
+- `GET /api/history/{stock_name}?model=TF` - 히스토리 조회
+- `GET /api/backtest/{stock_name}?model=TF` - 백테스팅
 
 ---
 
@@ -450,8 +459,12 @@ J-StockLab/
 │   │   │   ├── page.tsx     # 종목 리스트
 │   │   │   └── [name]/
 │   │   │       └── page.tsx # 종목 상세
-│   │   └── indicators/
-│   │       └── page.tsx     # 경제 지표
+│   │   ├── indicators/
+│   │   │   └── page.tsx     # 경제 지표
+│   │   ├── compare/
+│   │   │   └── page.tsx     # 종목 비교 ✅
+│   │   └── models/
+│   │       └── page.tsx     # 모델 비교 ✅
 │   ├── components/
 │   │   ├── StockCard.tsx
 │   │   ├── PriceChart.tsx
@@ -510,13 +523,18 @@ J-StockLab/
 
 ## 📊 모델 성능 비교 요약
 
-| 모델 | 평균 정확도 | 평균 MAPE | 상태 | 프론트엔드 표시 |
-|------|------------|-----------|------|----------------|
-| **Transformer** | ~91% | ~8.8% | ✅ 신뢰 가능 | 기본 선택 |
-| **LSTM** | ~94% | ~6.2% | ✅ 신뢰 가능 | 선택 가능 |
-| **Linear Regression** | ~99.9% | ~0.01% | ⚠️ 과적합 | 경고 표시 |
+| 모델 | 평균 정확도 | 평균 MAPE | 정확도 표준편차 | 상태 | 프론트엔드 표시 |
+|------|------------|-----------|----------------|------|----------------|
+| **LSTM** | **94.12%** | **5.88%** | **2.69** | ✅ **최적 모델** | 성능 최고 표시 |
+| **Transformer** | 91.73% | 8.27% | 6.74 | ✅ 신뢰 가능 | 기본 선택 (메인 모델) |
+| **Linear Regression** | ~99.9% | ~0.01% | - | ⚠️ 과적합 | 경고 표시 |
+
+**핵심 결론**:
+- **Transformer를 메인 모델로 개발**하였으나, 실험 결과 **LSTM이 본 프로젝트 규모(20개 종목)에서 가장 적합**
+- LSTM이 Transformer 대비 정확도 +2.39%p, MAPE -2.39%p, 표준편차 -4.05 우수
 
 **프론트엔드 구현 시 고려사항**:
+- 모델 비교 페이지에서 LSTM 최적 모델임을 명시
 - 모델 선택 드롭다운에 LR은 "(과적합 주의)" 표시
 - LR 선택 시 경고 배너 표시
 - 모델 비교 차트에서 LR은 다른 색상/스타일로 구분

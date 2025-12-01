@@ -630,6 +630,173 @@ def get_latest_indicators():
     }
 
 
+# -----------------------------------------------------------------------------
+# 9. Stock Compare API (Phase 3)
+# -----------------------------------------------------------------------------
+
+@app.get("/api/compare")
+def compare_stocks(
+    model: ModelType = Query(ModelType.TF, description="Model selection"),
+    stocks: str = Query(..., description="Comma-separated stock names")
+):
+    """Compare multiple stocks within the same model"""
+    stock_list = [s.strip() for s in stocks.split(",") if s.strip()]
+
+    if len(stock_list) < 2:
+        raise HTTPException(status_code=400, detail="At least 2 stocks required for comparison")
+    if len(stock_list) > 5:
+        raise HTTPException(status_code=400, detail="Maximum 5 stocks can be compared at once")
+
+    df = load_analysis(model.value)
+    pred_df = load_predictions(model.value)
+
+    stocks_data = []
+    not_found = []
+
+    for stock_name in stock_list:
+        stock_row = df[df["Stock"] == stock_name]
+
+        if stock_row.empty:
+            not_found.append(stock_name)
+            continue
+
+        row = stock_row.iloc[0]
+
+        # Get day prices
+        day_prices = []
+        for day in range(1, 8):
+            col = f"Day{day}_Price"
+            if col in row:
+                day_prices.append({
+                    "day": day,
+                    "price": round(row[col], 2)
+                })
+
+        # Get recent chart data (30 days)
+        actual_col = f"{stock_name}_Actual"
+        chart_data = []
+        if actual_col in pred_df.columns:
+            recent = pred_df.tail(30)
+            for _, r in recent.iterrows():
+                chart_data.append({
+                    "date": r["날짜"].strftime("%Y-%m-%d"),
+                    "price": round(r[actual_col], 2)
+                })
+
+        stocks_data.append({
+            "stock": row["Stock"],
+            "last_price": round(row["Last Actual Price"], 2),
+            "predicted_price": round(row["Predicted Future Price"], 2),
+            "price_change": round(row["Predicted Future Price"] - row["Last Actual Price"], 2),
+            "price_change_pct": round(((row["Predicted Future Price"] - row["Last Actual Price"]) / row["Last Actual Price"]) * 100, 2),
+            "rise_probability": round(row["Rise Probability (%)"], 2),
+            "accuracy": round(row["Avg_Accuracy (%)"], 2),
+            "mape": round(row["Avg_MAPE (%)"], 2),
+            "recommendation": row["Recommendation"],
+            "day_prices": day_prices,
+            "chart_data": chart_data
+        })
+
+    if not stocks_data:
+        raise HTTPException(status_code=404, detail="No stocks found")
+
+    return {
+        "model": get_model_display_name(model.value),
+        "model_code": model.value,
+        "status": get_model_status(model.value),
+        "stocks": stocks_data,
+        "not_found": not_found if not_found else None
+    }
+
+
+# -----------------------------------------------------------------------------
+# 10. Backtest API (Phase 3)
+# -----------------------------------------------------------------------------
+
+@app.get("/api/backtest/{stock_name}")
+def backtest_stock(
+    stock_name: str,
+    model: ModelType = Query(ModelType.TF, description="Model selection"),
+    days: int = Query(30, description="Number of days to backtest")
+):
+    """
+    Get backtesting data for a stock.
+    Shows how accurate the model's predictions were over past N days.
+    Uses the most recent data available.
+    """
+    pred_df = load_predictions(model.value)
+
+    actual_col = f"{stock_name}_Actual"
+    day7_col = f"{stock_name}_Day7"
+
+    if actual_col not in pred_df.columns:
+        raise HTTPException(status_code=404, detail=f"Stock '{stock_name}' not found")
+
+    total_rows = len(pred_df)
+
+    # We need at least days+7 rows to backtest
+    if total_rows < days + 7:
+        days = total_rows - 7
+
+    backtest_results = []
+
+    # Start from the most recent data and go backwards
+    # For each day, compare the Day7 prediction from 7 days ago with actual
+    start_idx = total_rows - days
+    end_idx = total_rows
+
+    for i in range(start_idx, end_idx):
+        row = pred_df.iloc[i]
+        prev_row = pred_df.iloc[i - 7]  # The row where Day7 prediction was made
+
+        actual_price = row[actual_col]
+        predicted_price = prev_row[day7_col] if day7_col in pred_df.columns else None
+
+        if predicted_price is None or pd.isna(actual_price) or pd.isna(predicted_price):
+            continue
+
+        error = actual_price - predicted_price
+        error_pct = (error / actual_price) * 100
+
+        # Determine if direction prediction was correct
+        # Compare: was the price supposed to go up/down from 7 days ago?
+        price_7days_ago = prev_row[actual_col]
+        actual_direction = "up" if actual_price > price_7days_ago else "down"
+        predicted_direction = "up" if predicted_price > price_7days_ago else "down"
+        direction_correct = actual_direction == predicted_direction
+
+        backtest_results.append({
+            "date": row["날짜"].strftime("%Y-%m-%d"),
+            "actual_price": round(actual_price, 2),
+            "predicted_price": round(predicted_price, 2),
+            "error": round(error, 2),
+            "error_pct": round(abs(error_pct), 2),
+            "direction_correct": direction_correct
+        })
+
+    if not backtest_results:
+        raise HTTPException(status_code=400, detail="Not enough data for backtesting")
+
+    # Calculate summary metrics
+    total_tests = len(backtest_results)
+    direction_accuracy = sum(1 for r in backtest_results if r["direction_correct"]) / total_tests * 100
+    avg_error_pct = sum(r["error_pct"] for r in backtest_results) / total_tests
+
+    return {
+        "stock": stock_name,
+        "model": get_model_display_name(model.value),
+        "model_code": model.value,
+        "status": get_model_status(model.value),
+        "backtest_days": len(backtest_results),
+        "summary": {
+            "direction_accuracy": round(direction_accuracy, 2),
+            "avg_error_pct": round(avg_error_pct, 2),
+            "total_tests": total_tests
+        },
+        "results": backtest_results
+    }
+
+
 @app.get("/api/indicators/{indicator_code}")
 def get_single_indicator(
     indicator_code: str,
@@ -675,6 +842,170 @@ def get_single_indicator(
         "last_value": values[-1] if values else None,
         "unit": unit,
         "frequency": frequency
+    }
+
+
+# -----------------------------------------------------------------------------
+# 11. Model Analysis API (for Model Comparison Page)
+# -----------------------------------------------------------------------------
+
+@app.get("/api/models/analysis")
+def get_models_analysis():
+    """
+    Get comprehensive model analysis data for the model comparison page.
+    Returns: performance metrics, per-stock comparisons, recommendation distributions
+    """
+    all_models = ["TF", "LSTM", "LR"]
+
+    # 1. Performance Summary
+    performance_summary = []
+    for model in all_models:
+        try:
+            df = load_analysis(model)
+
+            # Calculate metrics
+            avg_accuracy = df["Avg_Accuracy (%)"].mean()
+            avg_mape = df["Avg_MAPE (%)"].mean()
+            accuracy_day7 = df["Accuracy_Day7 (%)"].mean()
+
+            # MAE and RMSE if available
+            mae_day7 = df["MAE_Day7"].mean() if "MAE_Day7" in df.columns else None
+            rmse_day7 = df["RMSE_Day7"].mean() if "RMSE_Day7" in df.columns else None
+
+            # Standard deviations for error bars
+            accuracy_std = df["Avg_Accuracy (%)"].std()
+            mape_std = df["Avg_MAPE (%)"].std()
+
+            performance_summary.append({
+                "model": get_model_display_name(model),
+                "code": model,
+                "status": get_model_status(model),
+                "avg_accuracy": round(avg_accuracy, 2),
+                "accuracy_day7": round(accuracy_day7, 2),
+                "avg_mape": round(avg_mape, 2),
+                "mae_day7": round(mae_day7, 2) if mae_day7 else None,
+                "rmse_day7": round(rmse_day7, 2) if rmse_day7 else None,
+                "accuracy_std": round(accuracy_std, 2),
+                "mape_std": round(mape_std, 2),
+                "total_stocks": len(df)
+            })
+        except Exception:
+            continue
+
+    # 2. Per-Stock Model Comparison (all stocks with all 3 models)
+    stock_comparisons = []
+    try:
+        tf_df = load_analysis("TF")
+        stocks = tf_df["Stock"].tolist()
+
+        for stock in stocks:
+            stock_data = {"stock": stock, "models": {}}
+
+            for model in all_models:
+                try:
+                    df = load_analysis(model)
+                    row = df[df["Stock"] == stock]
+                    if not row.empty:
+                        row = row.iloc[0]
+                        stock_data["models"][model] = {
+                            "accuracy": round(row["Avg_Accuracy (%)"], 2),
+                            "mape": round(row["Avg_MAPE (%)"], 2),
+                            "predicted_price": round(row["Predicted Future Price"], 2),
+                            "rise_probability": round(row["Rise Probability (%)"], 2),
+                            "recommendation": row["Recommendation"]
+                        }
+                except Exception:
+                    continue
+
+            if len(stock_data["models"]) == 3:
+                stock_comparisons.append(stock_data)
+    except Exception:
+        pass
+
+    # 3. Recommendation Distribution per Model
+    recommendation_dist = []
+    for model in all_models:
+        try:
+            df = load_analysis(model)
+            rec_counts = df["Recommendation"].value_counts().to_dict()
+            total = len(df)
+
+            recommendation_dist.append({
+                "model": get_model_display_name(model),
+                "code": model,
+                "strong_buy": rec_counts.get("STRONG BUY", 0),
+                "buy": rec_counts.get("BUY", 0),
+                "sell": rec_counts.get("SELL", 0),
+                "strong_buy_pct": round(rec_counts.get("STRONG BUY", 0) / total * 100, 1),
+                "buy_pct": round(rec_counts.get("BUY", 0) / total * 100, 1),
+                "sell_pct": round(rec_counts.get("SELL", 0) / total * 100, 1)
+            })
+        except Exception:
+            continue
+
+    # 4. Model Characteristics (based on project documentation and actual results)
+    model_info = [
+        {
+            "model": "Transformer",
+            "code": "TF",
+            "type": "Deep Learning",
+            "description": "Self-Attention 기반 병렬 처리 모델. 모든 시점을 동시에 처리하여 멀리 떨어진 시간 구간의 의존성도 효과적으로 포착합니다.",
+            "pros": [
+                "Self-Attention으로 경제지표-주가 간 상호작용 학습",
+                "병렬 처리로 학습 속도 빠름",
+                "대규모 데이터셋에서 강력한 성능"
+            ],
+            "cons": [
+                "20개 종목 규모에서는 복잡성이 과도함",
+                "종목별 성능 편차가 큼 (표준편차 6.74)",
+                "하이퍼파라미터 튜닝 난이도 높음"
+            ],
+            "status": "reliable",
+            "note": "이론적 장점에도 불구하고, 본 프로젝트 규모(20개 종목)에서는 LSTM 대비 정확도 -2.4%p, MAPE +2.4%p로 다소 낮은 성능을 보입니다."
+        },
+        {
+            "model": "LSTM",
+            "code": "LSTM",
+            "type": "Deep Learning",
+            "description": "순차적 처리 방식의 순환 신경망. Forget/Input/Output 게이트로 기억할 정보를 선택적으로 학습합니다.",
+            "pros": [
+                "본 프로젝트에서 가장 높은 정확도 (94.1%)",
+                "종목별 성능이 안정적 (표준편차 2.69)",
+                "중소형 규모 시계열에 최적화된 구조"
+            ],
+            "cons": [
+                "순차 처리로 병렬화 어려움 (학습 느림)",
+                "90일 시퀀스에서 초반 정보 손실 가능성",
+                "매우 긴 시계열에서 장기 의존성 학습 한계"
+            ],
+            "status": "reliable",
+            "note": "본 프로젝트 규모(20개 종목, 90일 시퀀스)에서 가장 적합한 모델입니다. Transformer보다 단순하지만 안정적인 성능을 보입니다."
+        },
+        {
+            "model": "Linear Regression",
+            "code": "LR",
+            "type": "Traditional ML",
+            "description": "선형 관계만 학습하는 단순 베이스라인 모델. 딥러닝 모델과의 비교 기준으로 사용됩니다.",
+            "pros": [
+                "학습 속도가 매우 빠름",
+                "모델 해석이 용이함",
+                "계산 리소스 최소화"
+            ],
+            "cons": [
+                "비선형 패턴 학습 불가",
+                "주가의 복잡한 변동성 포착 불가",
+                "훈련 데이터에 과적합 발생"
+            ],
+            "status": "overfitting",
+            "note": "Bias-Variance Trade-off 분석, 정규화 등 추가 실험 없이 단순 비교 목적으로만 사용되었습니다."
+        }
+    ]
+
+    return {
+        "performance_summary": performance_summary,
+        "stock_comparisons": stock_comparisons,
+        "recommendation_dist": recommendation_dist,
+        "model_info": model_info
     }
 
 

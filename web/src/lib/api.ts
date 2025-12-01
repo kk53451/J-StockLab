@@ -232,3 +232,110 @@ export async function getLatestIndicators(): Promise<LatestIndicatorsResponse> {
 export async function getSingleIndicator(code: string, days: number = 90): Promise<SingleIndicatorData> {
   return fetchAPI(`/api/indicators/${code}?days=${days}`);
 }
+
+// =============================================================================
+// Stock Compare API (Phase 3)
+// =============================================================================
+
+export interface CompareStock {
+  stock: string;
+  last_price: number;
+  predicted_price: number;
+  price_change: number;
+  price_change_pct: number;
+  rise_probability: number;
+  accuracy: number;
+  mape: number;
+  recommendation: string;
+  day_prices: Array<{
+    day: number;
+    price: number;
+  }>;
+  chart_data: Array<{
+    date: string;
+    price: number;
+  }>;
+}
+
+export interface CompareResponse {
+  model: string;
+  model_code: string;
+  status: string;
+  stocks: CompareStock[];
+  not_found: string[] | null;
+}
+
+export async function compareStocks(
+  stocks: string[],
+  model: ModelType = "TF"
+): Promise<CompareResponse> {
+  return fetchAPI(`/api/compare?model=${model}&stocks=${stocks.map(encodeURIComponent).join(",")}`);
+}
+
+// =============================================================================
+// Model Analysis API (Phase 3 - Model Comparison Page)
+// =============================================================================
+
+export interface PerformanceSummary {
+  model: string;
+  code: string;
+  status: string;
+  avg_accuracy: number;
+  accuracy_day7: number;
+  avg_mape: number;
+  mae_day7: number | null;
+  rmse_day7: number | null;
+  accuracy_std: number;
+  mape_std: number;
+  total_stocks: number;
+}
+
+export interface StockModelData {
+  accuracy: number;
+  mape: number;
+  predicted_price: number;
+  rise_probability: number;
+  recommendation: string;
+}
+
+export interface StockComparison {
+  stock: string;
+  models: {
+    TF?: StockModelData;
+    LSTM?: StockModelData;
+    LR?: StockModelData;
+  };
+}
+
+export interface RecommendationDist {
+  model: string;
+  code: string;
+  strong_buy: number;
+  buy: number;
+  sell: number;
+  strong_buy_pct: number;
+  buy_pct: number;
+  sell_pct: number;
+}
+
+export interface ModelInfo {
+  model: string;
+  code: string;
+  type: string;
+  description: string;
+  pros: string[];
+  cons: string[];
+  status: string;
+  note?: string;
+}
+
+export interface ModelAnalysisResponse {
+  performance_summary: PerformanceSummary[];
+  stock_comparisons: StockComparison[];
+  recommendation_dist: RecommendationDist[];
+  model_info: ModelInfo[];
+}
+
+export async function getModelAnalysis(): Promise<ModelAnalysisResponse> {
+  return fetchAPI("/api/models/analysis");
+}

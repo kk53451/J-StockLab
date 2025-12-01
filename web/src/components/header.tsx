@@ -31,6 +31,18 @@ export function Header() {
           >
             경제 지표
           </Link>
+          <Link
+            href="/compare"
+            className="text-sm font-medium hover:text-blue-600 transition-colors"
+          >
+            종목 비교
+          </Link>
+          <Link
+            href="/models"
+            className="text-sm font-medium hover:text-blue-600 transition-colors"
+          >
+            모델 비교
+          </Link>
           <ThemeToggle />
         </nav>
       </div>
