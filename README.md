@@ -324,7 +324,13 @@ J-StockLab/
 │   ├── predict_LSTM.py           # LSTM 베이스라인 모델 (Colab용)
 │   ├── predict_LR.py             # Linear Regression 베이스라인 모델 (Colab용)
 │   ├── report.py                 # 평가 메트릭 및 Buy/Sell 추천 (Colab용)
+│   ├── generate_correlation_heatmap.py  # 상관관계 히트맵 생성
+│   ├── correlation_heatmap.png   # 경제 지표-주가 상관관계 히트맵
 │   ├── total.csv                 # 통합 데이터 (약 4,000+ rows, 48 columns)
+│   ├── Predict_Screenshot/       # 모델 학습 스크린샷 (학습곡선, 예측결과 등)
+│   │   ├── LR/                   # Linear Regression
+│   │   ├── LSTM/                 # LSTM
+│   │   └── TF/                   # Transformer
 │   └── test_result/              # 테스트 결과 저장
 │       ├── fred/                 # FRED 테스트 결과
 │       ├── yfinance/             # yfinance 테스트 결과
@@ -367,6 +373,8 @@ J-StockLab/
 │
 ├── experiments/                  # 실험 (Bias-Variance, Hyperparameter Tuning)
 │   ├── README.md                 # 실험 개요
+│   ├── generate_model_comparison.py  # 모델 성능 비교 차트 생성
+│   ├── model_performance_comparison.png  # 3개 모델 성능 비교 차트
 │   ├── bias_variance_analysis/   # Bias-Variance Tradeoff 분석
 │   │   ├── README.md
 │   │   ├── bias_variance_analysis.py

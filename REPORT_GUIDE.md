@@ -201,9 +201,26 @@ for df in fred_data_frames:
 
 | 파일명 | 설명 |
 |--------|------|
+| `eda/correlation_heatmap.png` | 경제 지표-주가 상관관계 히트맵 |
 | `data/raw/indices_comparison.png` | 3개 일본 지수 비교 |
 | `data/raw/stocks_comparison.png` | 20개 종목 가격 추이 |
 | `data/raw/nikkei_test_plot.png` | 닛케이 225 테스트 |
+
+**상관관계 히트맵 분석:**
+
+![Correlation Heatmap](eda/correlation_heatmap.png)
+
+| 분석 항목 | 결과 |
+|----------|------|
+| 전체 평균 절대 상관관계 | 0.611 |
+| 최대 상관관계 | 0.986 (시장 지수와 주가) |
+| 최소 상관관계 | -0.834 |
+
+**주요 발견:**
+- 닛케이 225, TOPIX ETF, S&P 500 등 시장 지수는 모든 종목과 강한 양의 상관관계
+- 일본 10년 국채 수익률이 금융주(Mitsubishi UFJ, SMFG, Mizuho)와 특히 높은 상관관계 (r>0.9)
+- VIX 지수, 미국 장단기 금리차는 주가와 음의 상관관계
+- **Dual Input Stream 아키텍처 근거**: 경제 지표와 주가 간 유의미한 상관관계 존재
 
 #### 3.4 데이터 품질 검증
 
@@ -217,6 +234,8 @@ print(f"데이터 타입: {df.dtypes.unique()}")  # [float64]
 
 ### 관련 파일
 - [eda/stock_japan.py](eda/stock_japan.py) - 전처리 로직 포함
+- [eda/generate_correlation_heatmap.py](eda/generate_correlation_heatmap.py) - 상관관계 히트맵 생성
+- [eda/correlation_heatmap.png](eda/correlation_heatmap.png) - 상관관계 히트맵 이미지
 - [INDICATORS.md](INDICATORS.md) - 지표별 상세 설명 및 전처리 주의사항
 
 ---
@@ -827,6 +846,8 @@ else:
 ### 데이터 수집 및 전처리
 - `eda/stock_japan.py` - 데이터 수집 스크립트
 - `eda/total.csv` - 통합 데이터셋
+- `eda/generate_correlation_heatmap.py` - 상관관계 히트맵 생성
+- `eda/correlation_heatmap.png` - 경제 지표-주가 상관관계 히트맵
 - `INDICATORS.md` - 경제 지표 상세 설명
 
 ### 모델 구현
