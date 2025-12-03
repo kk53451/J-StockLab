@@ -127,9 +127,10 @@ print(f"  - US FRED: 10 indicators")
 print(f"  - yfinance: 9 indicators")
 
 print("\nScaling data...")
-train_size = int(len(data) * 0.8)
-train_data = data.iloc[:train_size]
-test_data = data.iloc[train_size:]
+# 추후 별도 평가 또는 스케일링 시 사용
+# train_size = int(len(data) * 0.8)
+# train_data = data.iloc[:train_size]
+# test_data = data.iloc[train_size:]
 
 data_scaled = data.copy()
 stock_scaler = MinMaxScaler()
@@ -137,8 +138,6 @@ econ_scaler = MinMaxScaler()
 
 data_scaled[target_columns] = stock_scaler.fit_transform(data[target_columns])
 data_scaled[economic_features] = econ_scaler.fit_transform(data[economic_features])
-
-print(f"Train/Test split: {train_size} / {len(data) - train_size} ({train_size/len(data)*100:.1f}% / {(1-train_size/len(data))*100:.1f}%)")
 
 print(f"\nCreating sequences...")
 print(f"Lookback window: {lookback} days")
@@ -248,7 +247,7 @@ for idx, col in enumerate(target_columns):
 result_data['날짜'] = pd.to_datetime(result_data['날짜'], errors='coerce')
 result_data['날짜'] = result_data['날짜'].dt.strftime('%Y-%m-%d')
 
-output_file_path = 'predicted_stock.csv'
+output_file_path = 'predicted_stock_TF.csv'
 result_data.to_csv(output_file_path, index=False)
 print(f"\n" + "=" * 80)
 print(f"✅ Predicted stock prices saved to: {output_file_path}")
@@ -286,5 +285,5 @@ for col in sample_stocks:
     plt.gcf().autofmt_xdate()
     plt.show()
 
-print("\n✅ All done! Check the downloaded 'predicted_stock.csv' file.")
+print("\n✅ All done! Check the downloaded 'predicted_stock_TF.csv' file.")
 print(f"   CSV contains: 날짜, and for each stock: Day1~Day7 predictions + Actual")

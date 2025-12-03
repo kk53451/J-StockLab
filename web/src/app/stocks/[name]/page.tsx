@@ -342,6 +342,8 @@ export default function StockDetailPage() {
         </div>
         <p className="text-xs text-gray-500 mt-2 text-center">
           파란선: 과거 실제가 | 초록선: 미래 예측가 | 점선: 현재 시점
+          <br />
+          ※ 주말/공휴일은 그래프에 표시되지 않을 수 있습니다
         </p>
       </div>
 

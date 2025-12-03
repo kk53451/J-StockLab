@@ -409,6 +409,9 @@ export default function ComparePage() {
                 </LineChart>
               </ResponsiveContainer>
             </div>
+            <p className="text-xs text-gray-500 text-center mt-2">
+              ※ 주말/공휴일은 그래프에 표시되지 않을 수 있습니다
+            </p>
           </div>
 
           {/* Day Predictions Chart */}
@@ -453,6 +456,8 @@ export default function ComparePage() {
             </div>
             <p className="text-xs text-gray-500 text-center mt-2">
               실선: 과거 실제 가격 | 점선 이후: 예측 가격
+              <br />
+              ※ 주말/공휴일은 그래프에 표시되지 않을 수 있습니다
             </p>
           </div>
         </>

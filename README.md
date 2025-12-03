@@ -415,7 +415,8 @@ J-StockLab/
 ├── IMPLEMENTATION_PLAN.md        # 구현 가이드
 ├── FRONTEND_PLAN.md              # 프론트엔드 구현 계획
 ├── INDICATORS.md                 # 경제 지표 설명
-└── NIKKEI225_SECTORS.md          # Nikkei 225 섹터 정보
+├── NIKKEI225_SECTORS.md          # Nikkei 225 섹터 정보
+└── PROBLEM_SOLVING_PROCESS.md    # 문제 해결 프로세스 8단계 수행 현황
 ```
 
 ---

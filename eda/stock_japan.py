@@ -1,3 +1,17 @@
+"""
+J-StockLab: 데이터 수집 스크립트
+
+FRED API와 yfinance를 사용하여 다음 데이터를 수집합니다:
+- 일본 경제 지표 (FRED 8개)
+- 미국 경제 지표 (FRED 10개)
+- 시장 지표 (yfinance 9개)
+- Nikkei 225 상위 20개 종목 주가
+
+출력: total.csv (날짜별 모든 지표 + 주가 통합 데이터)
+
+작성자: 최정민, 김종수, 김용균
+"""
+
 import requests
 import pandas as pd
 import yfinance as yf
@@ -148,8 +162,6 @@ for i, df in enumerate(fred_data_frames):
             fred_data_frames[i] = df.resample('D').ffill()
         elif inferred_freq in ['B']:  # 영업일 데이터
             fred_data_frames[i] = df.resample('D').ffill()
-        # else:
-        #     print(f"Unknown frequency for DataFrame {i}: {inferred_freq}")
         else:
             fred_data_frames[i] = df.resample('D').ffill()
     except Exception as e:
@@ -160,10 +172,8 @@ yfinance_data_frames = []
 for name, ticker in yfinance_indicators.items():
     df = yf.download(ticker, start=start_date, end=end_date, auto_adjust=True)
     if not df.empty:
-        # df = df[['Close']].rename(columns={'Close': name})
-        # name만 사용하여 컬럼 이름 지정
         df = df[['Close']]
-        df.columns = [name]  # rename 대신 직접 columns 할당
+        df.columns = [name]
         df.index = df.index.tz_localize(None)
         yfinance_data_frames.append(df)
     else:
@@ -177,9 +187,8 @@ for ticker, name in nikkei_top_20:
     try:
         df = yf.download(ticker, start=start_date, end=end_date, auto_adjust=True)
         if not df.empty:
-            #df = df[['Close']].rename(columns={'Close': f"{name}"})
             df = df[['Close']]
-            df.columns = [name]  # rename 대신 직접 columns 할당
+            df.columns = [name]
             df.index = df.index.tz_localize(None)
             nikkei_data_frames.append(df)
     except Exception as e:
@@ -207,21 +216,12 @@ if all_data_frames:
     # 리크루트홀딩스 상장일 이후 데이터만 사용 (2014-10-16)
     result_df = result_df[result_df.index >= '2014-10-16']
 
-    # 특정 열에서 결측치가 있는 행 제거
-    # result_df = result_df.dropna(subset=['닛케이 225'])
-
     # CSV 파일로 저장
     try:
         csv_path = f'total.csv'
         result_df.to_csv(csv_path, index_label="날짜", encoding='utf-8-sig')
         print(f"Data saved to {csv_path}")
     except PermissionError:
-        # 현재 시간을 파일명에 추가하여 새로운 파일 생성
-        # from datetime import datetime
-        # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        # csv_path = f'total_{timestamp}.csv'
-        csv_path = f'total.csv'
-        result_df.to_csv(csv_path, index_label="날짜", encoding='utf-8-sig')
-        print(f"Permission denied for original file. Data saved to {csv_path}")
+        print("Permission denied: Please close total.csv if it's open in another program.")
 else:
     print("No data collected for any indicators.")
