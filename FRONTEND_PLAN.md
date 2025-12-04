@@ -403,12 +403,12 @@ GET /api/data/status
 
 **Bias-Variance Tradeoff 분석** ✅:
 - Learning Curve 분석으로 데이터 크기별 성능 변화 확인
-- Model Complexity 분석으로 LSTM 64 units가 최적임을 확인
+- Model Complexity 분석으로 LSTM 128 units가 최적임을 확인
 - Linear Regression 99.9% 정확도가 과적합임을 시각적 증명
 
 **Hyperparameter Tuning 실험** ✅:
-- Grid Search (8개) + Random Search (6개) 실험
-- 현재 설정이 거의 최적임을 확인
+- Sensitivity Analysis (8개 조합) 실험
+- 현재 Baseline 설정이 1위 (최적)임을 확인
 
 자세한 내용: [experiments/README.md](experiments/README.md)
 

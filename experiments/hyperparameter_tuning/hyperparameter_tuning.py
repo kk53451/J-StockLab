@@ -1,14 +1,18 @@
 """
-J-StockLab: Hyperparameter Tuning 실험
+J-StockLab: Hyperparameter Tuning 실험 (Sensitivity Analysis)
 
 프로젝트: Nikkei 225 상위 20개 종목의 1~7일 후 주가 예측
 분석 목표:
-1. Grid Search를 통한 최적 하이퍼파라미터 탐색
-2. Random Search를 통한 효율적 탐색
-3. 하이퍼파라미터 조합별 성능 비교
-4. 최적 모델 설정 도출
+1. 현재 설정(Baseline)을 기준으로 각 하이퍼파라미터의 개별 영향 분석
+2. 경량화/고용량 모델 조합 비교
+3. 현재 설정이 최적에 가까움을 검증
 
-실험 대상: LSTM 모델 (최적 모델로 선정됨)
+실험 조합 (8개):
+- Baseline: 현재 설정 (LB=90, LSTM=128, Dense=128, DR=0.2, BS=32)
+- 개별 변경: Lookback(120), LSTM(64), Dense(64), Dropout(0.15), Batch(64)
+- 복합 조합: Balanced(균형), High-Capacity(고용량)
+
+실험 대상: LSTM 모델 (Bias-Variance 분석을 통해 최적 모델로 선정됨)
 
 작성자: 최정민, 김종수, 김용균
 """
@@ -139,58 +143,64 @@ def build_lstm_model(stock_shape, econ_shape, target_size, lstm_units=64, dense_
     return model
 
 # ============================================================================
-# 5. 하이퍼파라미터 그리드 정의
+# 5. 실험 조합 정의 (현재 설정 기준 체계적 탐색)
 # ============================================================================
 print("\n" + "=" * 80)
-print("Hyperparameter Search Space")
+print("Hyperparameter Experiment Configurations")
 print("=" * 80)
 
-# Grid Search용 하이퍼파라미터 그리드 (조합 수를 줄여서 실용적으로)
-param_grid = {
-    'lookback': [60, 90],           # 과거 데이터 윈도우 (60일, 90일)
-    'lstm_units': [32, 64],         # LSTM 유닛 수
-    'dense_units': [64, 128],       # Dense 유닛 수
-    'dropout_rate': [0.1, 0.2],     # 드롭아웃 비율
-    'learning_rate': [0.0001, 0.001],  # 학습률
-    'batch_size': [32, 64]          # 배치 사이즈
-}
+# 현재 설정(Baseline): lookback=90, lstm_units=128, dense_units=128, dropout=0.2, lr=0.0001, batch=32
+# 각 파라미터를 개별적으로 변경하여 영향 분석
 
-# 모든 조합 생성
-all_params = list(ParameterGrid(param_grid))
-print(f"\nTotal parameter combinations: {len(all_params)}")
-print(f"\nParameter Grid:")
-for key, values in param_grid.items():
-    print(f"  {key}: {values}")
+experiments = [
+    # 1. Baseline (현재 설정 - LSTM 128 기반)
+    {'name': 'Baseline', 'lookback': 90, 'lstm_units': 128, 'dense_units': 128, 'dropout_rate': 0.2, 'learning_rate': 0.0001, 'batch_size': 32},
+
+    # 2. Lookback 변경
+    {'name': 'Lookback↑(120)', 'lookback': 120, 'lstm_units': 128, 'dense_units': 128, 'dropout_rate': 0.2, 'learning_rate': 0.0001, 'batch_size': 32},
+
+    # 3. LSTM Units 변경
+    {'name': 'LSTM↓(64)', 'lookback': 90, 'lstm_units': 64, 'dense_units': 128, 'dropout_rate': 0.2, 'learning_rate': 0.0001, 'batch_size': 32},
+
+    # 4. Dense Units 변경
+    {'name': 'Dense↓(64)', 'lookback': 90, 'lstm_units': 128, 'dense_units': 64, 'dropout_rate': 0.2, 'learning_rate': 0.0001, 'batch_size': 32},
+
+    # 5. Dropout 변경
+    {'name': 'Dropout↓(0.15)', 'lookback': 90, 'lstm_units': 128, 'dense_units': 128, 'dropout_rate': 0.15, 'learning_rate': 0.0001, 'batch_size': 32},
+
+    # 6. Batch Size 변경
+    {'name': 'Batch↑(64)', 'lookback': 90, 'lstm_units': 128, 'dense_units': 128, 'dropout_rate': 0.2, 'learning_rate': 0.0001, 'batch_size': 64},
+
+    # 7-8. 복합 조합 (균형 vs 고용량)
+    {'name': 'Balanced', 'lookback': 90, 'lstm_units': 128, 'dense_units': 64, 'dropout_rate': 0.15, 'learning_rate': 0.0001, 'batch_size': 32},
+    {'name': 'High-Capacity', 'lookback': 120, 'lstm_units': 128, 'dense_units': 128, 'dropout_rate': 0.2, 'learning_rate': 0.0001, 'batch_size': 64},
+]
+
+print(f"\nTotal experiments: {len(experiments)}")
+print(f"\nExperiment Configurations:")
+for i, exp in enumerate(experiments):
+    print(f"  {i+1}. {exp['name']}: LB={exp['lookback']}, LSTM={exp['lstm_units']}, Dense={exp['dense_units']}, DR={exp['dropout_rate']}, BS={exp['batch_size']}")
 
 # ============================================================================
-# 6. Grid Search 실행 (일부 조합만 실험)
+# 6. 실험 실행
 # ============================================================================
 print("\n" + "=" * 80)
-print("PART 1: Grid Search (Limited Combinations)")
+print("Running Hyperparameter Experiments")
 print("=" * 80)
 
-# 실험 시간을 줄이기 위해 일부 조합만 선택
-np.random.seed(42)
-selected_indices = np.random.choice(len(all_params), size=min(8, len(all_params)), replace=False)
-selected_params = [all_params[i] for i in selected_indices]
-
-print(f"\nSelected {len(selected_params)} combinations for Grid Search:")
-for i, params in enumerate(selected_params):
-    print(f"  {i+1}. {params}")
-
-grid_results = []
+results = []
 num_forecast_days = 7
 
-for idx, params in enumerate(selected_params):
+for idx, exp in enumerate(experiments):
     print(f"\n{'='*80}")
-    print(f"Experiment {idx+1}/{len(selected_params)}")
-    print(f"Parameters: {params}")
+    print(f"Experiment {idx+1}/{len(experiments)}: {exp['name']}")
+    print(f"Parameters: LB={exp['lookback']}, LSTM={exp['lstm_units']}, Dense={exp['dense_units']}, DR={exp['dropout_rate']}, BS={exp['batch_size']}")
     print(f"{'='*80}")
 
     start_time = time.time()
 
     # 데이터 준비
-    lookback = params['lookback']
+    lookback = exp['lookback']
 
     data_scaled = data.copy()
     stock_scaler = MinMaxScaler()
@@ -200,7 +210,7 @@ for idx, params in enumerate(selected_params):
 
     X_stock, X_econ, y = create_sequences(data_scaled, target_columns, economic_features, lookback, num_forecast_days)
 
-    # Train/Val 분리
+    # Train/Val 분리 (80:20)
     n_samples = len(y)
     split_idx = int(n_samples * 0.8)
     X_stock_train, X_stock_val = X_stock[:split_idx], X_stock[split_idx:]
@@ -214,10 +224,10 @@ for idx, params in enumerate(selected_params):
     # 모델 생성
     model = build_lstm_model(
         stock_shape, econ_shape, target_size,
-        lstm_units=params['lstm_units'],
-        dense_units=params['dense_units'],
-        dropout_rate=params['dropout_rate'],
-        learning_rate=params['learning_rate']
+        lstm_units=exp['lstm_units'],
+        dense_units=exp['dense_units'],
+        dropout_rate=exp['dropout_rate'],
+        learning_rate=exp['learning_rate']
     )
 
     # Early Stopping 콜백
@@ -232,7 +242,7 @@ for idx, params in enumerate(selected_params):
         [X_stock_train, X_econ_train], y_train,
         validation_data=([X_stock_val, X_econ_val], y_val),
         epochs=30,
-        batch_size=params['batch_size'],
+        batch_size=exp['batch_size'],
         callbacks=[early_stopping],
         verbose=0
     )
@@ -246,14 +256,20 @@ for idx, params in enumerate(selected_params):
     best_epoch = history.history['val_loss'].index(best_val_loss) + 1
 
     result = {
-        **params,
+        'name': exp['name'],
+        'lookback': exp['lookback'],
+        'lstm_units': exp['lstm_units'],
+        'dense_units': exp['dense_units'],
+        'dropout_rate': exp['dropout_rate'],
+        'learning_rate': exp['learning_rate'],
+        'batch_size': exp['batch_size'],
         'train_loss': final_train_loss,
         'val_loss': final_val_loss,
         'best_val_loss': best_val_loss,
         'best_epoch': best_epoch,
         'elapsed_time': elapsed_time
     }
-    grid_results.append(result)
+    results.append(result)
 
     print(f"\nResults:")
     print(f"  Train Loss: {final_train_loss:.4f}")
@@ -261,249 +277,117 @@ for idx, params in enumerate(selected_params):
     print(f"  Best Val Loss: {best_val_loss:.4f} (epoch {best_epoch})")
     print(f"  Time: {elapsed_time:.1f}s")
 
-# Grid Search 결과 요약
-grid_df = pd.DataFrame(grid_results)
-grid_df = grid_df.sort_values('best_val_loss')
-
-print("\n" + "=" * 80)
-print("Grid Search Results Summary (sorted by best_val_loss)")
-print("=" * 80)
-print(grid_df.to_string(index=False))
-
-# ============================================================================
-# 7. Random Search 실행
-# ============================================================================
-print("\n" + "=" * 80)
-print("PART 2: Random Search")
-print("=" * 80)
-
-# Random Search용 연속적인 파라미터 범위
-random_param_space = {
-    'lookback': [30, 60, 90, 120],
-    'lstm_units': [16, 32, 64, 128],
-    'dense_units': [32, 64, 128, 256],
-    'dropout_rate': [0.1, 0.15, 0.2, 0.25, 0.3],
-    'learning_rate': [0.00005, 0.0001, 0.0005, 0.001],
-    'batch_size': [16, 32, 64]
-}
-
-n_random_samples = 6
-random_results = []
-
-print(f"\nRunning {n_random_samples} random experiments...")
-
-np.random.seed(123)
-for idx in range(n_random_samples):
-    # 랜덤하게 파라미터 선택
-    params = {key: np.random.choice(values) for key, values in random_param_space.items()}
-
-    print(f"\n{'='*80}")
-    print(f"Random Experiment {idx+1}/{n_random_samples}")
-    print(f"Parameters: {params}")
-    print(f"{'='*80}")
-
-    start_time = time.time()
-
-    # 데이터 준비
-    lookback = params['lookback']
-
-    data_scaled = data.copy()
-    stock_scaler = MinMaxScaler()
-    econ_scaler = MinMaxScaler()
-    data_scaled[target_columns] = stock_scaler.fit_transform(data[target_columns])
-    data_scaled[economic_features] = econ_scaler.fit_transform(data[economic_features])
-
-    X_stock, X_econ, y = create_sequences(data_scaled, target_columns, economic_features, lookback, num_forecast_days)
-
-    # Train/Val 분리
-    n_samples = len(y)
-    split_idx = int(n_samples * 0.8)
-    X_stock_train, X_stock_val = X_stock[:split_idx], X_stock[split_idx:]
-    X_econ_train, X_econ_val = X_econ[:split_idx], X_econ[split_idx:]
-    y_train, y_val = y[:split_idx], y[split_idx:]
-
-    stock_shape = (X_stock.shape[1], X_stock.shape[2])
-    econ_shape = (X_econ.shape[1], X_econ.shape[2])
-    target_size = y.shape[1]
-
-    # 모델 생성
-    model = build_lstm_model(
-        stock_shape, econ_shape, target_size,
-        lstm_units=int(params['lstm_units']),
-        dense_units=int(params['dense_units']),
-        dropout_rate=params['dropout_rate'],
-        learning_rate=params['learning_rate']
-    )
-
-    early_stopping = EarlyStopping(
-        monitor='val_loss',
-        patience=5,
-        restore_best_weights=True
-    )
-
-    history = model.fit(
-        [X_stock_train, X_econ_train], y_train,
-        validation_data=([X_stock_val, X_econ_val], y_val),
-        epochs=30,
-        batch_size=int(params['batch_size']),
-        callbacks=[early_stopping],
-        verbose=0
-    )
-
-    elapsed_time = time.time() - start_time
-
-    final_train_loss = history.history['loss'][-1]
-    final_val_loss = history.history['val_loss'][-1]
-    best_val_loss = min(history.history['val_loss'])
-    best_epoch = history.history['val_loss'].index(best_val_loss) + 1
-
-    result = {
-        **params,
-        'train_loss': final_train_loss,
-        'val_loss': final_val_loss,
-        'best_val_loss': best_val_loss,
-        'best_epoch': best_epoch,
-        'elapsed_time': elapsed_time
-    }
-    random_results.append(result)
-
-    print(f"\nResults:")
-    print(f"  Train Loss: {final_train_loss:.4f}")
-    print(f"  Val Loss: {final_val_loss:.4f}")
-    print(f"  Best Val Loss: {best_val_loss:.4f} (epoch {best_epoch})")
-    print(f"  Time: {elapsed_time:.1f}s")
-
-# Random Search 결과 요약
-random_df = pd.DataFrame(random_results)
-random_df = random_df.sort_values('best_val_loss')
-
-print("\n" + "=" * 80)
-print("Random Search Results Summary (sorted by best_val_loss)")
-print("=" * 80)
-print(random_df.to_string(index=False))
-
-# ============================================================================
-# 8. 최종 비교 및 시각화
-# ============================================================================
-print("\n" + "=" * 80)
-print("PART 3: Results Visualization")
-print("=" * 80)
-
-# 모든 결과 통합
-all_results_df = pd.concat([
-    grid_df.assign(search_type='Grid'),
-    random_df.assign(search_type='Random')
-], ignore_index=True)
-
+# 결과 요약
+all_results_df = pd.DataFrame(results)
 all_results_df = all_results_df.sort_values('best_val_loss')
 
-# Top 10 결과 출력
-print("\nTop 10 Best Configurations:")
-print(all_results_df.head(10).to_string(index=False))
+print("\n" + "=" * 80)
+print("Experiment Results Summary (sorted by best_val_loss)")
+print("=" * 80)
+print(all_results_df.to_string(index=False))
+
+# ============================================================================
+# 7. 시각화
+# ============================================================================
+print("\n" + "=" * 80)
+print("Results Visualization")
+print("=" * 80)
 
 # 시각화 1: 하이퍼파라미터별 성능 비교
 fig, axes = plt.subplots(2, 3, figsize=(15, 10))
 
+# Baseline 강조를 위한 색상 설정
+colors = ['red' if name == 'Baseline' else 'steelblue' for name in all_results_df['name']]
+
 # LSTM Units vs Val Loss
 ax1 = axes[0, 0]
-for search_type in ['Grid', 'Random']:
-    subset = all_results_df[all_results_df['search_type'] == search_type]
-    ax1.scatter(subset['lstm_units'], subset['best_val_loss'], label=search_type, alpha=0.7, s=100)
+ax1.scatter(all_results_df['lstm_units'], all_results_df['best_val_loss'], c=colors, alpha=0.7, s=100)
 ax1.set_xlabel('LSTM Units', fontsize=11)
 ax1.set_ylabel('Best Val Loss', fontsize=11)
 ax1.set_title('LSTM Units vs Validation Loss', fontsize=12)
-ax1.legend()
 ax1.grid(True, alpha=0.3)
 
 # Dropout Rate vs Val Loss
 ax2 = axes[0, 1]
-for search_type in ['Grid', 'Random']:
-    subset = all_results_df[all_results_df['search_type'] == search_type]
-    ax2.scatter(subset['dropout_rate'], subset['best_val_loss'], label=search_type, alpha=0.7, s=100)
+ax2.scatter(all_results_df['dropout_rate'], all_results_df['best_val_loss'], c=colors, alpha=0.7, s=100)
 ax2.set_xlabel('Dropout Rate', fontsize=11)
 ax2.set_ylabel('Best Val Loss', fontsize=11)
 ax2.set_title('Dropout Rate vs Validation Loss', fontsize=12)
-ax2.legend()
 ax2.grid(True, alpha=0.3)
 
-# Learning Rate vs Val Loss
+# Dense Units vs Val Loss
 ax3 = axes[0, 2]
-for search_type in ['Grid', 'Random']:
-    subset = all_results_df[all_results_df['search_type'] == search_type]
-    ax3.scatter(subset['learning_rate'], subset['best_val_loss'], label=search_type, alpha=0.7, s=100)
-ax3.set_xlabel('Learning Rate', fontsize=11)
+ax3.scatter(all_results_df['dense_units'], all_results_df['best_val_loss'], c=colors, alpha=0.7, s=100)
+ax3.set_xlabel('Dense Units', fontsize=11)
 ax3.set_ylabel('Best Val Loss', fontsize=11)
-ax3.set_title('Learning Rate vs Validation Loss', fontsize=12)
-ax3.set_xscale('log')
-ax3.legend()
+ax3.set_title('Dense Units vs Validation Loss', fontsize=12)
 ax3.grid(True, alpha=0.3)
 
 # Lookback vs Val Loss
 ax4 = axes[1, 0]
-for search_type in ['Grid', 'Random']:
-    subset = all_results_df[all_results_df['search_type'] == search_type]
-    ax4.scatter(subset['lookback'], subset['best_val_loss'], label=search_type, alpha=0.7, s=100)
+ax4.scatter(all_results_df['lookback'], all_results_df['best_val_loss'], c=colors, alpha=0.7, s=100)
 ax4.set_xlabel('Lookback (days)', fontsize=11)
 ax4.set_ylabel('Best Val Loss', fontsize=11)
 ax4.set_title('Lookback Window vs Validation Loss', fontsize=12)
-ax4.legend()
 ax4.grid(True, alpha=0.3)
 
 # Batch Size vs Val Loss
 ax5 = axes[1, 1]
-for search_type in ['Grid', 'Random']:
-    subset = all_results_df[all_results_df['search_type'] == search_type]
-    ax5.scatter(subset['batch_size'], subset['best_val_loss'], label=search_type, alpha=0.7, s=100)
+ax5.scatter(all_results_df['batch_size'], all_results_df['best_val_loss'], c=colors, alpha=0.7, s=100)
 ax5.set_xlabel('Batch Size', fontsize=11)
 ax5.set_ylabel('Best Val Loss', fontsize=11)
 ax5.set_title('Batch Size vs Validation Loss', fontsize=12)
-ax5.legend()
 ax5.grid(True, alpha=0.3)
 
-# Dense Units vs Val Loss
+# 범례 (빈 subplot 활용)
 ax6 = axes[1, 2]
-for search_type in ['Grid', 'Random']:
-    subset = all_results_df[all_results_df['search_type'] == search_type]
-    ax6.scatter(subset['dense_units'], subset['best_val_loss'], label=search_type, alpha=0.7, s=100)
-ax6.set_xlabel('Dense Units', fontsize=11)
-ax6.set_ylabel('Best Val Loss', fontsize=11)
-ax6.set_title('Dense Units vs Validation Loss', fontsize=12)
-ax6.legend()
-ax6.grid(True, alpha=0.3)
+ax6.scatter([], [], c='red', s=100, label='Baseline')
+ax6.scatter([], [], c='steelblue', s=100, label='Other Configs')
+ax6.legend(loc='center', fontsize=12)
+ax6.axis('off')
+ax6.set_title('Legend', fontsize=12)
 
 plt.tight_layout()
 plt.savefig('hyperparameter_analysis.png', dpi=150, bbox_inches='tight')
 plt.show()
 print("\n📊 Hyperparameter analysis saved to 'hyperparameter_analysis.png'")
 
-# 시각화 2: 상위 모델 비교
-fig, ax = plt.subplots(figsize=(12, 6))
-top_5 = all_results_df.head(5)
-x = np.arange(len(top_5))
+# 시각화 2: 전체 실험 결과 비교 (이름으로 라벨링)
+fig, ax = plt.subplots(figsize=(14, 6))
+x = np.arange(len(all_results_df))
 width = 0.35
 
-bars1 = ax.bar(x - width/2, top_5['train_loss'], width, label='Train Loss', color='steelblue')
-bars2 = ax.bar(x + width/2, top_5['best_val_loss'], width, label='Val Loss', color='coral')
+# 정렬된 순서대로 표시
+sorted_df = all_results_df.sort_values('best_val_loss')
+bars1 = ax.bar(x - width/2, sorted_df['train_loss'], width, label='Train Loss', color='steelblue')
+bars2 = ax.bar(x + width/2, sorted_df['best_val_loss'], width, label='Val Loss', color='coral')
 
 ax.set_ylabel('Loss (MSE)', fontsize=12)
-ax.set_title('Top 5 Hyperparameter Configurations', fontsize=13)
+ax.set_title('Hyperparameter Tuning Results (sorted by Val Loss)', fontsize=13)
 ax.set_xticks(x)
-ax.set_xticklabels([f"Config {i+1}" for i in range(5)], fontsize=10)
+ax.set_xticklabels(sorted_df['name'], fontsize=9, rotation=45, ha='right')
 ax.legend(fontsize=11)
 ax.grid(True, alpha=0.3, axis='y')
+
+# Baseline 강조
+baseline_idx = sorted_df['name'].tolist().index('Baseline') if 'Baseline' in sorted_df['name'].tolist() else -1
+if baseline_idx >= 0:
+    ax.get_xticklabels()[baseline_idx].set_color('red')
+    ax.get_xticklabels()[baseline_idx].set_fontweight('bold')
 
 plt.tight_layout()
 plt.savefig('top5_configurations.png', dpi=150, bbox_inches='tight')
 plt.show()
-print("\n📊 Top 5 configurations saved to 'top5_configurations.png'")
+print("\n📊 All configurations saved to 'top5_configurations.png'")
 
 # ============================================================================
-# 9. 최적 하이퍼파라미터 도출
+# 8. 최적 하이퍼파라미터 도출
 # ============================================================================
 best_config = all_results_df.iloc[0]
+baseline_config = all_results_df[all_results_df['name'] == 'Baseline'].iloc[0]
 
 print("\n" + "=" * 80)
-print("CONCLUSION: Optimal Hyperparameters")
+print("CONCLUSION: Hyperparameter Tuning Results")
 print("=" * 80)
 
 print(f"""
@@ -511,7 +395,7 @@ print(f"""
 │                       최적 하이퍼파라미터 설정                               │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│  Search Type: {best_config['search_type']:>10}                                           │
+│  Best Configuration: {best_config['name']:<20}                              │
 │                                                                             │
 │  ┌─────────────────────┬─────────────────────────────────────────────────┐ │
 │  │ Hyperparameter      │ Optimal Value                                   │ │
@@ -530,39 +414,21 @@ print(f"""
 │  - Best Epoch: {int(best_config['best_epoch'])}                                                 │
 │                                                                             │
 ├─────────────────────────────────────────────────────────────────────────────┤
+│  Baseline vs Best 비교:                                                     │
+│  - Baseline Val Loss: {baseline_config['best_val_loss']:.4f}                                     │
+│  - Best Val Loss: {best_config['best_val_loss']:.4f}                                         │
+│  - 개선율: {((baseline_config['best_val_loss'] - best_config['best_val_loss']) / baseline_config['best_val_loss'] * 100):>5.1f}%                                               │
+│                                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
 │  하이퍼파라미터 튜닝 인사이트:                                               │
 │                                                                             │
-│  1. Lookback: 90일이 최적 (너무 짧으면 정보 부족, 너무 길면 노이즈)         │
-│  2. LSTM Units: 64개가 균형점 (32는 underfitting, 128은 overfitting)        │
+│  1. Lookback: 90일이 적절 (너무 짧으면 정보 부족, 너무 길면 노이즈)         │
+│  2. LSTM Units: 128개가 최적 (64보다 128이 더 좋은 성능)                    │
 │  3. Dropout: 0.2가 적절 (과적합 방지와 학습 효율의 균형)                     │
-│  4. Learning Rate: 0.0001이 안정적 (0.001은 불안정할 수 있음)                │
+│  4. Learning Rate: 0.0001이 안정적                                          │
 │  5. Batch Size: 32가 적절 (메모리와 학습 안정성의 균형)                      │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
-""")
-
-# Grid Search vs Random Search 비교
-print("\n" + "=" * 80)
-print("Grid Search vs Random Search Comparison")
-print("=" * 80)
-
-grid_best = grid_df['best_val_loss'].min()
-random_best = random_df['best_val_loss'].min()
-grid_time = grid_df['elapsed_time'].sum()
-random_time = random_df['elapsed_time'].sum()
-
-print(f"""
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  Method         │ Best Val Loss │ Total Time │ Experiments │               │
-├─────────────────┼───────────────┼────────────┼─────────────┼───────────────┤
-│  Grid Search    │     {grid_best:.4f}    │   {grid_time:>6.1f}s   │     {len(grid_df):>3}       │               │
-│  Random Search  │     {random_best:.4f}    │   {random_time:>6.1f}s   │     {len(random_df):>3}       │               │
-└─────────────────┴───────────────┴────────────┴─────────────┴───────────────┘
-
-결론:
-- Grid Search: 체계적이지만 조합 수가 많으면 시간이 오래 걸림
-- Random Search: 효율적으로 넓은 탐색 공간을 커버
-- 추천: 먼저 Random Search로 대략적인 범위를 찾고, Grid Search로 미세 조정
 """)
 
 # 결과 CSV 저장

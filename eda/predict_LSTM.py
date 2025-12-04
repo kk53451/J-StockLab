@@ -152,17 +152,17 @@ def build_lstm_dual_input(stock_shape, econ_shape, target_size):
     """
     # Stock stream
     stock_inputs = Input(shape=stock_shape, name='stock_input')
-    stock_lstm = LSTM(64, return_sequences=True)(stock_inputs)
+    stock_lstm = LSTM(128, return_sequences=True)(stock_inputs)
     stock_lstm = Dropout(0.2)(stock_lstm)
-    stock_lstm = LSTM(64, return_sequences=False)(stock_lstm)
+    stock_lstm = LSTM(128, return_sequences=False)(stock_lstm)
     stock_lstm = Dropout(0.2)(stock_lstm)
     stock_dense = Dense(64, activation='relu')(stock_lstm)
 
     # Economic stream
     econ_inputs = Input(shape=econ_shape, name='econ_input')
-    econ_lstm = LSTM(64, return_sequences=True)(econ_inputs)
+    econ_lstm = LSTM(128, return_sequences=True)(econ_inputs)
     econ_lstm = Dropout(0.2)(econ_lstm)
-    econ_lstm = LSTM(64, return_sequences=False)(econ_lstm)
+    econ_lstm = LSTM(128, return_sequences=False)(econ_lstm)
     econ_lstm = Dropout(0.2)(econ_lstm)
     econ_dense = Dense(64, activation='relu')(econ_lstm)
 
@@ -185,7 +185,7 @@ econ_shape = (lookback, len(economic_features))
 print(f"\nModel architecture:")
 print(f"  Stock Input: {stock_shape}")
 print(f"  Economic Input: {econ_shape}")
-print(f"  LSTM Layers: 2 layers each stream (64 units)")
+print(f"  LSTM Layers: 2 layers each stream (128 units)")
 print(f"  Output: {len(target_columns) * num_forecast_days} values ({len(target_columns)} stocks × {num_forecast_days} days)")
 
 # 출력 크기: 20종목 × 7일 = 140

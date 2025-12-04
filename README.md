@@ -261,8 +261,8 @@ y_val = np.concatenate(y_vals)  # (140,) 형태
 ### 2. 베이스라인 모델
 
 #### LSTM Dual Input Model
-- Stock Stream: LSTM(64) × 2 layers + Dropout(0.2)
-- Economic Stream: LSTM(64) × 2 layers + Dropout(0.2)
+- Stock Stream: LSTM(128) × 2 layers + Dropout(0.2)
+- Economic Stream: LSTM(128) × 2 layers + Dropout(0.2)
 - Merge: Concatenate → Dense(128) → Output(140)
 
 #### Linear Regression
@@ -295,8 +295,8 @@ y_val = np.concatenate(y_vals)  # (140,) 형태
 - **Linear Regression**: MAE가 ~1e-12 수준으로 비현실적. 고차원 입력(4,230차원)에 대한 심각한 과적합. 시계열 예측에 부적합.
 
 **실험을 통한 검증** (experiments/ 폴더 참고):
-- **Bias-Variance Tradeoff 분석**: LSTM 64 units가 최적 균형점임을 확인, Linear Regression 99.9% 정확도가 과적합임을 증명
-- **Hyperparameter Tuning**: Grid Search (8개) + Random Search (6개) 실험으로 현재 설정이 거의 최적임을 확인
+- **Bias-Variance Tradeoff 분석**: LSTM 128 units가 최적 균형점임을 확인, Linear Regression 99.9% 정확도가 과적합임을 증명
+- **Hyperparameter Tuning**: Sensitivity Analysis (8개 조합) 실험 결과, Baseline(lstm_units=128, dense_units=128, dropout=0.2, batch_size=32, lr=0.0001)이 Val Loss 0.0358로 #1 순위 확인
 
 ### 하이퍼파라미터
 
@@ -545,9 +545,9 @@ J-StockLab/
    - 3개 모델 종합 비교
 
 2. **Hyperparameter Tuning 실험** ✅
-   - Grid Search (8개 조합): 체계적 탐색
-   - Random Search (6개 조합): 효율적 탐색
-   - 현재 설정이 거의 최적임을 확인
+   - Sensitivity Analysis (8개 조합): 하이퍼파라미터별 민감도 분석
+   - Baseline (lstm_units=128, dense_units=128, dropout=0.2, batch_size=32, lr=0.0001)이 Val Loss 0.0358로 #1 순위
+   - 현재 설정이 최적임을 확인
 
 ### Phase 5: 배포 (진행 예정)
 

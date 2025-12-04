@@ -126,8 +126,8 @@ print(f"y shape: {y.shape}")
 # ============================================================================
 # 5. LSTM 모델 정의
 # ============================================================================
-def build_lstm_model(stock_shape, econ_shape, target_size, lstm_units=64):
-    """LSTM 기반 Dual Input 모델"""
+def build_lstm_model(stock_shape, econ_shape, target_size, lstm_units=128):
+    """LSTM 기반 Dual Input 모델 (Baseline: 128 units)"""
     stock_inputs = Input(shape=stock_shape, name='stock_input')
     stock_lstm = LSTM(lstm_units, return_sequences=True)(stock_inputs)
     stock_lstm = Dropout(0.2)(stock_lstm)

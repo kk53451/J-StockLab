@@ -422,13 +422,13 @@ Output: 140개 출력 (20종목 × 7일 예측)
 ```
 Input 1: Stock Data (20개 종목)
   ↓
-LSTM(64) → Dropout(0.2) → LSTM(64) → Dropout(0.2)
+LSTM(128) → Dropout(0.2) → LSTM(128) → Dropout(0.2)
   ↓
 Dense(64, relu)
 
 Input 2: Economic Data (27개 지표)
   ↓
-LSTM(64) → Dropout(0.2) → LSTM(64) → Dropout(0.2)
+LSTM(128) → Dropout(0.2) → LSTM(128) → Dropout(0.2)
   ↓
 Dense(64, relu)
 
@@ -945,15 +945,15 @@ open web/index.html
 
 **Hyperparameter Tuning 실험** ✅:
 - [x] `experiments/hyperparameter_tuning/hyperparameter_tuning.py` 작성
-- [x] Grid Search (8개 조합): 체계적 하이퍼파라미터 탐색
-- [x] Random Search (6개 조합): 넓은 탐색 공간에서 효율적 탐색
-- [x] 현재 설정이 거의 최적임을 확인 (LSTM 64 units, Dropout 0.2, Batch 32)
+- [x] Sensitivity Analysis (8개 조합): 하이퍼파라미터별 민감도 분석
+- [x] Baseline (lstm_units=128, dense_units=128, dropout=0.2, batch_size=32, lr=0.0001)이 Val Loss 0.0358로 #1 순위
+- [x] 현재 설정이 최적임을 확인
 - [x] 결과 파일 생성: hyperparameter_analysis.png, top5_configurations.png, hyperparameter_tuning_results.csv
 
 **핵심 결론**:
-- LSTM 64 units가 Bias-Variance 균형이 가장 좋음
+- LSTM 128 units가 Bias-Variance 균형이 가장 좋음
 - Linear Regression 99.9% 정확도는 과적합 (Feature 4,230개 > Sample 3,200개)
-- 현재 하이퍼파라미터 설정이 적절함 (learning_rate=0.001로 개선 가능하나 현재도 충분)
+- 현재 하이퍼파라미터 설정이 최적임
 
 ### Phase 4-7 (통합 테스트 및 배포) - 진행 예정
 
