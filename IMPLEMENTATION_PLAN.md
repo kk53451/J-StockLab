@@ -35,9 +35,13 @@ J-StockLab/
 │   ├── report.py                    # 평가 메트릭 및 Buy/Sell 추천
 │   ├── total.csv                    # 통합 데이터 (~4,000+ rows, 48 columns)
 │   └── test_result/                 # 테스트 결과
-├── api/                             # FastAPI 서버
-│   └── main.py                      # API 엔드포인트 (대시보드, 종목, 지표, 시장)
-├── web/                             # Next.js 프론트엔드
+├── api/                             # FastAPI 서버 (Railway 배포)
+│   ├── main.py                      # API 엔드포인트 (대시보드, 종목, 지표, 시장)
+│   └── data/                        # CSV 데이터 (Railway 배포용)
+│       ├── final_stock_analysis_*.csv
+│       ├── predicted_stock_*.csv
+│       └── total.csv
+├── web/                             # Next.js 프론트엔드 (Vercel 배포)
 │   ├── src/
 │   │   ├── app/
 │   │   │   ├── page.tsx             # 대시보드 (메인 페이지)
@@ -792,7 +796,7 @@ open web/index.html
 - [x] 출력 크기 140 (20종목 × 7일)
 - [x] 예측 결과 시각화 (대표 5개 종목 그래프)
 - [x] 영문 종목명 사용으로 matplotlib 한글 폰트 문제 해결
-- [x] Google Colab 직접 파일 업로드 방식 적용
+- [x] Google Colab 직접 파일 업로드 방식 ���용
 
 ### Phase 4-1 (평가 리포트)
 
@@ -816,7 +820,7 @@ open web/index.html
 
 ### Phase 4-3 (Next.js 프론트엔드 MVP)
 
-- [x] Next.js 15 + TypeScript + Tailwind CSS 프로젝트 구축
+- [x] Next.js 14 + TypeScript + Tailwind CSS 프로젝트 구축
 - [x] 대시보드 페이지 (모델 선택 드롭다운, 성능 비교 차트, 데이터 기준일)
 - [x] 종목 리스트 페이지 (정렬/필터/검색)
 - [x] 종목 상세 페이지 (90일 차트 + 7일 예측, 모델 간 비교 테이블)
@@ -886,12 +890,13 @@ open web/index.html
 - Linear Regression 99.9% 정확도는 과적합 (Feature 4,230개 > Sample 3,200개)
 - 현재 하이퍼파라미터 설정이 최적임
 
-### Phase 4-7 (통합 테스트 및 배포) - 진행 예정
+### Phase 4-7 (통합 테스트 및 배포) - 완료
 
-- [ ] Vercel 프론트엔드 배포
-- [ ] 백엔드 배포 (Railway/Render 등)
-- [ ] 통합 테스트
-- [ ] 문서 최종 정리
+- [x] Railway 백엔드 배포: https://j-stocklab-production.up.railway.app
+- [x] Vercel 프론트엔드 배포: https://j-stock-lab.vercel.app
+- [x] 통합 테스트
+- [x] 문서 최종 정리
+- [x] CSV 파일 `api/data/` 폴더로 정리 (Railway 배포용)
 
 ---
 

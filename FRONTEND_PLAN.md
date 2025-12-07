@@ -174,7 +174,7 @@ CSV 파일의 마지막 데이터 날짜, 파일 수정 시간, 데이터 갱신
 
 | 기술         | 용도             |
 | ------------ | ---------------- |
-| Next.js 15   | React 프레임워크 |
+| Next.js 14   | React 프레임워크 |
 | TypeScript   | 타입 안전성      |
 | Tailwind CSS | 스타일링         |
 | Recharts     | 차트 라이브러리  |
@@ -183,14 +183,19 @@ CSV 파일의 마지막 데이터 날짜, 파일 수정 시간, 데이터 갱신
 ### 데이터 흐름
 
 ```
-CSV Files (static)
+CSV Files (api/data/)
      ↓
-FastAPI (읽기 전용)
+FastAPI (Railway 배포)
      ↓
-Next.js (SSR/CSR)
-     ↓
-Vercel (배포)
+Next.js (Vercel 배포)
 ```
+
+### 배포 URL
+
+| 서비스 | URL |
+|--------|-----|
+| 백엔드 (Railway) | https://j-stocklab-production.up.railway.app |
+| 프론트엔드 (Vercel) | https://j-stock-lab.vercel.app |
 
 ---
 
@@ -198,17 +203,18 @@ Vercel (배포)
 
 ```
 J-StockLab/
-├── api/
-│   ├── main.py              # FastAPI 메인
-│   ├── routers/
-│   │   ├── dashboard.py     # 대시보드 API
-│   │   ├── stocks.py        # 종목 API
-│   │   ├── indicators.py    # 지표 API
-│   │   └── market.py        # 시장 API
-│   └── utils/
-│       └── data_loader.py   # CSV 로더
+├── api/                             # FastAPI 백엔드 (Railway 배포)
+│   ├── main.py                      # FastAPI 메인
+│   └── data/                        # CSV 데이터 폴더
+│       ├── final_stock_analysis_TF.csv
+│       ├── final_stock_analysis_LSTM.csv
+│       ├── final_stock_analysis_LR.csv
+│       ├── predicted_stock_TF.csv
+│       ├── predicted_stock_LSTM.csv
+│       ├── predicted_stock_LR.csv
+│       └── total.csv
 │
-├── web/                      # Next.js 프로젝트
+├── web/                             # Next.js 프론트엔드 (Vercel 배포)
 │   ├── src/
 │   │   ├── app/
 │   │   │   ├── page.tsx             # 대시보드
@@ -227,14 +233,20 @@ J-StockLab/
 │   │   └── lib/api.ts               # API 호출 함수
 │   └── package.json
 │
-├── # CSV 결과 파일
+├── eda/                             # 데이터 수집 스크립트
+│   ├── stock_japan.py
+│   └── total.csv                    # 원본 데이터
+│
+├── # 루트 CSV/ipynb (로컬 작업용)
 ├── predicted_stock_TF.csv
 ├── predicted_stock_LSTM.csv
 ├── predicted_stock_LR.csv
 ├── final_stock_analysis_TF.csv
 ├── final_stock_analysis_LSTM.csv
 ├── final_stock_analysis_LR.csv
-└── eda/total.csv
+├── 주식예측하기_TF.ipynb
+├── 주가예측하기_LSTM.ipynb
+└── 주가예측하기_LR.ipynb
 ```
 
 ---

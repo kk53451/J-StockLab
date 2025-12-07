@@ -897,9 +897,11 @@ else:
 
 **기술 스택:**
 
-- Backend: FastAPI + Python + Pandas
-- Frontend: Next.js 15 + TypeScript + Tailwind CSS + Recharts
-- 배포: Vercel (예정)
+- Backend: FastAPI + Python + Pandas (Railway 배포)
+- Frontend: Next.js 14 + TypeScript + Tailwind CSS + Recharts (Vercel 배포)
+- 배포 URL:
+  - 백엔드: https://j-stocklab-production.up.railway.app
+  - 프론트엔드: https://j-stock-lab.vercel.app
 
 ### 관련 파일
 

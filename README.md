@@ -346,20 +346,17 @@ J-StockLab/
 │       ├── fred/                 # FRED 테스트 결과
 │       ├── yfinance/             # yfinance 테스트 결과
 │
-├── data/                          # 추가 데이터 저장
-│   ├── raw/                      # 원본 데이터 및 그래프
-│   │   ├── indices_comparison.png
-│   │   ├── nikkei_test_plot.png
-│   │   └── stocks_comparison.png
-│   └── processed/                # 전처리된 데이터 (선택)
+├── api/                          # FastAPI 서버 (Railway 배포)
+│   ├── main.py                   # API 엔드포인트 (대시보드, 종목, 지표, 시장)
+│   ├── data/                     # CSV 데이터 파일 (Railway 배포용)
+│   │   ├── final_stock_analysis_*.csv  # 모델별 분석 결과
+│   │   ├── predicted_stock_*.csv       # 모델별 예측 결과
+│   │   └── total.csv                   # 통합 데이터
+│   ├── Procfile                  # Railway 시작 명령
+│   ├── requirements.txt          # Python 의존성
+│   └── runtime.txt               # Python 버전
 │
-├── notebooks/                     # Jupyter 분석 (Phase 1용)
-│   └── 01_data_test.ipynb        # 데이터 수집 검증
-│
-├── api/                          # FastAPI 서버
-│   └── main.py                   # API 엔드포인트 (대시보드, 종목, 지표, 시장)
-│
-├── web/                          # Next.js 프론트엔드
+├── web/                          # Next.js 프론트엔드 (Vercel 배포)
 │   ├── src/
 │   │   ├── app/
 │   │   │   ├── page.tsx          # 대시보드 (메인 페이지)
@@ -400,8 +397,6 @@ J-StockLab/
 │       ├── hyperparameter_analysis.png
 │       ├── top5_configurations.png
 │       └── hyperparameter_tuning_results.csv
-│
-├── models/                       # 학습된 모델 저장 (선택)
 │
 ├── # Transformer 결과
 ├── predicted_stock_TF.csv        # Transformer 예측 결과
@@ -448,7 +443,7 @@ J-StockLab/
 
 2. **stock_japan.py 작성**
 
-   - FRED 데이터 수집 및 리샘플링
+   - FRED 데이터 수집 �� 리샘플링
    - yfinance로 일본 지수 9개 수집
    - Nikkei 225 상위 20개 종목 수집 (영문명)
    - 미국 시장 지표 수집
@@ -571,15 +566,22 @@ J-StockLab/
    - Baseline (lstm_units=128, dense_units=128, dropout=0.2, batch_size=32, lr=0.0001)이 Val Loss 0.0358로 #1 순위
    - 현재 설정이 최적임을 확인
 
-### Phase 5: 배포 (진행 예정)
+### Phase 5: 배포 (완료)
 
-1. **Vercel 배포**
+1. **백엔드 배포 (Railway)**
 
-   - Next.js 프론트엔드 Vercel 배포
-   - 백엔드 배포 (Railway/Render 등)
-   - 환경 변수 설정
+   - FastAPI 서버 Railway 배포 완료
+   - URL: https://j-stocklab-production.up.railway.app
+   - Root Directory: `/api`
+   - CSV 데이터 파일 `api/data/` 폴더에 포함
 
-2. **백테스팅 기능** (선택)
+2. **프론트엔드 배포 (Vercel)**
+
+   - Next.js 프론트엔드 Vercel 배포 완료
+   - URL: https://j-stock-lab.vercel.app
+   - 환경 변수 `NEXT_PUBLIC_API_URL` 설정
+
+3. **백테스팅 기능** (선택)
    - `/api/history/{stock_name}?model=TF&date=2025-11-01` - 특정 날짜 예측 vs 실제
    - `/api/backtest/{stock_name}?model=TF` - 기간별 예측 정확도 추이
 
@@ -703,19 +705,26 @@ python stock_japan.py
 
 ### 6. CSV 파일 배치
 
-Colab에서 다운로드한 CSV 파일들을 프로젝트 루트 디렉토리에 배치:
+Colab에서 다운로드한 CSV 파일들을 배치:
 
 ```
 J-StockLab/
-├── predicted_stock_TF.csv
+├── predicted_stock_TF.csv           # 루트 (로컬 개발용)
 ├── predicted_stock_LSTM.csv
 ├── predicted_stock_LR.csv
 ├── final_stock_analysis_TF.csv
 ├── final_stock_analysis_LSTM.csv
 ├── final_stock_analysis_LR.csv
-└── eda/
-    └── total.csv
+├── eda/
+│   └── total.csv
+└── api/
+    └── data/                        # Railway 배포용 (동일 파일 복사)
+        ├── predicted_stock_*.csv
+        ├── final_stock_analysis_*.csv
+        └── total.csv
 ```
+
+> **참고**: `api/data/` 폴더는 Railway 배포 시 사용됩니다. 데이터 업데이트 시 두 위치 모두 업데이트 필요.
 
 ### 7. FastAPI 서버 실행 (백엔드)
 
