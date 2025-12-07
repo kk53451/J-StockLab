@@ -26,8 +26,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Base path for CSV files (same directory as main.py for Railway deployment)
-BASE_PATH = os.path.dirname(os.path.abspath(__file__))
+# Base path for CSV files (data folder in api directory for Railway deployment)
+BASE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
 
 class ModelType(str, Enum):
@@ -392,7 +392,7 @@ def get_data_status():
 
     # Check each file
     file_configs = [
-        ("total_csv", os.path.join(BASE_PATH, "eda", "total.csv")),
+        ("total_csv", os.path.join(BASE_PATH, "total.csv")),
         ("predicted_stock_TF", os.path.join(BASE_PATH, "predicted_stock_TF.csv")),
         ("predicted_stock_LSTM", os.path.join(BASE_PATH, "predicted_stock_LSTM.csv")),
         ("predicted_stock_LR", os.path.join(BASE_PATH, "predicted_stock_LR.csv")),
