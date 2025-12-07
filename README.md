@@ -4,6 +4,12 @@
 >
 > 딥러닝 시계열 예측을 통한 Nikkei 225 종목 분석
 
+---
+
+### **[웹 서비스 접속하기](https://j-stock-lab-6baz-git-main-kk53451s-projects.vercel.app/)**
+
+---
+
 ## 프로젝트 정보
 
 **팀원**
