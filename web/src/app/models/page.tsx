@@ -205,9 +205,10 @@ export default function ModelsPage() {
                   <YAxis domain={[88, 100]} className="text-xs" />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "var(--background)",
-                      border: "1px solid var(--foreground)",
+                      backgroundColor: "#1f2937",
+                      border: "1px solid #374151",
                       borderRadius: "8px",
+                      color: "#f9fafb",
                     }}
                     formatter={(value: number) => [`${value}%`, ""]}
                   />
@@ -235,9 +236,10 @@ export default function ModelsPage() {
                   <YAxis dataKey="model" type="category" className="text-xs" />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "var(--background)",
-                      border: "1px solid var(--foreground)",
+                      backgroundColor: "#1f2937",
+                      border: "1px solid #374151",
                       borderRadius: "8px",
+                      color: "#f9fafb",
                     }}
                     formatter={(value: number) => [`${value}%`, "MAPE"]}
                   />

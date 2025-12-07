@@ -213,9 +213,10 @@ export default function Dashboard() {
               <YAxis yAxisId="right" orientation="right" stroke="#10b981" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "var(--background)",
-                  border: "1px solid var(--foreground)",
+                  backgroundColor: "#1f2937",
+                  border: "1px solid #374151",
                   borderRadius: "8px",
+                  color: "#f9fafb",
                 }}
               />
               <Legend />

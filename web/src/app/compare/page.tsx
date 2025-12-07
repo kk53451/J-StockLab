@@ -389,9 +389,10 @@ export default function ComparePage() {
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "var(--background)",
-                      border: "1px solid var(--foreground)",
+                      backgroundColor: "#1f2937",
+                      border: "1px solid #374151",
                       borderRadius: "8px",
+                      color: "#f9fafb",
                     }}
                     formatter={(value: number) => [`¥${value.toLocaleString()}`, ""]}
                   />
@@ -432,9 +433,10 @@ export default function ComparePage() {
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "var(--background)",
-                      border: "1px solid var(--foreground)",
+                      backgroundColor: "#1f2937",
+                      border: "1px solid #374151",
                       borderRadius: "8px",
+                      color: "#f9fafb",
                     }}
                     formatter={(value: number) => [`¥${value.toLocaleString()}`, ""]}
                   />
