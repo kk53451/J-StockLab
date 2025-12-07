@@ -26,8 +26,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Base path for CSV files
-BASE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Base path for CSV files (same directory as main.py for Railway deployment)
+BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 
 
 class ModelType(str, Enum):
@@ -57,8 +57,8 @@ def load_predictions(model: str = "TF") -> pd.DataFrame:
 
 
 def load_total() -> pd.DataFrame:
-    """Load eda/total.csv"""
-    file_path = os.path.join(BASE_PATH, "eda", "total.csv")
+    """Load total.csv"""
+    file_path = os.path.join(BASE_PATH, "total.csv")
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="total.csv not found")
     return pd.read_csv(file_path, parse_dates=["날짜"])
