@@ -7,6 +7,7 @@
 ## 프로젝트 정보
 
 **팀원**
+
 - 최정민 (201901841)
 - 김종수 (201801758)
 - 김용균 (202005098)
@@ -65,7 +66,9 @@
 본 프로젝트는 두 가지 주요 데이터 소스를 사용한다:
 
 #### 1. Yahoo Finance (yfinance 라이브러리)
+
 - **일본 주요 지수**:
+
   - `^N225` (Nikkei 225) - 일본 대표 주가지수
   - `1306.T` (TOPIX ETF) - TOPIX 추종 ETF
   - `^N300` (Nikkei 300) - 중형주 포함 확장 지수
@@ -101,11 +104,13 @@
 #### 2. FRED API (Federal Reserve Economic Data)
 
 **일본 경제 지표 (8개)**:
+
 - GDP, 실업률, 국채 수익률, 은행간 금리
 - 산업생산지수, 무역수지, 소비자 신뢰지수
 - 일본은행 총자산
 
 **미국 경제 지표 (10개)**:
+
 - **금리 관련**: 10년 기대 인플레이션율, 장단기 금리차, 기준금리, 2년 국채 수익률, 10년 국채 수익률
 - **경제 지표**: 미시간대 소비자 심리지수, 실업률, CPI, GDP
 - **금융 시장**: 금융스트레스지수
@@ -113,6 +118,7 @@
 ### 데이터 형태
 
 #### 시계열 데이터 (yfinance)
+
 - Date (날짜)
 - Open (시가)
 - High (고가)
@@ -121,6 +127,7 @@
 - Volume (거래량)
 
 #### 경제 지표 데이터 (FRED)
+
 - Date (날짜)
 - Value (지표 값)
 - 빈도: 일간/주간/월간/분기
@@ -143,7 +150,7 @@
 4. **스케일링**: MinMaxScaler (0~1 정규화)
 5. **시퀀스 생성**: 90일 lookback window
 
-**참고**: 미국 프로젝트는 핵심 지표가 모두 일간 데이터라 dropna → ffill 순서여도 문제없었으나, 일본 프로젝트는 핵심 지표에 월간 데이터(일본 10년 국채 수익률, 일본 3개월 은행간 금리)가 포함되어 ffill → dropna 순서로 변경 필요
+**참고**: 핵심 지표에 월간 데이터(일본 10년 국채 수익률, 일본 3개월 은행간 금리)가 포함되어 있어 ffill → dropna 순서로 처리해야 함
 
 ### 피처 엔지니어링 (파생변수 생성)
 
@@ -151,11 +158,11 @@
 
 #### 1. Lookback Window 시퀀스 (시간 지연 피처)
 
-| 파생변수 | 설명 | 선택 근거 |
-|---------|------|----------|
+| 파생변수                 | 설명                                    | 선택 근거                                                                    |
+| ------------------------ | --------------------------------------- | ---------------------------------------------------------------------------- |
 | **90일 Lookback Window** | 과거 90일 데이터를 하나의 시퀀스로 변환 | 약 3개월(1분기) 패턴을 학습하기 위함. 주식 시장의 분기별 실적 발표 주기 반영 |
-| **Stock Sequence** | (90일 × 20종목) = 1,800개 피처 | 종목 간 상관관계와 시간적 패턴 동시 학습 |
-| **Economic Sequence** | (90일 × 27지표) = 2,430개 피처 | 경제 지표의 시간적 변화 추세 학습 |
+| **Stock Sequence**       | (90일 × 20종목) = 1,800개 피처          | 종목 간 상관관계와 시간적 패턴 동시 학습                                     |
+| **Economic Sequence**    | (90일 × 27지표) = 2,430개 피처          | 경제 지표의 시간적 변화 추세 학습                                            |
 
 ```python
 # 코드 예시 (predict_TF.py)
@@ -166,10 +173,10 @@ X_econ_seq = data_scaled[economic_features].iloc[i - lookback:i].to_numpy()  # (
 
 #### 2. MinMaxScaler 정규화
 
-| 파생변수 | 설명 | 선택 근거 |
-|---------|------|----------|
-| **정규화된 주가** | 원본 주가를 0~1 범위로 변환 | 종목 간 가격 스케일 차이 제거 (예: Toyota ~2,500엔 vs Keyence ~60,000엔) |
-| **정규화된 경제지표** | 원본 지표를 0~1 범위로 변환 | 지표 간 단위 차이 제거 (예: GDP vs 금리) |
+| 파생변수              | 설명                        | 선택 근거                                                                |
+| --------------------- | --------------------------- | ------------------------------------------------------------------------ |
+| **정규화된 주가**     | 원본 주가를 0~1 범위로 변환 | 종목 간 가격 스케일 차이 제거 (예: Toyota ~2,500엔 vs Keyence ~60,000엔) |
+| **정규화된 경제지표** | 원본 지표를 0~1 범위로 변환 | 지표 간 단위 차이 제거 (예: GDP vs 금리)                                 |
 
 ```python
 # 코드 예시
@@ -181,8 +188,8 @@ data_scaled[economic_features] = econ_scaler.fit_transform(data[economic_feature
 
 #### 3. Multi-horizon Target (다중 예측 타겟)
 
-| 파생변수 | 설명 | 선택 근거 |
-|---------|------|----------|
+| 파생변수               | 설명                        | 선택 근거                                             |
+| ---------------------- | --------------------------- | ----------------------------------------------------- |
 | **1~7일 후 주가 벡터** | 20종목 × 7일 = 140차원 타겟 | 단일 시점이 아닌 1주일 추세 예측으로 투자 판단에 유용 |
 
 ```python
@@ -194,19 +201,19 @@ y_val = np.concatenate(y_vals)  # (140,) 형태
 
 #### 4. Dual Input Stream 분리
 
-| 파생변수 | 설명 | 선택 근거 |
-|---------|------|----------|
-| **Stock Stream** | 주식 데이터만 분리하여 별도 인코딩 | 주가 패턴과 경제 지표 패턴을 독립적으로 학습 후 결합 |
-| **Economic Stream** | 경제 지표만 분리하여 별도 인코딩 | 서로 다른 특성의 데이터를 각각 최적화하여 학습 |
+| 파생변수            | 설명                               | 선택 근거                                            |
+| ------------------- | ---------------------------------- | ---------------------------------------------------- |
+| **Stock Stream**    | 주식 데이터만 분리하여 별도 인코딩 | 주가 패턴과 경제 지표 패턴을 독립적으로 학습 후 결합 |
+| **Economic Stream** | 경제 지표만 분리하여 별도 인코딩   | 서로 다른 특성의 데이터를 각각 최적화하여 학습       |
 
 #### 파생변수 선택 근거 요약
 
-| 선택 항목 | 값 | 근거 |
-|----------|---|------|
-| **Lookback 90일** | 약 3개월 | 분기 실적 발표 주기, 계절적 패턴 반영 |
-| **Forecast 7일** | 1주일 | 단기 투자 전략에 적합, 장기 예측의 불확실성 회피 |
-| **MinMaxScaler** | 0~1 정규화 | 신경망 학습 안정성, 종목/지표 간 스케일 통일 |
-| **Dual Input** | 주식 + 경제 분리 | 이질적 데이터의 독립적 특징 추출 후 결합 |
+| 선택 항목         | 값               | 근거                                             |
+| ----------------- | ---------------- | ------------------------------------------------ |
+| **Lookback 90일** | 약 3개월         | 분기 실적 발표 주기, 계절적 패턴 반영            |
+| **Forecast 7일**  | 1주일            | 단기 투자 전략에 적합, 장기 예측의 불확실성 회피 |
+| **MinMaxScaler**  | 0~1 정규화       | 신경망 학습 안정성, 종목/지표 간 스케일 통일     |
+| **Dual Input**    | 주식 + 경제 분리 | 이질적 데이터의 독립적 특징 추출 후 결합         |
 
 ---
 
@@ -261,55 +268,60 @@ y_val = np.concatenate(y_vals)  # (140,) 형태
 ### 2. 베이스라인 모델
 
 #### LSTM Dual Input Model
+
 - Stock Stream: LSTM(128) × 2 layers + Dropout(0.2)
 - Economic Stream: LSTM(128) × 2 layers + Dropout(0.2)
 - Merge: Concatenate → Dense(128) → Output(140)
 
 #### Linear Regression
+
 - Input: 90일 × 47개 피처 = 4,230차원 (flatten)
 - Output: 140개 (20종목 × 7일)
 - sklearn MultiOutputRegressor 사용
 
 ### 모델 성능 비교
 
-| 모델 | 평균 정확도 | 평균 MAPE | 정확도 표준편차 | 특징 |
-|------|------------|-----------|----------------|------|
-| **LSTM** | **94.12%** | **5.88%** | **2.69** | ✅ 본 프로젝트 최적 모델 |
-| **Transformer** | 91.73% | 8.27% | 6.74 | 메인 모델로 개발, 대규모 데이터에 적합 |
-| **Linear Regression** | 99.9%* | 0.01%* | - | ⚠️ 과적합 (Overfitting) - 신뢰 불가 |
+| 모델                  | 평균 정확도 | 평균 MAPE | 정확도 표준편차 | 특징                                   |
+| --------------------- | ----------- | --------- | --------------- | -------------------------------------- |
+| **LSTM**              | **94.12%**  | **5.88%** | **2.69**        | 본 프로젝트 최적 모델                  |
+| **Transformer**       | 91.73%      | 8.27%     | 6.74            | 메인 모델로 개발, 대규모 데이터에 적합 |
+| **Linear Regression** | 99.9%\*     | 0.01%\*   | -               | 과적합 (Overfitting) - 신뢰 불가       |
 
 **분석 결과 및 결론**:
 
 본 프로젝트는 **Transformer를 메인 모델로 개발**하였으나, 실험 결과 **LSTM이 본 프로젝트 규모(20개 종목, 90일 시퀀스)에서 가장 적합한 모델**임을 확인하였다.
 
 - **LSTM 선택 이유**:
+
   1. 가장 높은 정확도 (94.12% vs Transformer 91.73%, +2.39%p)
   2. 가장 낮은 MAPE (5.88% vs Transformer 8.27%, -2.39%p)
   3. 종목별 성능이 안정적 (표준편차 2.69 vs Transformer 6.74)
   4. 중소형 규모 시계열 데이터에 최적화된 구조
 
 - **Transformer 한계**:
+
   - Self-Attention 메커니즘은 대규모 데이터셋에서 강력하지만, 20개 종목 규모에서는 복잡성이 과도함
   - 종목별 성능 편차가 큼 (표준편차 6.74)
 
 - **Linear Regression**: MAE가 ~1e-12 수준으로 비현실적. 고차원 입력(4,230차원)에 대한 심각한 과적합. 시계열 예측에 부적합.
 
 **실험을 통한 검증** (experiments/ 폴더 참고):
+
 - **Bias-Variance Tradeoff 분석**: LSTM 128 units가 최적 균형점임을 확인, Linear Regression 99.9% 정확도가 과적합임을 증명
 - **Hyperparameter Tuning**: Sensitivity Analysis (8개 조합) 실험 결과, Baseline(lstm_units=128, dense_units=128, dropout=0.2, batch_size=32, lr=0.0001)이 Val Loss 0.0358로 #1 순위 확인
 
 ### 하이퍼파라미터
 
-| 파라미터 | Transformer | LSTM | Linear Regression |
-|----------|-------------|------|-------------------|
-| lookback | 90일 | 90일 | 90일 |
-| forecast_horizon | 7일 | 7일 | 7일 |
-| output_size | 140 | 140 | 140 |
-| epochs | 50 | 50 | - |
-| batch_size | 32 | 32 | - |
-| learning_rate | 0.0001 | 0.0001 | - |
-| optimizer | Adam | Adam | - |
-| loss | MSE | MSE | - |
+| 파라미터         | Transformer | LSTM   | Linear Regression |
+| ---------------- | ----------- | ------ | ----------------- |
+| lookback         | 90일        | 90일   | 90일              |
+| forecast_horizon | 7일         | 7일    | 7일               |
+| output_size      | 140         | 140    | 140               |
+| epochs           | 50          | 50     | -                 |
+| batch_size       | 32          | 32     | -                 |
+| learning_rate    | 0.0001      | 0.0001 | -                 |
+| optimizer        | Adam        | Adam   | -                 |
+| loss             | MSE         | MSE    | -                 |
 
 ---
 
@@ -318,8 +330,7 @@ y_val = np.concatenate(y_vals)  # (140,) 형태
 ```
 J-StockLab/
 ├── eda/                           # 데이터 수집 및 분석
-│   ├── stock.py                  # 미국 버전 (참고용)
-│   ├── stock_japan.py            # 일본 버전 (메인 사용)
+│   ├── stock_japan.py            # 데이터 수집 스크립트 (메인)
 │   ├── predict_TF.py             # Transformer 모델 학습 및 예측 (Colab용)
 │   ├── predict_LSTM.py           # LSTM 베이스라인 모델 (Colab용)
 │   ├── predict_LR.py             # Linear Regression 베이스라인 모델 (Colab용)
@@ -334,7 +345,6 @@ J-StockLab/
 │   └── test_result/              # 테스트 결과 저장
 │       ├── fred/                 # FRED 테스트 결과
 │       ├── yfinance/             # yfinance 테스트 결과
-│       └── usa/                  # 미국 프로젝트 참고 데이터
 │
 ├── data/                          # 추가 데이터 저장
 │   ├── raw/                      # 원본 데이터 및 그래프
@@ -423,75 +433,82 @@ J-StockLab/
 
 ## 수행 계획
 
-### Phase 1: 환경 설정 및 데이터 검증 ✅
+### Phase 1: 환경 설정 및 데이터 검증 (완료)
 
 - [x] yfinance로 3개 지수 데이터 수집
 - [x] FastAPI 서버 구축
 - [x] 웹 인터페이스 구현
 
-### Phase 2: 데이터 수집 및 전처리 ✅
+### Phase 2: 데이터 수집 및 전처리 (완료)
 
-1. **FRED API 설정** ✅
+1. **FRED API 설정**
+
    - API 키 발급 완료
    - 경제 지표 18개 수집 (일본 8개 + 미국 10개)
 
-2. **stock_japan.py 작성** ✅
+2. **stock_japan.py 작성**
+
    - FRED 데이터 수집 및 리샘플링
    - yfinance로 일본 지수 9개 수집
    - Nikkei 225 상위 20개 종목 수집 (영문명)
    - 미국 시장 지표 수집
    - total.csv 생성 (모든 데이터 통합)
 
-3. **데이터 검증** ✅
+3. **데이터 검증**
    - 결측치: 0%
    - 데이터 기간: 2014-10-16 ~ 실행 시점 기준 전일 (동적으로 변경)
    - 컬럼 수: 48개 (날짜 + FRED 18 + yfinance 9 + 종목 20)
    - 데이터 행 수: 약 4,000행 이상 (실행 시점에 따라 증가)
    - 데이터 타입: 모두 숫자형 (float64)
 
-### Phase 3: Transformer 모델링 ✅
+### Phase 3: Transformer 모델링 (완료)
 
-1. **predict_TF.py 작성** ✅
+1. **predict_TF.py 작성**
+
    - Transformer Encoder 구현
    - Dual Input Stream 설계 (stock stream + economic stream)
    - 데이터 전처리 및 스케일링 (MinMaxScaler)
    - 모델 학습 (50 epochs, Google Colab)
    - 영문 종목명 사용으로 matplotlib 한글 폰트 문제 해결
 
-2. **베이스라인 모델 구현** ✅
+2. **베이스라인 모델 구현**
+
    - **predict_LSTM.py**: LSTM Dual Input 모델 (Transformer와 동일 구조)
    - **predict_LR.py**: Linear Regression 베이스라인 (sklearn)
    - 모든 모델 동일 하이퍼파라미터 사용 (lookback=90, forecast=7)
 
-3. **예측 수행** ✅
+3. **예측 수행**
    - 90일 lookback window
    - 1~7일 후 동시 예측 (forecast_horizon=7, output_size=140)
-   - 각 모델별 predicted_stock_*.csv 생성
+   - 각 모델별 predicted*stock*\*.csv 생성
    - Google Colab 직접 파일 업로드 방식 적용
 
-### Phase 4-1: 평가 리포트 ✅
+### Phase 4-1: 평가 리포트 (완료)
 
-1. **report.py 작성** ✅
+1. **report.py 작성**
+
    - MAE, MSE, RMSE, MAPE, Accuracy 계산 (Day7 기준 + 전체 Day 평균)
    - 상승/하락 예측 및 확률 계산 (Rise Probability %)
    - Buy/Sell 추천 로직 (STRONG BUY/BUY/SELL)
    - Day1~Day7 가격 예측값 포함
-   - 각 모델별 final_stock_analysis_*.csv 생성
+   - 각 모델별 final*stock_analysis*\*.csv 생성
    - Google Colab 직접 파일 업로드 방식 적용
 
-2. **모델별 평가 완료** ✅
+2. **모델별 평가 완료**
+
    - Transformer: final_stock_analysis_TF.csv (평균 정확도 ~91%)
    - LSTM: final_stock_analysis_LSTM.csv (평균 정확도 ~94%)
    - Linear Regression: final_stock_analysis_LR.csv (과적합으로 신뢰 불가)
 
-3. **Colab 노트북 작성** ✅
-   - 주식예측하기_TF.ipynb (Cell 0: predict, Cell 1: report)
-   - 주가예측하기_LSTM.ipynb (Cell 0: predict, Cell 1: report)
-   - 주가예측하기_LR.ipynb (Cell 0: predict, Cell 1: report)
+3. **Colab 노트북 작성**
+   - 주식예측하기\_TF.ipynb (Cell 0: predict, Cell 1: report)
+   - 주가예측하기\_LSTM.ipynb (Cell 0: predict, Cell 1: report)
+   - 주가예측하기\_LR.ipynb (Cell 0: predict, Cell 1: report)
 
-### Phase 4-2: 웹 서비스 Phase 1 (MVP) ✅
+### Phase 4-2: 웹 서비스 Phase 1 (MVP) (완료)
 
-1. **FastAPI 확장** ✅
+1. **FastAPI 확장**
+
    - `/api/dashboard?model=TF` - 대시보드 요약 (모델 선택 지원)
    - `/api/stocks?model=TF` - 종목 리스트 (정렬/필터)
    - `/api/stocks/{name}?model=TF` - 종목 상세
@@ -500,51 +517,56 @@ J-StockLab/
    - `/api/models/compare` - 모델 성능 비교
    - `/api/data/status` - 데이터 최신화 정보
 
-2. **Next.js 프론트엔드** ✅
+2. **Next.js 프론트엔드**
    - 대시보드 페이지 (모델 선택, 성능 비교 차트, 데이터 기준일)
    - 종목 리스트 페이지 (정렬/필터/검색)
    - 종목 상세 페이지 (90일 차트 + 7일 예측, 모델 간 비교)
    - 다크모드 지원
 
-### Phase 4-3: 웹 서비스 Phase 2 (시장 & 지표) ✅
+### Phase 4-3: 웹 서비스 Phase 2 (시장 & 지표) (완료)
 
-1. **시장 현황 API** ✅
+1. **시장 현황 API**
+
    - `/api/market` - 닛케이 225, S&P 500, 엔/달러, VIX, 금 가격
 
-2. **경제 지표 API** ✅
+2. **경제 지표 API**
+
    - `/api/indicators?days=730` - 경제 지표 데이터
    - 일본 지표 8개 (GDP, 실업률, 국채, 금리, 산업생산, 무역수지, 소비자신뢰, BOJ총자산)
    - 미국 지표 10개 (인플레이션, 금리차, 기준금리, 국채, 소비자심리, 실업률, CPI, GDP, 금융스트레스)
    - 시장 지표 9개 (닛케이, TOPIX, S&P500, 나스닥, VIX, 금, 달러인덱스, 엔/달러)
 
-3. **경제 지표 페이지** ✅
+3. **경제 지표 페이지**
+
    - 탭 구성: 일본 경제지표 | 미국 경제지표 | 시장 지표
    - 지표별 메타데이터: 단위(%, $, ¥, 억엔, pt), 빈도(일간/주간/월간/분기)
    - 빈도별 자동 기간 조절 (일간 3개월, 월간 1년, 분기 2년)
    - X축 날짜 포맷: 일간/주간은 MM-DD, 월간/분기는 YYYY-MM
 
-4. **대시보드 시장 현황 카드** ✅
+4. **대시보드 시장 현황 카드**
    - 닛케이 225, S&P 500, 엔/달러, VIX, 금 가격 표시
 
-### Phase 4-4: 웹 서비스 Phase 3 (고급 기능) ✅
+### Phase 4-4: 웹 서비스 Phase 3 (고급 기능)
 
-1. **종목 비교 기능** ✅
+1. **종목 비교 기능**
+
    - `/api/compare?model=TF&stocks=Toyota,Sony` - 동일 모델 내 종목 비교
    - 종목 비교 페이지 (`/compare`) - 최대 5개 종목 동시 비교, 차트 및 성능 지표 비교
 
-2. **모델 비교 기능** ✅
+2. **모델 비교 기능**
    - `/api/models/analysis` - 모델별 상세 분석 API
    - 모델 비교 페이지 (`/models`) - 성능 요약, 정확도/MAPE 비교 차트, 추천 분포, 모델 특성
 
-### Phase 4-5: 실험 및 검증 ✅
+### Phase 4-5: 실험 및 검증
 
-1. **Bias-Variance Tradeoff 분석** ✅
+1. **Bias-Variance Tradeoff 분석**
+
    - Learning Curve 분석: 훈련 데이터 크기에 따른 성능 변화
    - Model Complexity 분석: LSTM 유닛 수에 따른 Bias-Variance 변화
    - Linear Regression 과적합 증명
    - 3개 모델 종합 비교
 
-2. **Hyperparameter Tuning 실험** ✅
+2. **Hyperparameter Tuning 실험**
    - Sensitivity Analysis (8개 조합): 하이퍼파라미터별 민감도 분석
    - Baseline (lstm_units=128, dense_units=128, dropout=0.2, batch_size=32, lr=0.0001)이 Val Loss 0.0358로 #1 순위
    - 현재 설정이 최적임을 확인
@@ -552,6 +574,7 @@ J-StockLab/
 ### Phase 5: 배포 (진행 예정)
 
 1. **Vercel 배포**
+
    - Next.js 프론트엔드 Vercel 배포
    - 백엔드 배포 (Railway/Render 등)
    - 환경 변수 설정
@@ -565,6 +588,7 @@ J-StockLab/
 ## 기술 스택
 
 ### Backend
+
 - **Language**: Python 3.8+
 - **Data Collection**: yfinance, requests (FRED API)
 - **Data Processing**: pandas, numpy
@@ -573,11 +597,13 @@ J-StockLab/
 - **Web Framework**: FastAPI, Uvicorn
 
 ### Frontend
+
 - **Next.js** (React 기반 프레임워크)
 - **Vercel** 배포
 - **Visualization**: matplotlib, seaborn, plotly (분석용), Recharts/Chart.js (웹용)
 
 ### APIs
+
 - **Yahoo Finance**: 주식 데이터
 - **FRED API**: 경제 지표 데이터
 
@@ -629,7 +655,7 @@ cd ..
 
 ```bash
 cd eda
-python stock_japan.py  # 일본 버전 사용 (stock.py는 미국 참고용)
+python stock_japan.py
 ```
 
 생성 파일: `eda/total.csv` (2014-10-16 ~ 실행 시점 기준 전일, 48열, 결측치 0%)
@@ -638,13 +664,14 @@ python stock_japan.py  # 일본 버전 사용 (stock.py는 미국 참고용)
 
 **Google Colab에서 실행** (3개 모델 각각):
 
-| 모델 | 노트북 파일 | predict 코드 | 출력 파일 |
-|------|------------|-------------|----------|
-| Transformer | 주식예측하기_TF.ipynb | predict_TF.py | predicted_stock_TF.csv |
-| LSTM | 주가예측하기_LSTM.ipynb | predict_LSTM.py | predicted_stock_LSTM.csv |
-| Linear Regression | 주가예측하기_LR.ipynb | predict_LR.py | predicted_stock_LR.csv |
+| 모델              | 노트북 파일              | predict 코드    | 출력 파일                |
+| ----------------- | ------------------------ | --------------- | ------------------------ |
+| Transformer       | 주식예측하기\_TF.ipynb   | predict_TF.py   | predicted_stock_TF.csv   |
+| LSTM              | 주가예측하기\_LSTM.ipynb | predict_LSTM.py | predicted_stock_LSTM.csv |
+| Linear Regression | 주가예측하기\_LR.ipynb   | predict_LR.py   | predicted_stock_LR.csv   |
 
 **실행 방법**:
+
 1. 해당 노트북 파일을 Google Colab에 업로드
 2. Colab 상단 메뉴: **런타임 > 런타임 유형 변경 > T4 GPU** 선택 (Transformer, LSTM)
 3. Cell 0 실행 시 `total.csv` 업로드 요청 팝업에서 파일 선택하여 업로드
@@ -654,18 +681,20 @@ python stock_japan.py  # 일본 버전 사용 (stock.py는 미국 참고용)
 
 **Google Colab에서 실행** (각 노트북의 Cell 1):
 
-| 모델 | 입력 파일 | 출력 파일 |
-|------|----------|----------|
-| Transformer | predicted_stock_TF.csv | final_stock_analysis_TF.csv |
-| LSTM | predicted_stock_LSTM.csv | final_stock_analysis_LSTM.csv |
-| Linear Regression | predicted_stock_LR.csv | final_stock_analysis_LR.csv |
+| 모델              | 입력 파일                | 출력 파일                     |
+| ----------------- | ------------------------ | ----------------------------- |
+| Transformer       | predicted_stock_TF.csv   | final_stock_analysis_TF.csv   |
+| LSTM              | predicted_stock_LSTM.csv | final_stock_analysis_LSTM.csv |
+| Linear Regression | predicted_stock_LR.csv   | final_stock_analysis_LR.csv   |
 
 **실행 방법**:
+
 1. 각 노트북의 Cell 1 실행 (report.py 코드)
 2. 코드 실행 시 해당 `predicted_stock_*.csv` 파일 업로드
 3. 평가 완료 후 자동으로 `final_stock_analysis_*.csv` 파일 다운로드
 
 **출력 내용**:
+
 - 평가 지표: MAE, RMSE, MAPE, Accuracy (Day7 기준 + 전체 Day 평균)
 - Day1~Day7 가격 예측값
 - 상승/하락 예측 및 확률 (Rise Probability %)
@@ -787,16 +816,19 @@ FastAPI를 활용한 RESTful API 설계와 간단한 웹 인터페이스 구현�
 ## 참고 자료
 
 ### APIs & Documentation
+
 - [Yahoo Finance](https://finance.yahoo.com/)
 - [yfinance Documentation](https://pypi.org/project/yfinance/)
 - [FRED API](https://fred.stlouisfed.org/docs/api/)
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 
 ### Machine Learning
+
 - [TensorFlow Transformer Tutorial](https://www.tensorflow.org/text/tutorials/transformer)
 - [scikit-learn Time Series Split](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.TimeSeriesSplit.html)
 
 ### Data Sources
+
 - [Nikkei 225 Historical Data](https://finance.yahoo.com/quote/%5EN225/history/)
 - [TOPIX ETF Historical Data](https://finance.yahoo.com/quote/1306.T/history/)
 - [Nikkei 300 Historical Data](https://finance.yahoo.com/quote/%5EN300/history/)

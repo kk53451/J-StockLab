@@ -10,21 +10,21 @@
 
 | 단계          | 수행 내용                           | 수행 상태    | 관련 파일/폴더                                |
 | ------------- | ----------------------------------- | ------------ | --------------------------------------------- |
-| 1             | 데이터 준비                         | ✅ 수행 완료 | `eda/stock_japan.py`, `eda/total.csv`         |
-| 2             | 문제 정의 및 목표 설정              | ✅ 수행 완료 | `README.md`                                   |
-| 3             | 탐색적 데이터 분석(EDA)             | ✅ 수행 완료 | `eda/stock_japan.py`, `data/raw/*.png`        |
-| 4             | 베이스라인 모델 학습 및 검증        | ✅ 수행 완료 | `eda/predict_LR.py`, `eda/predict_LSTM.py`    |
-| 5             | 피처 엔지니어링(심화)               | ✅ 수행 완료 | `eda/predict_TF.py`, `eda/predict_LSTM.py`    |
-| 6             | 모델링 및 성능 비교 (Bias-Variance) | ✅ 수행 완료 | `experiments/bias_variance_analysis/`         |
-| 7             | 모델 최적화 (Grid/Random Search)    | ✅ 수행 완료 | `experiments/hyperparameter_tuning/`          |
-| 8             | 결론 및 인사이트                    | ✅ 수행 완료 | `eda/report.py`, `final_stock_analysis_*.csv` |
-| **확장 과제** | 웹 서비스 구현 (가산점)             | ✅ 수행 완료 | `api/`, `web/`                                |
+| 1             | 데이터 준비                         | 수행 완료 | `eda/stock_japan.py`, `eda/total.csv`         |
+| 2             | 문제 정의 및 목표 설정              | 수행 완료 | `README.md`                                   |
+| 3             | 탐색적 데이터 분석(EDA)             | 수행 완료 | `eda/stock_japan.py`, `data/raw/*.png`        |
+| 4             | 베이스라인 모델 학습 및 검증        | 수행 완료 | `eda/predict_LR.py`, `eda/predict_LSTM.py`    |
+| 5             | 피처 엔지니어링(심화)               | 수행 완료 | `eda/predict_TF.py`, `eda/predict_LSTM.py`    |
+| 6             | 모델링 및 성능 비교 (Bias-Variance) | 수행 완료 | `experiments/bias_variance_analysis/`         |
+| 7             | 모델 최적화 (Sensitivity Analysis)  | 수행 완료 | `experiments/hyperparameter_tuning/`          |
+| 8             | 결론 및 인사이트                    | 수행 완료 | `eda/report.py`, `final_stock_analysis_*.csv` |
+| **확장 과제** | 웹 서비스 구현 (가산점)             | 수행 완료 | `api/`, `web/`                                |
 
 **전체 수행률: 8/8 (100%) + 확장 과제 완료**
 
 ---
 
-## 1. 데이터 준비 ✅
+## 1. 데이터 준비
 
 ### 요구사항
 
@@ -84,7 +84,7 @@
 
 ---
 
-## 2. 문제 정의 및 목표 설정 ✅
+## 2. 문제 정의 및 목표 설정
 
 ### 요구사항
 
@@ -162,7 +162,7 @@
 
 ---
 
-## 3. 탐색적 데이터 분석(EDA) ✅
+## 3. 탐색적 데이터 분석(EDA)
 
 ### 요구사항
 
@@ -175,7 +175,7 @@
 **결측치 처리:**
 
 ```python
-# 처리 순서 (일본 프로젝트 특수성)
+# 처리 순서
 1. FRED API '.' 값 → pd.NA 변환
 2. Forward Fill (ffill) - 월간/분기 데이터 확장
 3. Backward Fill (bfill) - 첫 행 결측치 처리
@@ -184,8 +184,7 @@
 
 **처리 순서가 중요한 이유:**
 
-- 미국 프로젝트: 핵심 지표가 모두 일간 → dropna → ffill 순서 OK
-- 일본 프로젝트: 핵심 지표에 월간 데이터 포함 → **ffill → dropna** 순서 필수
+- 핵심 지표에 월간 데이터 포함 → **ffill → dropna** 순서 필수
 
 **리샘플링:**
 
@@ -263,7 +262,7 @@ print(f"데이터 타입: {df.dtypes.unique()}")  # [float64]
 
 ---
 
-## 4. 베이스라인 모델 학습 및 검증 ✅
+## 4. 베이스라인 모델 학습 및 검증
 
 ### 요구사항
 
@@ -292,7 +291,7 @@ Output: 140개 (20종목 × 7일)
 **결과:**
 | 지표 | 값 | 해석 |
 |------|-----|------|
-| 정확도 | ~99.9% | ⚠️ **과적합** |
+| 정확도 | ~99.9% | **과적합** |
 | MAPE | ~0.01% | 비현실적 수치 |
 | MAE | ~1e-12 | 완벽한 기억 (일반화 실패) |
 
@@ -326,10 +325,10 @@ Merge: Concatenate → Dense(128) → Dropout(0.2) → Output(140)
 
 #### 4.4 베이스라인 비교 요약
 
-| 모델              | 정확도     | MAPE      | 신뢰도  | 결론                    |
-| ----------------- | ---------- | --------- | ------- | ----------------------- |
-| Linear Regression | 99.9%      | 0.01%     | ❌ Low  | 과적합, 사용 불가       |
-| **LSTM**          | **94.12%** | **5.88%** | ✅ High | **베이스라인으로 적합** |
+| 모델              | 정확도     | MAPE      | 신뢰도 | 결론                    |
+| ----------------- | ---------- | --------- | ------ | ----------------------- |
+| Linear Regression | 99.9%      | 0.01%     | Low    | 과적합, 사용 불가       |
+| **LSTM**          | **94.12%** | **5.88%** | High   | **베이스라인으로 적합** |
 
 ### 관련 파일
 
@@ -340,7 +339,7 @@ Merge: Concatenate → Dense(128) → Dropout(0.2) → Output(140)
 
 ---
 
-## 5. 피처 엔지니어링(심화) ✅
+## 5. 피처 엔지니어링(심화)
 
 ### 요구사항
 
@@ -424,7 +423,7 @@ data_scaled[economic_features] = econ_scaler.fit_transform(data[economic_feature
 
 ---
 
-## 6. 모델링 및 성능 비교 (Bias-Variance Tradeoff) ✅
+## 6. 모델링 및 성능 비교 (Bias-Variance Tradeoff)
 
 ### 요구사항
 
@@ -435,11 +434,11 @@ data_scaled[economic_features] = econ_scaler.fit_transform(data[economic_feature
 
 #### 6.1 모델 비교
 
-| 모델                  | 아키텍처                         | 학습 시간 | GPU 필요  |
-| --------------------- | -------------------------------- | --------- | --------- |
-| **Transformer**       | 4-layer Encoder × 2 (Dual Input) | ~15분     | ✅ 권장   |
-| **LSTM**              | 2-layer LSTM × 2 (Dual Input)    | ~10분     | ✅ 권장   |
-| **Linear Regression** | MultiOutputRegressor             | ~2초      | ❌ 불필요 |
+| 모델                  | 아키텍처                         | 학습 시간 | GPU 필요 |
+| --------------------- | -------------------------------- | --------- | -------- |
+| **Transformer**       | 4-layer Encoder × 2 (Dual Input) | ~15분     | 권장     |
+| **LSTM**              | 2-layer LSTM × 2 (Dual Input)    | ~10분     | 권장     |
+| **Linear Regression** | MultiOutputRegressor             | ~2초      | 불필요   |
 
 #### 6.2 하이퍼파라미터 설정
 
@@ -494,7 +493,7 @@ data_scaled[economic_features] = econ_scaler.fit_transform(data[economic_feature
 - **16 units**: Underfitting 경향 (Val Loss 높음)
 - **32 units**: 불안정 (오히려 Val Loss 증가)
 - **64 units**: 양호한 균형점
-- **128 units**: 최적의 균형점 ✅ (Baseline으로 채택)
+- **128 units**: 최적의 균형점 (Baseline으로 채택)
 - **256 units**: 미미한 개선, 복잡도 대비 효율 낮음
 
 **6.3.3 Linear Regression 과적합 증명**
@@ -516,19 +515,19 @@ Linear Regression의 문제점:
 
 ![Model Comparison](experiments/bias_variance_analysis/model_comparison_bias_variance.png)
 
-| 모델              | Bias     | Variance       | 정확도 | 신뢰도      |
-| ----------------- | -------- | -------------- | ------ | ----------- |
-| Linear Regression | Very Low | **Very High**  | 99.9%  | ❌ Low      |
-| **LSTM**          | Low      | **Low-Medium** | 94.12% | ✅ **High** |
-| Transformer       | Low      | Medium-High    | 91.73% | ⚠️ Medium   |
+| 모델              | Bias     | Variance       | 정확도 | 신뢰도     |
+| ----------------- | -------- | -------------- | ------ | ---------- |
+| Linear Regression | Very Low | **Very High**  | 99.9%  | Low        |
+| **LSTM**          | Low      | **Low-Medium** | 94.12% | **High**   |
+| Transformer       | Low      | Medium-High    | 91.73% | Medium     |
 
 #### 6.4 최종 성능 비교
 
 | 모델              | 평균 정확도 | 평균 MAPE | 정확도 표준편차 | 상태             |
 | ----------------- | ----------- | --------- | --------------- | ---------------- |
-| **LSTM**          | **94.12%**  | **5.88%** | **2.69**        | ✅ **최적 모델** |
+| **LSTM**          | **94.12%**  | **5.88%** | **2.69**        | **최적 모델**    |
 | Transformer       | 91.73%      | 8.27%     | 6.74            | 메인 모델로 개발 |
-| Linear Regression | ~99.9%      | ~0.01%    | -               | ⚠️ 과적합        |
+| Linear Regression | ~99.9%      | ~0.01%    | -               | 과적합           |
 
 #### 6.5 결론
 
@@ -544,11 +543,11 @@ Linear Regression의 문제점:
 
 ---
 
-## 7. 모델 최적화 (Grid Search, Random Search) ✅
+## 7. 모델 최적화 (Sensitivity Analysis)
 
 ### 요구사항
 
-> 하이퍼파라미터 튜닝 (Grid Search, Random Search 등)
+> 하이퍼파라미터 튜닝 (Sensitivity Analysis)
 > 최적 모델 도출 및 성능 결과 정리
 
 ### 수행 내용
@@ -591,7 +590,7 @@ Baseline을 기준으로 각 파라미터를 개별 변경하여 영향을 분�
 
 | 순위 | 설정 | Best Val Loss | 비고 |
 |------|------|---------------|------|
-| **1** | **Baseline** | **0.0358** | 🏆 **최고 성능!** |
+| **1** | **Baseline** | **0.0358** | **최고 성능!** |
 | 2 | High-Capacity | 0.0366 | |
 | 3 | Dropout↓(0.15) | 0.0367 | |
 | 4 | Batch↑(64) | 0.0387 | |
@@ -608,41 +607,41 @@ Baseline을 기준으로 각 파라미터를 개별 변경하여 영향을 분�
 | 값 | Val Loss | 해석 |
 |----|----------|------|
 | 64 | 0.0432 | 성능 저하 |
-| **128** | **0.0358** | **최적** ✅ |
+| **128** | **0.0358** | **최적** |
 
 **Dense Units:**
 | 값 | Val Loss | 해석 |
 |----|----------|------|
 | 64 | 0.0390-0.0404 | 성능 저하 |
-| **128** | **0.0358** | **최적** ✅ |
+| **128** | **0.0358** | **최적** |
 
 **Dropout Rate:**
 | 값 | Val Loss | 해석 |
 |----|----------|------|
 | 0.15 | 0.0367 | 약간 저하 |
-| **0.2** | **0.0358** | **최적** ✅ |
+| **0.2** | **0.0358** | **최적** |
 
 **Lookback (과거 데이터 윈도우):**
 | 값 | Val Loss | 해석 |
 |----|----------|------|
-| **90** | **0.0358** | **최적** ✅ |
+| **90** | **0.0358** | **최적** |
 | 120 | 0.0414 | 오히려 성능 저하 |
 
 **Batch Size:**
 | 값 | Val Loss | 해석 |
 |----|----------|------|
-| **32** | **0.0358** | **최적** ✅ |
+| **32** | **0.0358** | **최적** |
 | 64 | 0.0387 | 성능 저하 |
 
 #### 7.5 Baseline이 1위인 이유
 
 | 파라미터      | Baseline 값 | 변경 시 결과 | 결론 |
 | ------------- | ----------- | ------------ | ---- |
-| lookback      | 90          | 120 → 성능 저하 | ✅ 최적 |
-| lstm_units    | 128         | 64 → 성능 저하 | ✅ 최적 |
-| dense_units   | 128         | 64 → 성능 저하 | ✅ 최적 |
-| dropout_rate  | 0.2         | 0.15 → 약간 저하 | ✅ 최적 |
-| batch_size    | 32          | 64 → 성능 저하 | ✅ 최적 |
+| lookback      | 90          | 120 → 성능 저하 | 최적 |
+| lstm_units    | 128         | 64 → 성능 저하 | 최적 |
+| dense_units   | 128         | 64 → 성능 저하 | 최적 |
+| dropout_rate  | 0.2         | 0.15 → 약간 저하 | 최적 |
+| batch_size    | 32          | 64 → 성능 저하 | 최적 |
 
 #### 7.6 결론
 
@@ -653,20 +652,20 @@ Baseline을 기준으로 각 파라미터를 개별 변경하여 영향을 분�
 │                    검증된 최적 설정 (Baseline)                        │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
-│  ✅ Lookback = 90일                                                 │
+│  Lookback = 90일                                                    │
 │     - 120일은 오히려 노이즈 증가로 성능 저하                         │
 │                                                                     │
-│  ✅ LSTM Units = 128                                                │
+│  LSTM Units = 128                                                   │
 │     - 64보다 128이 명확히 우수                                      │
 │     - 충분한 표현력으로 시계열 패턴 학습                            │
 │                                                                     │
-│  ✅ Dense Units = 128                                               │
+│  Dense Units = 128                                                  │
 │     - 64로 줄이면 성능 저하                                         │
 │                                                                     │
-│  ✅ Dropout = 0.2                                                   │
+│  Dropout = 0.2                                                      │
 │     - 0.15보다 0.2가 과적합 방지에 효과적                           │
 │                                                                     │
-│  ✅ Batch Size = 32                                                 │
+│  Batch Size = 32                                                    │
 │     - 64보다 32가 안정적인 학습 제공                                │
 │                                                                     │
 │  Best Validation Loss: 0.0358                                       │
@@ -692,7 +691,7 @@ Baseline을 기준으로 각 파라미터를 개별 변경하여 영향을 분�
 
 ---
 
-## 8. 결론 및 인사이트 ✅
+## 8. 결론 및 인사이트
 
 ### 요구사항
 
@@ -707,9 +706,9 @@ Baseline을 기준으로 각 파라미터를 개별 변경하여 영향을 분�
 
 | 모델              | 평균 정확도 | 평균 MAPE | 표준편차 | Buy/Sell 추천 | 결론             |
 | ----------------- | ----------- | --------- | -------- | ------------- | ---------------- |
-| **LSTM**          | **94.12%**  | **5.88%** | **2.69** | 신뢰 가능     | ✅ **최적 모델** |
+| **LSTM**          | **94.12%**  | **5.88%** | **2.69** | 신뢰 가능     | **최적 모델**    |
 | Transformer       | 91.73%      | 8.27%     | 6.74     | 신뢰 가능     | 메인 모델로 개발 |
-| Linear Regression | ~99.9%      | ~0.01%    | -        | 신뢰 불가     | ❌ 과적합        |
+| Linear Regression | ~99.9%      | ~0.01%    | -        | 신뢰 불가     | 과적합           |
 
 **8.1.2 분석 결과**
 
@@ -834,7 +833,7 @@ else:
 
 ---
 
-## 확장 과제 (가산점) ✅
+## 확장 과제 (가산점)
 
 ### 요구사항
 

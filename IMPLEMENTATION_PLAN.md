@@ -1,49 +1,23 @@
 # 프로젝트 구현 과정
 
-> **J-StockLab - 일본 주가지수 및 Nikkei 225 종목 예측 프로젝트**
->
-> 딥러닝 기반 일본 주식 예측 시스템 (Transformer, LSTM, Linear Regression 비교)
->
-> 단계별 구현 가이드
+> 본 문서는 J-StockLab 프로젝트의 구현 과정을 단계별로 정리한다.
 >
 > **결론**: Transformer를 메인 모델로 개발하였으나, 실험 결과 LSTM이 본 프로젝트 규모(20개 종목)에서 가장 적합한 모델임을 확인
 
 ---
 
-## 📋 전체 구현 로드맵
+## 전체 구현 단계
 
-```
-Phase 1: 환경 설정 및 데이터 검증 (1주차)
-  ├─ Step 1-1: 프로젝트 환경 설정
-  ├─ Step 1-2: yfinance 데이터 수집 테스트
-  ├─ Step 1-3: 기본 시각화 확인
-  └─ Step 1-4: FastAPI 기본 구조 구축
-
-Phase 2: 데이터 수집 및 전처리 (2주차)
-  ├─ Step 2-1: FRED API + yfinance 데이터 수집 스크립트 (stock.py)
-  ├─ Step 2-2: Nikkei 225 상위 20개 종목 선정
-  ├─ Step 2-3: 일본 3개 지수 + 경제 지표 + 종목 데이터 통합
-  └─ Step 2-4: total.csv 생성 및 검증
-
-Phase 3: Transformer 모델링 (3-4주차)
-  ├─ Step 3-1: Transformer 모델 구조 설계 (predict.py)
-  ├─ Step 3-2: 데이터 전처리 및 스케일링
-  ├─ Step 3-3: Transformer 모델 학습 (1~7일 후 동시 예측)
-  └─ Step 3-4: predicted_stock.csv 생성
-
-Phase 4: 평가 및 웹 서비스 (5주차)
-  ├─ Step 4-1: 모델 평가 및 리포트 생성 (report.py) ✅
-  ├─ Step 4-2: FastAPI 예측 API 개발 ✅
-  ├─ Step 4-3: Next.js 프론트엔드 MVP 구현 ✅
-  ├─ Step 4-4: 시장 현황 & 경제 지표 기능 ✅
-  ├─ Step 4-5: 종목 비교 & 모델 비교 기능 ✅
-  ├─ Step 4-6: 실험 및 검증 (Bias-Variance, Hyperparameter Tuning) ✅
-  └─ Step 4-7: 통합 테스트 및 배포 (진행 예정)
-```
+| Phase | 내용 | 주요 작업 |
+|-------|------|----------|
+| Phase 1 | 환경 설정 및 데이터 검증 | 프로젝트 환경 설정, yfinance 데이터 수집 테스트, FastAPI 기본 구조 구축 |
+| Phase 2 | 데이터 수집 및 전처리 | FRED API + yfinance 데이터 수집, Nikkei 225 상위 20개 종목 선정, total.csv 생성 |
+| Phase 3 | 모델링 | Transformer/LSTM/Linear Regression 모델 구현, 학습, predicted_stock.csv 생성 |
+| Phase 4 | 평가 및 웹 서비스 | 모델 평가, FastAPI API, Next.js 프론트엔드, 실험 및 검증 |
 
 ---
 
-## 🎯 프로젝트 개요
+## 프로젝트 개요
 
 본 프로젝트는 **딥러닝 모델 (Transformer, LSTM, Linear Regression)**을 활용하여 일본 주식시장의 주요 지수와 Nikkei 225 상위 20개 종목의 1~7일 후 주가를 예측한다. FRED API를 통한 경제 지표와 Yahoo Finance의 주식 데이터를 통합하여 높은 예측 정확도를 목표로 한다.
 
@@ -54,7 +28,7 @@ Phase 4: 평가 및 웹 서비스 (5주차)
 ```
 J-StockLab/
 ├── eda/                             # 데이터 수집 및 분석
-│   ├── stock_japan.py               # FRED + yfinance 데이터 수집 (일본용)
+│   ├── stock_japan.py               # FRED + yfinance 데이터 수집
 │   ├── predict_TF.py                # Transformer 모델 학습 및 예측 (Colab용)
 │   ├── predict_LSTM.py              # LSTM 베이스라인 모델 (Colab용)
 │   ├── predict_LR.py                # Linear Regression 베이스라인 (Colab용)
@@ -108,7 +82,7 @@ J-StockLab/
 
 ---
 
-## 🚀 Phase 1: 환경 설정 및 데이터 검증
+## Phase 1: 환경 설정 및 데이터 검증
 
 **목표**: 개발 환경 구축, yfinance 데이터 수집 테스트, FastAPI 기본 서버 구축
 
@@ -119,13 +93,11 @@ J-StockLab/
 - FastAPI 기본 엔드포인트 구현
 - 간단한 웹 인터페이스 작성
 
-**참고**: Phase 1은 프로토타이핑 단계로, 본격적인 구현은 Phase 2부터 시작됩니다.
-
 ---
 
-## 📊 Phase 2: 데이터 수집 및 전처리
+## Phase 2: 데이터 수집 및 전처리
 
-### Step 2-1: FRED API + yfinance 데이터 수집 스크립트
+### FRED API + yfinance 데이터 수집 스크립트
 
 #### 2.1.1 `eda/stock_japan.py` 작성
 
@@ -233,12 +205,12 @@ end_date = datetime.today().strftime('%Y-%m-%d')
 
 ```bash
 cd /Users/kk53451/Desktop/J-StockLab/eda
-python stock_japan.py  # 일본 버전 (stock.py는 미국 참고용)
+python stock_japan.py
 ```
 
 ---
 
-### Step 2-2: Nikkei 225 상위 20개 종목 선정
+### Nikkei 225 상위 20개 종목 선정
 
 #### 자동 선정 로직 (선택사항)
 
@@ -270,7 +242,7 @@ print(top_20)
 
 ---
 
-### Step 2-3: 데이터 통합 및 전처리
+### 데이터 통합 및 전처리
 
 **stock_japan.py 핵심 로직**:
 
@@ -285,15 +257,7 @@ print(top_20)
 6. **날짜 필터링**: 2014-10-16 이후 데이터만 사용
 7. **total.csv 저장** (결측치 0%)
 
-**중요 - 처리 순서가 다른 이유**:
-
-미국 프로젝트는 dropna → ffill 순서였으나, 일본 프로젝트는 **ffill → dropna** 순서로 변경:
-
-- **미국 프로젝트**: 핵심 지표가 모두 **일간 데이터** (10년 기대 인플레이션율, 장단기 금리차)
-
-  - → dropna를 먼저 실행해도 최신 날짜까지 데이터 존재
-
-- **일본 프로젝트**: 핵심 지표에 **월간 데이터** 포함 (일본 10년 국채 수익률, 일본 3개월 은행간 금리)
+- **결측치 처리 중요 포인트**: 핵심 지표에 **월간 데이터** 포함 (일본 10년 국채 수익률, 일본 3개월 은행간 금리)
   - → 월간 지표는 최근 발표(예: 2025-09-01) 이후 NaN
   - → dropna를 먼저 실행하면 9월 이후 행 전부 삭제
   - → **ffill을 먼저** 실행해서 월간 값을 최신 날짜까지 확장한 후 확인 필요
@@ -302,7 +266,7 @@ Forward fill을 먼저 적용한 후 dropna를 실행해야 분기/월간 지표
 
 ---
 
-### Step 2-4: total.csv 검증
+### total.csv 검증
 
 **실제 데이터 현황** (stock_japan.py 실행 시):
 
@@ -340,56 +304,9 @@ df['닛케이 225'].plot(figsize=(14, 6), title='Nikkei 225 Index')
 plt.show()
 ```
 
----
+## Phase 3: 모델링 (Transformer + 베이스라인)
 
-## 📝 stock.py vs stock_japan.py 프로세스 비교
-
-### 프로세스 단계별 비교
-
-| 단계                      | 미국 (stock.py)         | 일본 (stock_japan.py)     | 동일 여부        |
-| ------------------------- | ----------------------- | ------------------------- | ---------------- |
-| **1. FRED 데이터 수집**   | 18개 미국 경제 지표     | 18개 (일본 8 + 미국 10)   | ✅ 로직 동일     |
-| **2. FRED 리샘플링**      | resample('D').ffill()   | resample('D').ffill()     | ✅ 완전 동일     |
-| **3. yfinance 시장 지표** | 나스닥, S&P 500, VIX 등 | 닛케이, TOPIX, S&P 500 등 | ✅ 로직 동일     |
-| **4. 개별 종목 수집**     | 나스닥 100 상위 20개    | Nikkei 225 상위 20개      | ✅ 로직 동일     |
-| **5. 데이터 통합**        | pd.concat outer join    | pd.concat outer join      | ✅ 완전 동일     |
-| **6. 결측치 처리**        | dropna → ffill          | ffill → bfill → dropna    | ⚠️ **순서 다름** |
-| **7. 날짜 필터링**        | 없음 (2006년부터)       | 2014-10-16 이후만         | ⚠️ 일본만 필터링 |
-| **8. CSV 저장**           | total.csv               | total.csv                 | ✅ 완전 동일     |
-
-### 핵심 차이점
-
-**1. 결측치 처리 순서 (6단계)**
-
-- **미국**: dropna → ffill
-
-  - 핵심 지표: `10년 기대 인플레이션율`(일간) + `장단기 금리차`(일간)
-  - 모두 일간 데이터 → dropna 먼저 실행 가능
-
-- **일본**: ffill → bfill → dropna
-  - 핵심 지표: `일본 10년 국채 수익률`(월간) + `일본 3개월 은행간 금리`(월간) + `미국 장단기 금리차`(일간)
-  - 월간 데이터 포함 → ffill로 확장 후 dropna 실행
-
-**2. 날짜 필터링 (7단계)**
-
-- **미국**: 없음 (2006년부터 전체 사용)
-- **일본**: 2014-10-16 이후만 사용 (리크루트홀딩스 상장일 기준)
-
-### 결론
-
-stock_japan.py는 stock.py의 프로세스를 **거의 그대로 재사용**:
-
-- FRED 지표 코드만 일본용으로 변경
-- yfinance 티커만 일본용으로 변경
-- 핵심 지표 빈도 차이로 인한 순서 조정만 추가
-
-**전체 데이터 수집 및 전처리 로직은 동일**하며, 효율적으로 재사용되었습니다.
-
----
-
-## 🤖 Phase 3: 모델링 (Transformer + 베이스라인)
-
-### Step 3-1: 모델 구조 설계
+### 모델 구조 설계
 
 #### 3.1.1 `eda/predict_TF.py` - Transformer 모델 (메인)
 
@@ -455,18 +372,18 @@ Output: 140개 출력 (20종목 × 7일 예측)
 
 ### 공통 핵심 파라미터
 
-| 파라미터 | Transformer | LSTM | Linear Regression |
-|----------|-------------|------|-------------------|
-| lookback | 90일 | 90일 | 90일 |
-| forecast_horizon | 7일 | 7일 | 7일 |
-| target_size | 140 | 140 | 140 |
-| epochs | 50 | 50 | - |
-| batch_size | 32 | 32 | - |
-| learning_rate | 0.0001 | 0.0001 | - |
+| 파라미터         | Transformer | LSTM   | Linear Regression |
+| ---------------- | ----------- | ------ | ----------------- |
+| lookback         | 90일        | 90일   | 90일              |
+| forecast_horizon | 7일         | 7일    | 7일               |
+| target_size      | 140         | 140    | 140               |
+| epochs           | 50          | 50     | -                 |
+| batch_size       | 32          | 32     | -                 |
+| learning_rate    | 0.0001      | 0.0001 | -                 |
 
 ---
 
-### Step 3-2: 데이터 전처리
+### 데이터 전처리
 
 **target_columns** (예측 대상 - Nikkei 225 상위 20개 종목, 영문명):
 
@@ -514,7 +431,7 @@ economic_features = [
 
 ---
 
-### Step 3-3: Transformer 모델 학습
+### Transformer 모델 학습
 
 **학습 과정**:
 
@@ -561,7 +478,7 @@ result_data.to_csv('predicted_stock.csv', index=False)
 
 ---
 
-### Step 3-4: 모델별 predicted_stock_*.csv 생성
+### 모델별 predicted_stock_*.csv 생성
 
 **출력 형식** (3개 모델 동일):
 
@@ -574,53 +491,55 @@ result_data.to_csv('predicted_stock.csv', index=False)
 
 **생성 파일**:
 
-| 모델 | 파일명 | 비고 |
-|------|--------|------|
-| Transformer | predicted_stock_TF.csv | 메인 모델 |
-| LSTM | predicted_stock_LSTM.csv | 베이스라인 |
-| Linear Regression | predicted_stock_LR.csv | 베이스라인 (과적합) |
+| 모델              | 파일명                   | 비고                |
+| ----------------- | ------------------------ | ------------------- |
+| Transformer       | predicted_stock_TF.csv   | 메인 모델           |
+| LSTM              | predicted_stock_LSTM.csv | 베이스라인          |
+| Linear Regression | predicted_stock_LR.csv   | 베이스라인 (과적합) |
 
 **체크포인트**:
 
-- ✅ 각 종목별 Day1~Day7 예측값 컬럼 존재
-- ✅ 각 종목별 Actual (현재가) 컬럼 존재
-- ✅ 총 161개 컬럼 (날짜 + 20종목 × 8)
-- ✅ 날짜 순서대로 정렬
-- ✅ 모든 20개 종목에 대한 예측값 포함
+- 각 종목별 Day1~Day7 예측값 컬럼 존재
+- 각 종목별 Actual (현재가) 컬럼 존재
+- 총 161개 컬럼 (날짜 + 20종목 × 8)
+- 날짜 순서대로 정렬
+- 모든 20개 종목에 대한 예측값 포함
 
 ---
 
-## 📝 모델별 구현 비교
+## 모델별 구현 비교
 
 ### Transformer vs LSTM vs Linear Regression
 
-| 항목 | Transformer | LSTM | Linear Regression |
-|------|-------------|------|-------------------|
-| **파일명** | predict_TF.py | predict_LSTM.py | predict_LR.py |
-| **프레임워크** | TensorFlow/Keras | TensorFlow/Keras | sklearn |
-| **입력 구조** | Dual Input (분리) | Dual Input (분리) | Single Input (flatten) |
-| **인코더** | Transformer × 4 | LSTM × 2 | - |
-| **Merge 방식** | Add | Concatenate | - |
-| **학습 시간** | ~15분 (GPU) | ~10분 (GPU) | ~2초 |
-| **GPU 필요** | ✅ 권장 | ✅ 권장 | ❌ 불필요 |
+| 항목           | Transformer       | LSTM              | Linear Regression      |
+| -------------- | ----------------- | ----------------- | ---------------------- |
+| **파일명**     | predict_TF.py     | predict_LSTM.py   | predict_LR.py          |
+| **프레임워크** | TensorFlow/Keras  | TensorFlow/Keras  | sklearn                |
+| **입력 구조**  | Dual Input (분리) | Dual Input (분리) | Single Input (flatten) |
+| **인코더**     | Transformer × 4   | LSTM × 2          | -                      |
+| **Merge 방식** | Add               | Concatenate       | -                      |
+| **학습 시간**  | ~15분 (GPU)       | ~10분 (GPU)       | ~2초                   |
+| **GPU 필요**   | 권장              | 권장              | 불필요                 |
 
-### 모델 성능 비교 결과 ✅
+### 모델 성능 비교 결과
 
-| 모델 | 평균 정확도 | 평균 MAPE | 정확도 표준편차 | 상태 |
-|------|------------|-----------|----------------|------|
-| **LSTM** | **94.12%** | **5.88%** | **2.69** | ✅ **최적 모델** |
-| **Transformer** | 91.73% | 8.27% | 6.74 | ✅ 정상 (메인 모델로 개발) |
-| **Linear Regression** | ~99.9%* | ~0.01%* | - | ⚠️ 과적합 |
+| 모델                  | 평균 정확도 | 평균 MAPE | 정확도 표준편차 | 상태                    |
+| --------------------- | ----------- | --------- | --------------- | ----------------------- |
+| **LSTM**              | **94.12%**  | **5.88%** | **2.69**        | **최적 모델**           |
+| **Transformer**       | 91.73%      | 8.27%     | 6.74            | 정상 (메인 모델로 개발) |
+| **Linear Regression** | ~99.9%\*    | ~0.01%\*  | -               | 과적합                  |
 
 **분석 및 결론**:
 
 1. **LSTM이 본 프로젝트 최적 모델**:
+
    - 가장 높은 정확도 (94.12% vs Transformer 91.73%, +2.39%p)
    - 가장 낮은 MAPE (5.88% vs Transformer 8.27%, -2.39%p)
    - 종목별 성능이 안정적 (표준편차 2.69 vs Transformer 6.74)
    - 중소형 규모 시계열에 최적화된 구조
 
 2. **Transformer 한계**:
+
    - Self-Attention 메커니즘은 대규모 데이터셋에서 강력하지만, 20개 종목 규모에서는 복잡성이 과도함
    - 종목별 성능 편차가 큼 (표준편차 6.74)
    - 하이퍼파라미터 튜닝 난이도 높음
@@ -632,12 +551,12 @@ result_data.to_csv('predicted_stock.csv', index=False)
 
 ### 공통 사항 (3개 모델)
 
-- ✅ **실행 환경**: Google Colab
-- ✅ **파일 업로드**: `files.upload()` 직접 업로드
-- ✅ **하이퍼파라미터**: lookback=90, forecast_horizon=7
-- ✅ **데이터 전처리**: MinMaxScaler, ffill/bfill
-- ✅ **출력 형식**: predicted_stock_*.csv (날짜 + 종목별 Day1~7 + Actual)
-- ✅ **결과 다운로드**: `files.download()`
+- **실행 환경**: Google Colab
+- **파일 업로드**: `files.upload()` 직접 업로드
+- **하이퍼파라미터**: lookback=90, forecast_horizon=7
+- **데이터 전처리**: MinMaxScaler, ffill/bfill
+- **출력 형식**: predicted*stock*\*.csv (날짜 + 종목별 Day1~7 + Actual)
+- **결과 다운로드**: `files.download()`
 
 ### 핵심 개선 사항
 
@@ -649,11 +568,11 @@ result_data.to_csv('predicted_stock.csv', index=False)
 
 ---
 
-## 📈 Phase 4: 평가 및 웹 서비스
+## Phase 4: 평가 및 웹 서비스
 
-### Step 4-1: 모델 평가 및 리포트 생성 ✅
+### 모델 평가 및 리포트 생성
 
-#### 4.1.1 `eda/report.py` 작성 ✅
+#### 4.1.1 `eda/report.py` 작성
 
 **평가 메트릭**:
 
@@ -674,13 +593,13 @@ result_data.to_csv('predicted_stock.csv', index=False)
 - `Rise Probability > 0%` → **BUY**
 - `Rise Probability < 0%` → **SELL**
 
-**모델별 출력 파일** ✅:
+**모델별 출력 파일**:
 
-| 모델 | 입력 파일 | 출력 파일 |
-|------|----------|----------|
-| Transformer | predicted_stock_TF.csv | final_stock_analysis_TF.csv |
-| LSTM | predicted_stock_LSTM.csv | final_stock_analysis_LSTM.csv |
-| Linear Regression | predicted_stock_LR.csv | final_stock_analysis_LR.csv |
+| 모델              | 입력 파일                | 출력 파일                     |
+| ----------------- | ------------------------ | ----------------------------- |
+| Transformer       | predicted_stock_TF.csv   | final_stock_analysis_TF.csv   |
+| LSTM              | predicted_stock_LSTM.csv | final_stock_analysis_LSTM.csv |
+| Linear Regression | predicted_stock_LR.csv   | final_stock_analysis_LR.csv   |
 
 **컬럼 구성**:
 
@@ -692,13 +611,14 @@ Rise Probability(%) | Recommendation | Analysis |
 Day1_Price | Day2_Price | Day3_Price | Day4_Price | Day5_Price | Day6_Price | Day7_Price
 ```
 
-**실행 방법** (Google Colab) ✅:
+**실행 방법** (Google Colab):
 
-1. 각 노트북(주식예측하기_TF.ipynb, 주가예측하기_LSTM.ipynb, 주가예측하기_LR.ipynb)의 Cell 1 실행
-2. 해당 predicted_stock_*.csv 파일 업로드 (팝업)
-3. 자동으로 final_stock_analysis_*.csv 다운로드
+1. 각 노트북(주식예측하기\_TF.ipynb, 주가예측하기\_LSTM.ipynb, 주가예측하기\_LR.ipynb)의 Cell 1 실행
+2. 해당 predicted*stock*\*.csv 파일 업로드 (팝업)
+3. 자동으로 final*stock_analysis*\*.csv 다운로드
 
-**출력 결과** ✅:
+**출력 결과**:
+
 - 평가 지표: MAE, RMSE, MAPE, Accuracy (Day7 기준 + 전체 Day 평균)
 - Day1~Day7 가격 예측값
 - 상승/하락 예측: Rise Probability (%)
@@ -707,7 +627,7 @@ Day1_Price | Day2_Price | Day3_Price | Day4_Price | Day5_Price | Day6_Price | Da
 
 ---
 
-### Step 4-2: FastAPI 예측 API 개발
+### FastAPI 예측 API 개발
 
 #### 4.2.1 `api/main.py` 업데이트
 
@@ -764,7 +684,7 @@ Day1_Price | Day2_Price | Day3_Price | Day4_Price | Day5_Price | Day6_Price | Da
 
 ---
 
-### Step 4-3: 프론트엔드 구현
+### 프론트엔드 구현
 
 #### 4.3.1 `web/index.html` 업데이트
 
@@ -789,7 +709,7 @@ Day1_Price | Day2_Price | Day3_Price | Day4_Price | Day5_Price | Day6_Price | Da
 
 ---
 
-### Step 4-4: 통합 테스트 및 배포
+### 통합 테스트 및 배포
 
 **테스트 체크리스트**:
 
@@ -826,16 +746,16 @@ open web/index.html
 
 ---
 
-## ✅ Phase별 체크리스트
+## Phase별 체크리스트
 
-### Phase 1 ✅
+### Phase 1
 
 - [x] Python 환경 및 라이브러리 설치
 - [x] yfinance로 3개 지수 데이터 수집 성공
 - [x] FastAPI 서버 구동 및 API 테스트
 - [x] HTML 페이지에서 API 호출 확인
 
-### Phase 2 (데이터 수집 및 전처리) ✅
+### Phase 2 (데이터 수집 및 전처리)
 
 - [x] `eda/stock_japan.py` 작성
 - [x] FRED API 키 설정 및 18개 지표 수집
@@ -845,32 +765,36 @@ open web/index.html
 - [x] 데이터 검증 (결측치 0%, 데이터 품질 확인)
 - [x] 결측치 처리 로직 개선 (ffill 후 dropna로 순서 변경)
 
-### Phase 3 (모델링: Transformer + 베이스라인) ✅
+### Phase 3 (모델링: Transformer + 베이스라인)
 
 **Transformer (메인 모델)**:
+
 - [x] `eda/predict_TF.py` 작성 (Google Colab용)
 - [x] Transformer Dual Input 모델 구현 (stock stream + economic stream)
 - [x] 모델 학습 (50 epochs, 90-day lookback, 1~7일 동시 예측)
 - [x] `predicted_stock_TF.csv` 생성
 
 **LSTM (베이스라인)**:
+
 - [x] `eda/predict_LSTM.py` 작성 (Google Colab용)
 - [x] LSTM Dual Input 모델 구현
 - [x] `predicted_stock_LSTM.csv` 생성
 
 **Linear Regression (베이스라인)**:
+
 - [x] `eda/predict_LR.py` 작성 (Google Colab용)
 - [x] sklearn LinearRegression 구현
 - [x] `predicted_stock_LR.csv` 생성
 - [x] 과적합(Overfitting) 문제 확인 및 문서화
 
 **공통**:
+
 - [x] 출력 크기 140 (20종목 × 7일)
 - [x] 예측 결과 시각화 (대표 5개 종목 그래프)
 - [x] 영문 종목명 사용으로 matplotlib 한글 폰트 문제 해결
 - [x] Google Colab 직접 파일 업로드 방식 적용
 
-### Phase 4-1 (평가 리포트) ✅
+### Phase 4-1 (평가 리포트)
 
 - [x] `eda/report.py` 작성 (Google Colab용)
 - [x] 평가 메트릭 계산 (MAE, RMSE, MAPE, Accuracy - Day7 기준 + 전체 Day 평균)
@@ -878,9 +802,9 @@ open web/index.html
 - [x] Buy/Sell 추천 로직 구현 (STRONG BUY/BUY/SELL)
 - [x] 모델별 `final_stock_analysis_*.csv` 생성 (TF, LSTM, LR)
 - [x] Google Colab 직접 파일 업로드 방식 적용 (report.py)
-- [x] 각 모델별 Colab 노트북 작성 (주식예측하기_TF.ipynb, 주가예측하기_LSTM.ipynb, 주가예측하기_LR.ipynb)
+- [x] 각 모델별 Colab 노트북 작성 (주식예측하기\_TF.ipynb, 주가예측하기\_LSTM.ipynb, 주가예측하기\_LR.ipynb)
 
-### Phase 4-2 (FastAPI 예측 API) ✅
+### Phase 4-2 (FastAPI 예측 API)
 
 - [x] `/api/dashboard?model=TF` - 대시보드 요약 (모델 선택 지원)
 - [x] `/api/stocks?model=TF` - 종목 리스트 (정렬/필터)
@@ -890,7 +814,7 @@ open web/index.html
 - [x] `/api/models/compare` - 모델 성능 비교
 - [x] `/api/data/status` - 데이터 최신화 정보
 
-### Phase 4-3 (Next.js 프론트엔드 MVP) ✅
+### Phase 4-3 (Next.js 프론트엔드 MVP)
 
 - [x] Next.js 15 + TypeScript + Tailwind CSS 프로젝트 구축
 - [x] 대시보드 페이지 (모델 선택 드롭다운, 성능 비교 차트, 데이터 기준일)
@@ -899,9 +823,10 @@ open web/index.html
 - [x] 다크모드 지원 (next-themes)
 - [x] 반응형 디자인
 
-### Phase 4-4 (시장 현황 & 경제 지표) ✅
+### Phase 4-4 (시장 현황 & 경제 지표)
 
 **백엔드 API**:
+
 - [x] `/api/market` - 시장 현황 (닛케이 225, S&P 500, 엔/달러, VIX, 금)
 - [x] `/api/indicators?days=730` - 경제 지표 데이터
   - 일본 지표 8개: GDP, 실업률, 국채, 금리, 산업생산, 무역수지, 소비자신뢰, BOJ총자산
@@ -911,6 +836,7 @@ open web/index.html
 - [x] 일본 무역수지 단위 변환 (엔 → 억엔)
 
 **프론트엔드**:
+
 - [x] 대시보드 시장 현황 카드 (닛케이 225, S&P 500, 엔/달러, VIX, 금)
 - [x] 경제 지표 페이지 (`/indicators`)
   - 탭 구성: 일본 경제지표 | 미국 경제지표 | 시장 지표
@@ -918,14 +844,16 @@ open web/index.html
   - X축 날짜 포맷: 일간/주간 MM-DD, 월간/분기 YYYY-MM
   - Recharts 차트 (step 타입, 툴팁)
 
-### Phase 4-5 (종목 비교 & 모델 비교) ✅
+### Phase 4-5 (종목 비교 & 모델 비교)
 
-**종목 비교 기능** ✅:
+**종목 비교 기능**:
+
 - [x] `/api/compare?model=TF&stocks=Toyota,Sony` - 동일 모델 내 종목 비교 API
 - [x] 종목 비교 페이지 (`/compare`) - 최대 5개 종목 동시 비교
 - [x] 차트 및 성능 지표 비교 (가격 추이, Day1~Day7 예측, 정확도, MAPE)
 
-**모델 비교 기능** ✅:
+**모델 비교 기능**:
+
 - [x] `/api/models/analysis` - 모델별 상세 분석 API
 - [x] 모델 비교 페이지 (`/models`)
   - 성능 요약 (평균 정확도, MAPE, 표준편차)
@@ -933,9 +861,10 @@ open web/index.html
   - 추천 분포 (STRONG BUY, BUY, SELL 파이차트)
   - 모델 특성 (장점, 단점, 설명, 실제 성능 기반 분석)
 
-### Phase 4-6 (실험 및 검증) ✅
+### Phase 4-6 (실험 및 검증)
 
-**Bias-Variance Tradeoff 분석** ✅:
+**Bias-Variance Tradeoff 분석**:
+
 - [x] `experiments/bias_variance_analysis/bias_variance_analysis.py` 작성
 - [x] Learning Curve 분석: 훈련 데이터 크기에 따른 성능 변화
 - [x] Model Complexity 분석: LSTM 유닛 수(16→256)에 따른 Bias-Variance 변화
@@ -943,7 +872,8 @@ open web/index.html
 - [x] 3개 모델 종합 비교 (LSTM, Transformer, Linear Regression)
 - [x] 결과 이미지 생성: learning_curve_lstm.png, bias_variance_decomposition.png, learning_curve_lr.png, model_comparison_bias_variance.png
 
-**Hyperparameter Tuning 실험** ✅:
+**Hyperparameter Tuning 실험**:
+
 - [x] `experiments/hyperparameter_tuning/hyperparameter_tuning.py` 작성
 - [x] Sensitivity Analysis (8개 조합): 하이퍼파라미터별 민감도 분석
 - [x] Baseline (lstm_units=128, dense_units=128, dropout=0.2, batch_size=32, lr=0.0001)이 Val Loss 0.0358로 #1 순위
@@ -951,6 +881,7 @@ open web/index.html
 - [x] 결과 파일 생성: hyperparameter_analysis.png, top5_configurations.png, hyperparameter_tuning_results.csv
 
 **핵심 결론**:
+
 - LSTM 128 units가 Bias-Variance 균형이 가장 좋음
 - Linear Regression 99.9% 정확도는 과적합 (Feature 4,230개 > Sample 3,200개)
 - 현재 하이퍼파라미터 설정이 최적임
@@ -964,7 +895,7 @@ open web/index.html
 
 ---
 
-## 📦 필수 라이브러리 (requirements.txt 업데이트 필요)
+## 필수 라이브러리 (requirements.txt 업데이트 필요)
 
 ```txt
 # 데이터 수집
@@ -1005,12 +936,12 @@ ipykernel==6.29.0
 
 ---
 
-## 🎓 참고사항
+## 참고사항
 
 ### 개발 팁
 
 - **FRED API 키**: https://fred.stlouisfed.org/docs/api/api_key.html 에서 무료 발급
-- **데이터 수집 시간**: stock.py 실행 시 약 5-10분 소요
+- **데이터 수집 시간**: stock_japan.py 실행 시 약 5-10분 소요
 - **모델 학습 시간**: GPU 사용 시 약 10-20분, CPU 사용 시 1-2시간
 - **Git 버전 관리**: 각 Phase 완료 후 커밋 추천
 
@@ -1024,7 +955,7 @@ ipykernel==6.29.0
 
 ---
 
-## 🔗 유용한 링크
+## 유용한 링크
 
 - **FRED API**: https://fred.stlouisfed.org/docs/api/
 - **yfinance 문서**: https://pypi.org/project/yfinance/
