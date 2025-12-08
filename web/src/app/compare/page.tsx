@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useTheme } from "next-themes";
 import {
   getStocks,
   compareStocks,
@@ -37,6 +38,7 @@ const MODEL_OPTIONS: { value: ModelType; label: string }[] = [
 const CHART_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
 
 export default function ComparePage() {
+  const { resolvedTheme } = useTheme();
   const [model, setModel] = useState<ModelType>("TF");
   const [allStocks, setAllStocks] = useState<Stock[]>([]);
   const [selectedStocks, setSelectedStocks] = useState<string[]>([]);
@@ -389,10 +391,10 @@ export default function ComparePage() {
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "#1f2937",
-                      border: "1px solid #374151",
+                      backgroundColor: resolvedTheme === "dark" ? "#1f2937" : "#ffffff",
+                      border: `1px solid ${resolvedTheme === "dark" ? "#374151" : "#e5e7eb"}`,
                       borderRadius: "8px",
-                      color: "#f9fafb",
+                      color: resolvedTheme === "dark" ? "#f9fafb" : "#111827",
                     }}
                     formatter={(value: number) => [`¥${value.toLocaleString()}`, ""]}
                   />
@@ -433,10 +435,10 @@ export default function ComparePage() {
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "#1f2937",
-                      border: "1px solid #374151",
+                      backgroundColor: resolvedTheme === "dark" ? "#1f2937" : "#ffffff",
+                      border: `1px solid ${resolvedTheme === "dark" ? "#374151" : "#e5e7eb"}`,
                       borderRadius: "8px",
-                      color: "#f9fafb",
+                      color: resolvedTheme === "dark" ? "#f9fafb" : "#111827",
                     }}
                     formatter={(value: number) => [`¥${value.toLocaleString()}`, ""]}
                   />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -47,6 +48,7 @@ const MODEL_LABELS: Record<ModelType, string> = {
 type ChartRange = "90d" | "2w";
 
 export default function StockDetailPage() {
+  const { resolvedTheme } = useTheme();
   const params = useParams();
   const name = decodeURIComponent(params.name as string);
 
@@ -300,10 +302,10 @@ export default function StockDetailPage() {
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "#1f2937",
-                  border: "1px solid #374151",
+                  backgroundColor: resolvedTheme === "dark" ? "#1f2937" : "#ffffff",
+                  border: `1px solid ${resolvedTheme === "dark" ? "#374151" : "#e5e7eb"}`,
                   borderRadius: "8px",
-                  color: "#f9fafb",
+                  color: resolvedTheme === "dark" ? "#f9fafb" : "#111827",
                 }}
                 formatter={(value: number, name: string) => [
                   `¥${value?.toLocaleString() || "-"}`,

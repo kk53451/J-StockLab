@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 import Link from "next/link";
 import {
   getDashboard,
@@ -43,6 +44,7 @@ const MODEL_LABELS: Record<ModelType, string> = {
 };
 
 export default function Dashboard() {
+  const { resolvedTheme } = useTheme();
   const [model, setModel] = useState<ModelType>("TF");
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [modelsCompare, setModelsCompare] = useState<ModelCompare[]>([]);
@@ -213,10 +215,10 @@ export default function Dashboard() {
               <YAxis yAxisId="right" orientation="right" stroke="#10b981" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "#1f2937",
-                  border: "1px solid #374151",
+                  backgroundColor: resolvedTheme === "dark" ? "#1f2937" : "#ffffff",
+                  border: `1px solid ${resolvedTheme === "dark" ? "#374151" : "#e5e7eb"}`,
                   borderRadius: "8px",
-                  color: "#f9fafb",
+                  color: resolvedTheme === "dark" ? "#f9fafb" : "#111827",
                 }}
               />
               <Legend />

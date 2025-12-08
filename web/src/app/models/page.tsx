@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 import { getModelAnalysis, type ModelAnalysisResponse } from "@/lib/api";
 import {
   BarChart,
@@ -43,9 +44,17 @@ const REC_COLORS = {
 };
 
 export default function ModelsPage() {
+  const { resolvedTheme } = useTheme();
   const [data, setData] = useState<ModelAnalysisResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedStock, setSelectedStock] = useState<string>("");
+
+  const tooltipStyle = {
+    backgroundColor: resolvedTheme === "dark" ? "#1f2937" : "#ffffff",
+    border: `1px solid ${resolvedTheme === "dark" ? "#374151" : "#e5e7eb"}`,
+    borderRadius: "8px",
+    color: resolvedTheme === "dark" ? "#f9fafb" : "#111827",
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -204,12 +213,7 @@ export default function ModelsPage() {
                   <XAxis dataKey="model" className="text-xs" />
                   <YAxis domain={[88, 100]} className="text-xs" />
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#1f2937",
-                      border: "1px solid #374151",
-                      borderRadius: "8px",
-                      color: "#f9fafb",
-                    }}
+                    contentStyle={tooltipStyle}
                     formatter={(value: number) => [`${value}%`, ""]}
                   />
                   <Legend />
@@ -235,12 +239,7 @@ export default function ModelsPage() {
                   <XAxis type="number" domain={[0, 15]} className="text-xs" />
                   <YAxis dataKey="model" type="category" className="text-xs" />
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#1f2937",
-                      border: "1px solid #374151",
-                      borderRadius: "8px",
-                      color: "#f9fafb",
-                    }}
+                    contentStyle={tooltipStyle}
                     formatter={(value: number) => [`${value}%`, "MAPE"]}
                   />
                   <Bar dataKey="MAPE">
@@ -469,7 +468,10 @@ export default function ModelsPage() {
                       <Cell fill={REC_COLORS.buy} />
                       <Cell fill={REC_COLORS.sell} />
                     </Pie>
-                    <Tooltip formatter={(value: number) => [`${value}개`, ""]} />
+                    <Tooltip
+                      contentStyle={tooltipStyle}
+                      formatter={(value: number) => [`${value}개`, ""]}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>

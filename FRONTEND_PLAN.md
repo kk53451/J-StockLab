@@ -12,8 +12,8 @@ J-StockLab 웹 서비스는 FastAPI 백엔드와 Next.js 프론트엔드로 구�
 
 | 모델              | 예측 파일                  | 분석 파일                       | 평균 정확도   |
 | ----------------- | -------------------------- | ------------------------------- | ------------- |
-| LSTM              | `predicted_stock_LSTM.csv` | `final_stock_analysis_LSTM.csv` | 94.12% (최적) |
-| Transformer       | `predicted_stock_TF.csv`   | `final_stock_analysis_TF.csv`   | 91.73%        |
+| LSTM              | `predicted_stock_LSTM.csv` | `final_stock_analysis_LSTM.csv` | 94.36% (최적) |
+| Transformer       | `predicted_stock_TF.csv`   | `final_stock_analysis_TF.csv`   | 92.03%        |
 | Linear Regression | `predicted_stock_LR.csv`   | `final_stock_analysis_LR.csv`   | ~99% (과적합) |
 
 | 파일                         | 내용                                    | 규모            |
@@ -39,8 +39,8 @@ GET /api/models/compare
   "models": [
     {
       "name": "Transformer",
-      "avg_accuracy": 91.73,
-      "avg_mape": 8.27,
+      "avg_accuracy": 92.03,
+      "avg_mape": 7.97,
       "strong_buy_count": 8,
       "buy_count": 1,
       "sell_count": 11,
@@ -48,8 +48,8 @@ GET /api/models/compare
     },
     {
       "name": "LSTM",
-      "avg_accuracy": 94.12,
-      "avg_mape": 5.88,
+      "avg_accuracy": 94.36,
+      "avg_mape": 5.64,
       "strong_buy_count": 5,
       "buy_count": 1,
       "sell_count": 14,
@@ -284,14 +284,14 @@ J-StockLab/
 
 | 모델              | 평균 정확도 | 평균 MAPE | 표준편차 | 상태      | 프론트엔드 표시 |
 | ----------------- | ----------- | --------- | -------- | --------- | --------------- |
-| LSTM              | 94.12%      | 5.88%     | 2.69     | 최적 모델 | 성능 최고 표시  |
-| Transformer       | 91.73%      | 8.27%     | 6.74     | 신뢰 가능 | 기본 선택       |
+| LSTM              | 94.36%      | 5.64%     | 2.50     | 최적 모델 | 성능 최고 표시  |
+| Transformer       | 92.03%      | 7.97%     | 5.17     | 신뢰 가능 | 기본 선택       |
 | Linear Regression | ~99.9%      | ~0.01%    | -        | 과적합    | 경고 표시       |
 
 **핵심 결론**:
 
 - Transformer를 메인 모델로 개발하였으나, 실험 결과 LSTM이 본 프로젝트 규모(20개 종목)에서 가장 적합함
-- LSTM이 Transformer 대비 정확도 +2.39%p, MAPE -2.39%p, 표준편차 -4.05 우수
+- LSTM이 Transformer 대비 정확도 +2.33%p, MAPE -2.33%p, 표준편차 -2.67 우수
 - Linear Regression은 과적합으로 실제 예측에 사용 불가 (참고용)
 
 ---

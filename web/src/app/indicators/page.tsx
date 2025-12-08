@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 import {
   getIndicators,
   type IndicatorsResponse,
@@ -50,6 +51,7 @@ const FREQUENCY_DEFAULT_DAYS: Record<string, number> = {
 };
 
 export default function IndicatorsPage() {
+  const { resolvedTheme } = useTheme();
   const [indicators, setIndicators] = useState<IndicatorsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -254,10 +256,10 @@ export default function IndicatorsPage() {
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "#1f2937",
-                        border: "1px solid #374151",
+                        backgroundColor: resolvedTheme === "dark" ? "#1f2937" : "#ffffff",
+                        border: `1px solid ${resolvedTheme === "dark" ? "#374151" : "#e5e7eb"}`,
                         borderRadius: "8px",
-                        color: "#f9fafb",
+                        color: resolvedTheme === "dark" ? "#f9fafb" : "#111827",
                       }}
                       formatter={(value: number) => [
                         formatValueWithUnit(value, selectedIndicator.unit),
