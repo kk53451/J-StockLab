@@ -231,13 +231,13 @@ export default function ModelsPage() {
             </h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={mapeChartData} layout="vertical">
+                <BarChart data={mapeChartData}>
                   <CartesianGrid
                     strokeDasharray="3 3"
                     className="stroke-gray-200 dark:stroke-gray-700"
                   />
-                  <XAxis type="number" domain={[0, 15]} className="text-xs" />
-                  <YAxis dataKey="model" type="category" className="text-xs" />
+                  <XAxis dataKey="model" className="text-xs" />
+                  <YAxis domain={[0, 15]} className="text-xs" />
                   <Tooltip
                     contentStyle={tooltipStyle}
                     formatter={(value: number) => [`${value}%`, "MAPE"]}
@@ -496,10 +496,7 @@ export default function ModelsPage() {
 
       {/* Section 4: Model Info */}
       <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Info className="w-5 h-5" />
-          4. 모델 특성 및 신뢰도
-        </h2>
+        <h2 className="text-lg font-semibold mb-4">4. 모델 특성 및 신뢰도</h2>
 
         <div className="grid md:grid-cols-3 gap-4">
           {data.model_info.map((info) => (
