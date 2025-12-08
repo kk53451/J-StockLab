@@ -1,8 +1,6 @@
 # 프로젝트 구현 과정
 
 > 본 문서는 J-StockLab 프로젝트의 구현 과정을 단계별로 정리한다.
->
-> **결론**: Transformer를 메인 모델로 개발하였으나, 실험 결과 LSTM이 본 프로젝트 규모(20개 종목)에서 가장 적합한 모델임을 확인
 
 ---
 
@@ -19,9 +17,7 @@
 
 ## 프로젝트 개요
 
-본 프로젝트는 **딥러닝 모델 (Transformer, LSTM, Linear Regression)**을 활용하여 일본 주식시장의 주요 지수와 Nikkei 225 상위 20개 종목의 1~7일 후 주가를 예측한다. FRED API를 통한 경제 지표와 Yahoo Finance의 주식 데이터를 통합하여 높은 예측 정확도를 목표로 한다.
-
-**핵심 결론**: Transformer를 메인 모델로 개발하였으나, 실험 결과 **LSTM이 본 프로젝트 규모(20개 종목, 90일 시퀀스)에서 가장 적합한 모델**임을 확인하였다 (평균 정확도: LSTM 94.12% vs Transformer 91.73%).
+본 프로젝트는 딥러닝 모델 (Transformer, LSTM, Linear Regression)을 활용하여 일본 주식시장의 주요 지수와 Nikkei 225 상위 20개 종목의 1~7일 후 주가를 예측한다. FRED API를 통한 경제 지표와 Yahoo Finance의 주식 데이터를 통합하여 높은 예측 정확도를 목표로 한다.
 
 ### 핵심 파일 구조
 
@@ -562,14 +558,6 @@ result_data.to_csv('predicted_stock.csv', index=False)
 - **출력 형식**: predicted*stock*\*.csv (날짜 + 종목별 Day1~7 + Actual)
 - **결과 다운로드**: `files.download()`
 
-### 핵심 개선 사항
-
-1. **Google Colab 전환**: GPU 활용으로 학습 속도 향상
-2. **직접 파일 업로드 방식**: Google Drive 마운트 권한 문제 해결
-3. **영문 종목명 사용**: matplotlib 한글 폰트 설치 불필요
-4. **경제 지표 확장**: 일본 경제 지표 8개 추가로 예측 정확도 향상
-5. **베이스라인 모델 추가**: LSTM, Linear Regression으로 Transformer 성능 검증
-
 ---
 
 ## Phase 4: 평가 및 웹 서비스
@@ -717,11 +705,11 @@ Day1_Price | Day2_Price | Day3_Price | Day4_Price | Day5_Price | Day6_Price | Da
 
 **테스트 체크리스트**:
 
-- [ ] `stock_japan.py` 실행 → `total.csv` 생성 확인
-- [ ] `predict.py` 실행 → `predicted_stock.csv` 생성 확인
-- [ ] `report.py` 실행 → `final_stock_analysis.csv` 생성 확인
-- [ ] FastAPI 서버 실행 → 모든 엔드포인트 정상 작동
-- [ ] 웹 인터페이스 → 데이터 정상 표시
+- [x] `stock_japan.py` 실행 → `total.csv` 생성 확인
+- [x] `predict.py` 실행 → `predicted_stock.csv` 생성 확인
+- [x] `report.py` 실행 → `final_stock_analysis.csv` 생성 확인
+- [x] FastAPI 서버 실행 → 모든 엔드포인트 정상 작동
+- [x] 웹 인터페이스 → 데이터 정상 표시
 
 **실행 순서**:
 
@@ -796,7 +784,7 @@ open web/index.html
 - [x] 출력 크기 140 (20종목 × 7일)
 - [x] 예측 결과 시각화 (대표 5개 종목 그래프)
 - [x] 영문 종목명 사용으로 matplotlib 한글 폰트 문제 해결
-- [x] Google Colab 직접 파일 업로드 방식 ���용
+- [x] Google Colab 직접 파일 업로드 방식 적용
 
 ### Phase 4-1 (평가 리포트)
 
@@ -949,14 +937,6 @@ ipykernel==6.29.0
 - **데이터 수집 시간**: stock_japan.py 실행 시 약 5-10분 소요
 - **모델 학습 시간**: GPU 사용 시 약 10-20분, CPU 사용 시 1-2시간
 - **Git 버전 관리**: 각 Phase 완료 후 커밋 추천
-
-### 시간 배분 예상
-
-- Phase 1 (환경 설정 및 검증): 3-5일
-- Phase 2 (데이터 수집): 3-5일
-- Phase 3 (모델링): 7-10일
-- Phase 4 (웹 서비스): 3-5일
-- **총 약 3-4주 소요 예상**
 
 ---
 

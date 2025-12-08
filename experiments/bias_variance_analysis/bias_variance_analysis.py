@@ -160,7 +160,7 @@ print("- High Bias (Underfitting): 훈련 오차와 검증 오차가 모두 높�
 print("- High Variance (Overfitting): 훈련 오차는 낮지만 검증 오차가 높음 (Gap이 큼)")
 
 def generate_learning_curve_lstm(X_stock, X_econ, y, train_sizes_ratio, epochs=30, batch_size=32):
-    """LSTM 모델의 학습 곡선을 생성합니다."""
+    """LSTM 학습 곡선 생성"""
     n_samples = len(y)
     train_sizes = [int(n_samples * ratio * 0.8) for ratio in train_sizes_ratio]
 
@@ -312,7 +312,7 @@ print("\n📊 Bias-Variance decomposition saved to 'bias_variance_decomposition.
 print("\n" + "=" * 80)
 print("PART 3: Linear Regression Overfitting Analysis")
 print("=" * 80)
-print("\nLinear Regression이 99.9% 정확도를 보인 이유를 분석합니다.")
+print("\nLinear Regression 99.9% 정확도 원인 분석")
 
 X_flat = np.concatenate([
     X_stock.reshape(X_stock.shape[0], -1),

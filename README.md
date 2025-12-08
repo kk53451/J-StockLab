@@ -432,15 +432,15 @@ J-StockLab/
 
 ---
 
-## 수행 계획
+## 개발 내역
 
-### Phase 1: 환경 설정 및 데이터 검증 (완료)
+### Phase 1: 환경 설정 및 데이터 검증
 
 - [x] yfinance로 3개 지수 데이터 수집
 - [x] FastAPI 서버 구축
 - [x] 웹 인터페이스 구현
 
-### Phase 2: 데이터 수집 및 전처리 (완료)
+### Phase 2: 데이터 수집 및 전처리
 
 1. **FRED API 설정**
 
@@ -449,7 +449,7 @@ J-StockLab/
 
 2. **stock_japan.py 작성**
 
-   - FRED 데이터 수집 �� 리샘플링
+   - FRED 데이터 수집 및 리샘플링
    - yfinance로 일본 지수 9개 수집
    - Nikkei 225 상위 20개 종목 수집 (영문명)
    - 미국 시장 지표 수집
@@ -462,7 +462,7 @@ J-StockLab/
    - 데이터 행 수: 약 4,000행 이상 (실행 시점에 따라 증가)
    - 데이터 타입: 모두 숫자형 (float64)
 
-### Phase 3: Transformer 모델링 (완료)
+### Phase 3: Transformer 모델링
 
 1. **predict_TF.py 작성**
 
@@ -484,7 +484,7 @@ J-StockLab/
    - 각 모델별 predicted*stock*\*.csv 생성
    - Google Colab 직접 파일 업로드 방식 적용
 
-### Phase 4-1: 평가 리포트 (완료)
+### Phase 4-1: 평가 리포트
 
 1. **report.py 작성**
 
@@ -506,7 +506,7 @@ J-StockLab/
    - 주가예측하기\_LSTM.ipynb (Cell 0: predict, Cell 1: report)
    - 주가예측하기\_LR.ipynb (Cell 0: predict, Cell 1: report)
 
-### Phase 4-2: 웹 서비스 Phase 1 (MVP) (완료)
+### Phase 4-2: 웹 서비스 Phase 1 (MVP)
 
 1. **FastAPI 확장**
 
@@ -524,7 +524,7 @@ J-StockLab/
    - 종목 상세 페이지 (90일 차트 + 7일 예측, 모델 간 비교)
    - 다크모드 지원
 
-### Phase 4-3: 웹 서비스 Phase 2 (시장 & 지표) (완료)
+### Phase 4-3: 웹 서비스 Phase 2 (시장 & 지표)
 
 1. **시장 현황 API**
 
@@ -572,7 +572,7 @@ J-StockLab/
    - Baseline (lstm_units=128, dense_units=128, dropout=0.2, batch_size=32, lr=0.0001)이 Val Loss 0.0358로 #1 순위
    - 현재 설정이 최적임을 확인
 
-### Phase 5: 배포 (완료)
+### Phase 5: 배포
 
 1. **백엔드 배포 (Railway)**
 
@@ -586,10 +586,6 @@ J-StockLab/
    - Next.js 프론트엔드 Vercel 배포 완료
    - URL: https://j-stock-lab.vercel.app
    - 환경 변수 `NEXT_PUBLIC_API_URL` 설정
-
-3. **백테스팅 기능** (선택)
-   - `/api/history/{stock_name}?model=TF&date=2025-11-01` - 특정 날짜 예측 vs 실제
-   - `/api/backtest/{stock_name}?model=TF` - 기간별 예측 정확도 추이
 
 ---
 
@@ -735,8 +731,7 @@ J-StockLab/
 ### 7. FastAPI 서버 실행 (백엔드)
 
 ```bash
-cd /Users/kk53451/Desktop/J-StockLab
-python api/main.py
+uvicorn api.main:app --reload
 ```
 
 접속: http://localhost:8000/docs (Swagger UI)
