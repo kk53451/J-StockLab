@@ -881,7 +881,7 @@ open web/index.html
 ### Phase 4-7 (통합 테스트 및 배포) - 완료
 
 - [x] Railway 백엔드 배포: https://j-stocklab-production.up.railway.app
-- [x] Vercel 프론트엔드 배포: https://j-stock-lab.vercel.app
+- [x] Vercel 프론트엔드 배포: https://j-stock-lab-6baz.vercel.app
 - [x] 통합 테스트
 - [x] 문서 최종 정리
 - [x] CSV 파일 `api/data/` 폴더로 정리 (Railway 배포용)

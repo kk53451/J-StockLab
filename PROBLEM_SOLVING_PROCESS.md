@@ -901,7 +901,7 @@ else:
 - Frontend: Next.js 14 + TypeScript + Tailwind CSS + Recharts (Vercel 배포)
 - 배포 URL:
   - 백엔드: https://j-stocklab-production.up.railway.app
-  - 프론트엔드: https://j-stock-lab.vercel.app
+  - 프론트엔드: https://j-stock-lab-6baz.vercel.app
 
 ### 관련 파일
 

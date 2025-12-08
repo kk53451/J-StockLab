@@ -6,7 +6,7 @@
 
 ---
 
-### **[웹 서비스 접속하기](https://j-stock-lab-6baz-git-main-kk53451s-projects.vercel.app/)**
+### **[웹 서비스 접속하기](https://j-stock-lab-6baz.vercel.app/)**
 
 ---
 
@@ -599,7 +599,7 @@ J-StockLab/
 2. **프론트엔드 배포 (Vercel)**
 
    - Next.js 프론트엔드 Vercel 배포 완료
-   - URL: https://j-stock-lab.vercel.app
+   - URL: https://j-stock-lab-6baz.vercel.app
    - 환경 변수 `NEXT_PUBLIC_API_URL` 설정
 
 ---

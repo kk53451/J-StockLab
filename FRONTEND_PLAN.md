@@ -195,7 +195,7 @@ Next.js (Vercel 배포)
 | 서비스 | URL |
 |--------|-----|
 | 백엔드 (Railway) | https://j-stocklab-production.up.railway.app |
-| 프론트엔드 (Vercel) | https://j-stock-lab.vercel.app |
+| 프론트엔드 (Vercel) | https://j-stock-lab-6baz.vercel.app |
 
 ---
 
