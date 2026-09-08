@@ -27,6 +27,7 @@ wheels/
 venv/
 env/
 ENV/
+.venv-ml/
 
 # IDE
 .vscode/
@@ -50,3 +51,7 @@ models/*.pkl
 # OS
 .DS_Store
 Thumbs.db
+
+# Reproducible ML runs (summaries intended for review live in docs/)
+artifacts/
+.pytest_cache/
