@@ -70,7 +70,7 @@ class Dataset:
     metadata: dict
 
 
-def load_frame(path: Path, feature_set: str) -> tuple[pd.DataFrame, list[str], dict]:
+def load_frame(path: Path, feature_set: str, *, end_date: str | None = None) -> tuple[pd.DataFrame, list[str], dict]:
     frame = pd.read_csv(path)
     if "날짜" not in frame:
         raise ValueError("CSV must contain 날짜")
@@ -81,6 +81,10 @@ def load_frame(path: Path, feature_set: str) -> tuple[pd.DataFrame, list[str], d
         raise ValueError("Expected date-only daily rows")
     frame.index = pd.DatetimeIndex(dates)
     frame = frame.sort_index()
+    snapshot_rows = len(frame)
+    if end_date is not None:
+        # Exclude reserved future values before numeric cleaning/calendar alignment.
+        frame = frame.loc[frame.index <= pd.Timestamp(end_date)].copy()
     if frame.empty:
         raise ValueError("CSV is empty")
     missing_columns = set(STOCKS) - set(frame.columns)
@@ -112,6 +116,9 @@ def load_frame(path: Path, feature_set: str) -> tuple[pd.DataFrame, list[str], d
             "A calendar session does not prove each stored value is an original unfilled observation.",
         ],
     }
+    if end_date is not None:
+        metadata.update(snapshot_rows=snapshot_rows, end_date=end_date,
+                        excluded_after_end_date=snapshot_rows - source_rows)
     if feature_set == "stock-econ":
         economics = [column for column in frame.columns if column not in STOCKS]
         if not economics:
@@ -138,11 +145,13 @@ def load_frame(path: Path, feature_set: str) -> tuple[pd.DataFrame, list[str], d
 
 
 def make_dataset(frame: pd.DataFrame, features: list[str], config: DataConfig,
-                 scalers: dict | None = None) -> Dataset:
+                 scalers: dict | None = None, *, include_test: bool = True) -> Dataset:
     config.validate()
     if not frame.index.is_monotonic_increasing or not frame.index.is_unique:
         raise ValueError("Frame must have sorted unique dates")
     train_end, validation_end = pd.Timestamp(config.train_end), pd.Timestamp(config.validation_end)
+    if not include_test:
+        frame = frame.loc[frame.index <= validation_end]
     training = frame.loc[frame.index <= train_end]
     if len(training) < config.lookback + config.horizon:
         raise ValueError("Not enough training sessions")
@@ -157,8 +166,9 @@ def make_dataset(frame: pd.DataFrame, features: list[str], config: DataConfig,
     masks = {
         "train": target_dates[:, -1] <= train_end.to_datetime64(),
         "validation": (target_dates[:, 0] > train_end.to_datetime64()) & (target_dates[:, -1] <= validation_end.to_datetime64()),
-        "test": target_dates[:, 0] > validation_end.to_datetime64(),
     }
+    if include_test:
+        masks["test"] = target_dates[:, 0] > validation_end.to_datetime64()
     for name, mask in masks.items():
         if not mask.any():
             raise ValueError(f"No {name} windows; adjust cutoffs/lookback/horizon")

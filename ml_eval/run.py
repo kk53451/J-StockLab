@@ -53,6 +53,14 @@ def predict(kind, model, windows, scalers, batch_size):
     return decoded
 
 
+def fit_ridge(training, alpha):
+    """Shared fixed solver for the single-split and walk-forward workflows."""
+    model = Ridge(alpha=alpha, solver="lsqr", tol=1e-6)
+    with threadpool_limits(limits=4):
+        model.fit(training.x.reshape(len(training.x), -1), training.y_scaled.reshape(len(training.y), -1))
+    return model
+
+
 def evaluate(windows, predictions, output):
     output.mkdir(exist_ok=False)
     table, summary = score(windows, predictions)
@@ -120,9 +128,7 @@ def train(args):
         joblib.dump(model, output / "model.joblib")
     elif args.model == "ridge":
         # Regularized multi-output linear baseline, replacing underdetermined OLS.
-        model = Ridge(alpha=args.alpha, solver="lsqr", tol=1e-6)
-        with threadpool_limits(limits=4):
-            model.fit(training.x.reshape(len(training.x), -1), training.y_scaled.reshape(len(training.y), -1))
+        model = fit_ridge(training, args.alpha)
         joblib.dump(model, output / "model.joblib")
     elif args.model in ("lstm", "transformer"):
         model, history = neural_module().train_model(args.model, training, validation, settings)
