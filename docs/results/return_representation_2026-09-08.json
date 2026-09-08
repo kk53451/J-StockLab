@@ -1,0 +1,418 @@
+{
+  "evaluation_split": "validation",
+  "test_evaluated": false,
+  "selection_rule": "Minimum validation macro MAPE within each Ridge representation; no test selection.",
+  "data_config_without_representation": {
+    "lookback": 90,
+    "horizon": 7,
+    "train_end": "2021-12-30",
+    "validation_end": "2023-12-29",
+    "feature_set": "stock"
+  },
+  "data_sha256": "03975b20227b6daac041aa3a64edeb79f3dc8243b09249a91cb6217c3320f853",
+  "source_sha256": {
+    "__init__.py": "2b8e616d0b7ed8f973dc3fb88f6925681ce36281d64f25b44a762a882ffbc2cb",
+    "data.py": "c6b66f2ae07c132064d4ee2b9ccb0b4da2a356453d983a4769f090597dcbbfe2",
+    "metrics.py": "3b0a7e1c87776221a8c39a0c0f1ff345a005caa5b40d2a99eb96cd2c6e82677c",
+    "neural.py": "bdfaa4795d97cb85e7216f3207a68f15b51a25f232a22284ed4d02cf32b5e7fb",
+    "run.py": "417315de7d3352e38f2da24a39e3342b2f667ca93f706248fad406084eb6a4c3"
+  },
+  "source": {
+    "calendar": "XTKS",
+    "source_rows": 4069,
+    "trading_sessions": 2721,
+    "removed_non_sessions": 1348,
+    "economic_lag_sessions": 0,
+    "limitations": [
+      "Legacy snapshot: prior backfill, revisions, adjusted prices and constituent selection are not point-in-time verified.",
+      "A calendar session does not prove each stored value is an original unfilled observation."
+    ],
+    "usable_sessions": 2721,
+    "start": "2014-10-16",
+    "end": "2025-12-05"
+  },
+  "partitions": {
+    "train": {
+      "samples": 1664,
+      "first_origin": "2015-03-02",
+      "last_origin": "2021-12-21",
+      "first_target": "2015-03-03",
+      "last_target": "2021-12-30"
+    },
+    "validation": {
+      "samples": 484,
+      "first_origin": "2021-12-30",
+      "last_origin": "2023-12-20",
+      "first_target": "2022-01-04",
+      "last_target": "2023-12-29"
+    },
+    "test": {
+      "samples": 465,
+      "first_origin": "2023-12-29",
+      "last_origin": "2025-11-26",
+      "first_target": "2024-01-04",
+      "last_target": "2025-12-05"
+    }
+  },
+  "versions": {
+    "python": "3.12.10",
+    "numpy": "2.5.3",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.9.0",
+    "exchange-calendars": "4.13.2",
+    "tensorflow": "2.20.0",
+    "keras": "3.15.1",
+    "joblib": "1.6.0"
+  },
+  "persistence": {
+    "origin_count": 484,
+    "stock_count": 20,
+    "horizon_sessions": 7,
+    "macro_mape_pct": 2.7293732373476423,
+    "macro_direction_agreement_pct": 0.37042502951593864,
+    "macro_mae_skill_vs_persistence": 0.0,
+    "non_positive_prediction_count": 0,
+    "definitions": {
+      "aggregation": "Equal weight per stock and horizon; overlapping origins are not independent observations.",
+      "direction": "Exact sign(predicted-origin) == sign(actual-origin); flat is a third class.",
+      "skill": "1 - model_MAE / persistence_MAE per stock/horizon; positive beats persistence; zero denominator excluded.",
+      "prices": "Input snapshot price units; MAE/RMSE retained per stock, not averaged across different price scales."
+    }
+  },
+  "selected_ridge_runs": {
+    "price": "artifacts/return-study/price-ridge-100",
+    "relative": "artifacts/return-study/relative-ridge-100"
+  },
+  "runs": [
+    {
+      "run_directory": "artifacts/return-study/price-ridge-0.1",
+      "model": "ridge",
+      "representation": "price",
+      "settings": {
+        "alpha": 0.1,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "created_utc": "2026-09-08T05:38:54.674338+00:00",
+      "epochs_completed": null,
+      "best_validation_epoch": null,
+      "summary": {
+        "origin_count": 484,
+        "stock_count": 20,
+        "horizon_sessions": 7,
+        "macro_mape_pct": 39.558502412052675,
+        "macro_direction_agreement_pct": 48.336776859504134,
+        "macro_mae_skill_vs_persistence": -14.578117915257092,
+        "non_positive_prediction_count": 3007,
+        "definitions": {
+          "aggregation": "Equal weight per stock and horizon; overlapping origins are not independent observations.",
+          "direction": "Exact sign(predicted-origin) == sign(actual-origin); flat is a third class.",
+          "skill": "1 - model_MAE / persistence_MAE per stock/horizon; positive beats persistence; zero denominator excluded.",
+          "prices": "Input snapshot price units; MAE/RMSE retained per stock, not averaged across different price scales."
+        }
+      }
+    },
+    {
+      "run_directory": "artifacts/return-study/price-ridge-1",
+      "model": "ridge",
+      "representation": "price",
+      "settings": {
+        "alpha": 1.0,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "created_utc": "2026-09-08T05:39:25.865145+00:00",
+      "epochs_completed": null,
+      "best_validation_epoch": null,
+      "summary": {
+        "origin_count": 484,
+        "stock_count": 20,
+        "horizon_sessions": 7,
+        "macro_mape_pct": 26.820370704366706,
+        "macro_direction_agreement_pct": 47.43358913813459,
+        "macro_mae_skill_vs_persistence": -9.370380237791807,
+        "non_positive_prediction_count": 367,
+        "definitions": {
+          "aggregation": "Equal weight per stock and horizon; overlapping origins are not independent observations.",
+          "direction": "Exact sign(predicted-origin) == sign(actual-origin); flat is a third class.",
+          "skill": "1 - model_MAE / persistence_MAE per stock/horizon; positive beats persistence; zero denominator excluded.",
+          "prices": "Input snapshot price units; MAE/RMSE retained per stock, not averaged across different price scales."
+        }
+      }
+    },
+    {
+      "run_directory": "artifacts/return-study/price-ridge-10",
+      "model": "ridge",
+      "representation": "price",
+      "settings": {
+        "alpha": 10.0,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "created_utc": "2026-09-08T05:39:39.213139+00:00",
+      "epochs_completed": null,
+      "best_validation_epoch": null,
+      "summary": {
+        "origin_count": 484,
+        "stock_count": 20,
+        "horizon_sessions": 7,
+        "macro_mape_pct": 19.93876459845271,
+        "macro_direction_agreement_pct": 47.18417945690673,
+        "macro_mae_skill_vs_persistence": -6.843312090062731,
+        "non_positive_prediction_count": 0,
+        "definitions": {
+          "aggregation": "Equal weight per stock and horizon; overlapping origins are not independent observations.",
+          "direction": "Exact sign(predicted-origin) == sign(actual-origin); flat is a third class.",
+          "skill": "1 - model_MAE / persistence_MAE per stock/horizon; positive beats persistence; zero denominator excluded.",
+          "prices": "Input snapshot price units; MAE/RMSE retained per stock, not averaged across different price scales."
+        }
+      }
+    },
+    {
+      "run_directory": "artifacts/return-study/price-ridge-100",
+      "model": "ridge",
+      "representation": "price",
+      "settings": {
+        "alpha": 100.0,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "created_utc": "2026-09-08T05:39:46.098634+00:00",
+      "epochs_completed": null,
+      "best_validation_epoch": null,
+      "summary": {
+        "origin_count": 484,
+        "stock_count": 20,
+        "horizon_sessions": 7,
+        "macro_mape_pct": 16.803026280120076,
+        "macro_direction_agreement_pct": 47.412927981109796,
+        "macro_mae_skill_vs_persistence": -5.652578227228731,
+        "non_positive_prediction_count": 0,
+        "definitions": {
+          "aggregation": "Equal weight per stock and horizon; overlapping origins are not independent observations.",
+          "direction": "Exact sign(predicted-origin) == sign(actual-origin); flat is a third class.",
+          "skill": "1 - model_MAE / persistence_MAE per stock/horizon; positive beats persistence; zero denominator excluded.",
+          "prices": "Input snapshot price units; MAE/RMSE retained per stock, not averaged across different price scales."
+        }
+      }
+    },
+    {
+      "run_directory": "artifacts/return-study/relative-ridge-0.1",
+      "model": "ridge",
+      "representation": "relative",
+      "settings": {
+        "alpha": 0.1,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "created_utc": "2026-09-08T05:39:50.648745+00:00",
+      "epochs_completed": null,
+      "best_validation_epoch": null,
+      "summary": {
+        "origin_count": 484,
+        "stock_count": 20,
+        "horizon_sessions": 7,
+        "macro_mape_pct": 7.470933275717071,
+        "macro_direction_agreement_pct": 49.40230224321134,
+        "macro_mae_skill_vs_persistence": -1.6874970628210937,
+        "non_positive_prediction_count": 0,
+        "definitions": {
+          "aggregation": "Equal weight per stock and horizon; overlapping origins are not independent observations.",
+          "direction": "Exact sign(predicted-origin) == sign(actual-origin); flat is a third class.",
+          "skill": "1 - model_MAE / persistence_MAE per stock/horizon; positive beats persistence; zero denominator excluded.",
+          "prices": "Input snapshot price units; MAE/RMSE retained per stock, not averaged across different price scales."
+        }
+      }
+    },
+    {
+      "run_directory": "artifacts/return-study/relative-ridge-1",
+      "model": "ridge",
+      "representation": "relative",
+      "settings": {
+        "alpha": 1.0,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "created_utc": "2026-09-08T05:40:19.549039+00:00",
+      "epochs_completed": null,
+      "best_validation_epoch": null,
+      "summary": {
+        "origin_count": 484,
+        "stock_count": 20,
+        "horizon_sessions": 7,
+        "macro_mape_pct": 4.979497016110633,
+        "macro_direction_agreement_pct": 49.16617473435655,
+        "macro_mae_skill_vs_persistence": -0.7920854988326052,
+        "non_positive_prediction_count": 0,
+        "definitions": {
+          "aggregation": "Equal weight per stock and horizon; overlapping origins are not independent observations.",
+          "direction": "Exact sign(predicted-origin) == sign(actual-origin); flat is a third class.",
+          "skill": "1 - model_MAE / persistence_MAE per stock/horizon; positive beats persistence; zero denominator excluded.",
+          "prices": "Input snapshot price units; MAE/RMSE retained per stock, not averaged across different price scales."
+        }
+      }
+    },
+    {
+      "run_directory": "artifacts/return-study/relative-ridge-10",
+      "model": "ridge",
+      "representation": "relative",
+      "settings": {
+        "alpha": 10.0,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "created_utc": "2026-09-08T05:40:31.887638+00:00",
+      "epochs_completed": null,
+      "best_validation_epoch": null,
+      "summary": {
+        "origin_count": 484,
+        "stock_count": 20,
+        "horizon_sessions": 7,
+        "macro_mape_pct": 3.4980987180677374,
+        "macro_direction_agreement_pct": 50.503246753246756,
+        "macro_mae_skill_vs_persistence": -0.25950258438792034,
+        "non_positive_prediction_count": 0,
+        "definitions": {
+          "aggregation": "Equal weight per stock and horizon; overlapping origins are not independent observations.",
+          "direction": "Exact sign(predicted-origin) == sign(actual-origin); flat is a third class.",
+          "skill": "1 - model_MAE / persistence_MAE per stock/horizon; positive beats persistence; zero denominator excluded.",
+          "prices": "Input snapshot price units; MAE/RMSE retained per stock, not averaged across different price scales."
+        }
+      }
+    },
+    {
+      "run_directory": "artifacts/return-study/relative-ridge-100",
+      "model": "ridge",
+      "representation": "relative",
+      "settings": {
+        "alpha": 100.0,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "created_utc": "2026-09-08T05:40:38.202282+00:00",
+      "epochs_completed": null,
+      "best_validation_epoch": null,
+      "summary": {
+        "origin_count": 484,
+        "stock_count": 20,
+        "horizon_sessions": 7,
+        "macro_mape_pct": 2.884026756915717,
+        "macro_direction_agreement_pct": 51.484651711924435,
+        "macro_mae_skill_vs_persistence": -0.04953951220488105,
+        "non_positive_prediction_count": 0,
+        "definitions": {
+          "aggregation": "Equal weight per stock and horizon; overlapping origins are not independent observations.",
+          "direction": "Exact sign(predicted-origin) == sign(actual-origin); flat is a third class.",
+          "skill": "1 - model_MAE / persistence_MAE per stock/horizon; positive beats persistence; zero denominator excluded.",
+          "prices": "Input snapshot price units; MAE/RMSE retained per stock, not averaged across different price scales."
+        }
+      }
+    },
+    {
+      "run_directory": "artifacts/return-study/price-lstm",
+      "model": "lstm",
+      "representation": "price",
+      "settings": {
+        "alpha": 10.0,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "created_utc": "2026-09-08T05:40:42.385768+00:00",
+      "epochs_completed": 35,
+      "best_validation_epoch": 30,
+      "summary": {
+        "origin_count": 484,
+        "stock_count": 20,
+        "horizon_sessions": 7,
+        "macro_mape_pct": 21.164768959220652,
+        "macro_direction_agreement_pct": 48.46517119244392,
+        "macro_mae_skill_vs_persistence": -8.049112914377273,
+        "non_positive_prediction_count": 0,
+        "definitions": {
+          "aggregation": "Equal weight per stock and horizon; overlapping origins are not independent observations.",
+          "direction": "Exact sign(predicted-origin) == sign(actual-origin); flat is a third class.",
+          "skill": "1 - model_MAE / persistence_MAE per stock/horizon; positive beats persistence; zero denominator excluded.",
+          "prices": "Input snapshot price units; MAE/RMSE retained per stock, not averaged across different price scales."
+        }
+      }
+    },
+    {
+      "run_directory": "artifacts/return-study/relative-lstm",
+      "model": "lstm",
+      "representation": "relative",
+      "settings": {
+        "alpha": 10.0,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "created_utc": "2026-09-08T05:41:53.893075+00:00",
+      "epochs_completed": 38,
+      "best_validation_epoch": 33,
+      "summary": {
+        "origin_count": 484,
+        "stock_count": 20,
+        "horizon_sessions": 7,
+        "macro_mape_pct": 2.79006622394076,
+        "macro_direction_agreement_pct": 52.99144037780401,
+        "macro_mae_skill_vs_persistence": -0.038390703454038735,
+        "non_positive_prediction_count": 0,
+        "definitions": {
+          "aggregation": "Equal weight per stock and horizon; overlapping origins are not independent observations.",
+          "direction": "Exact sign(predicted-origin) == sign(actual-origin); flat is a third class.",
+          "skill": "1 - model_MAE / persistence_MAE per stock/horizon; positive beats persistence; zero denominator excluded.",
+          "prices": "Input snapshot price units; MAE/RMSE retained per stock, not averaged across different price scales."
+        }
+      }
+    }
+  ]
+}

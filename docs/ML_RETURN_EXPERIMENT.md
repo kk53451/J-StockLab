@@ -33,3 +33,29 @@
 ```
 
 기존 manifest에서 representation이 생략돼 있으면 price로 해석한다. 모델을 저장할 때 표현 방식을 scalers와 manifest 양쪽에 기록하고, 다르게 복원하려 하면 오류 처리한다. 기존 웹·과제 CSV·발표 자료는 변경하지 않는다.
+
+
+## 실제 검증 결과
+
+[계산 결과·실행 설정·데이터/코드 해시](results/return_representation_2026-09-08.json)에 10개 실행을 모두 기록했다. 검증 타깃 기간은 2022-01-04 ~ 2023-12-29, origin 484개, 20종목 × 7거래 세션이다.
+
+| 모델 | 표현 | alpha | 검증 MAPE (%) ↓ | MAE skill ↑ |
+| --- | --- | ---: | ---: | ---: |
+| Persistence | 현재 가격 유지 | — | 2.7294 | 0.0000 |
+| ridge | price | 0.1 | 39.5585 | -14.5781 |
+| ridge | price | 1.0 | 26.8204 | -9.3704 |
+| ridge | price | 10.0 | 19.9388 | -6.8433 |
+| ridge | price | 100.0 | 16.8030 | -5.6526 |
+| ridge | relative | 0.1 | 7.4709 | -1.6875 |
+| ridge | relative | 1.0 | 4.9795 | -0.7921 |
+| ridge | relative | 10.0 | 3.4981 | -0.2595 |
+| ridge | relative | 100.0 | 2.8840 | -0.0495 |
+| lstm | price | — | 21.1648 | -8.0491 |
+| lstm | relative | — | 2.7901 | -0.0384 |
+
+- LSTM price: 35 epochs 실행, epoch 30 복원.
+- LSTM relative: 38 epochs 실행, epoch 33 복원.
+
+선택 기준에 따라 두 표현 모두 Ridge alpha=100이 후보 중 가장 낮은 MAPE를 보였다. LSTM도 변화율 표현에서 가격 오차가 줄었으나, **실행한 모든 설정은 persistence보다 MAPE가 높고 MAE skill도 음수**였다. 따라서 추가 예측 가치를 입증하지 못했다. 한 번의 시간순 분할·seed 결과이며, 여러 후보 중 선택한 검증 점수를 최종 일반화 성능으로 주장하지 않는다.
+
+전체 테스트 34개가 통과했다. 기존 representation 필드 없는 price 모델의 복원 호환성도 포함한다. 실제 테스트 구간은 평가하지 않았으며 기존 데이터의 point-in-time 한계는 그대로 남는다.

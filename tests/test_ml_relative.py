@@ -72,3 +72,19 @@ def test_mismatched_saved_representation_is_rejected():
 def test_economic_features_are_not_silently_origin_normalized():
     with pytest.raises(ValueError, match="stock-only"):
         DataConfig(feature_set="stock-econ", representation="relative").validate()
+
+
+def test_price_artifacts_without_representation_remain_compatible():
+    frame, config = dataset_inputs()
+    price_config = DataConfig(5, 3, config.train_end, config.validation_end)
+    original = make_dataset(frame, list(STOCKS), price_config)
+    legacy_scalers = {k: v for k, v in original.scalers.items() if k != "representation"}
+    restored = make_dataset(frame, list(STOCKS), price_config, legacy_scalers)
+    windows = restored.partitions["validation"]
+
+    class EchoTargets:
+        def predict(self, x):
+            return windows.y_scaled.reshape(len(x), -1)
+
+    np.testing.assert_array_equal(windows.x, original.partitions["validation"].x)
+    np.testing.assert_allclose(predict("ridge", EchoTargets(), windows, legacy_scalers, 32), windows.y, atol=2e-5)
