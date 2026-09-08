@@ -1,0 +1,871 @@
+{
+  "evaluation_split": "walk-forward-development",
+  "test_evaluated": false,
+  "fold_count": 8,
+  "evaluated_origin_count": 442,
+  "source": {
+    "calendar": "XTKS",
+    "source_rows": 3364,
+    "trading_sessions": 2250,
+    "removed_non_sessions": 1114,
+    "economic_lag_sessions": 0,
+    "limitations": [
+      "Legacy snapshot: prior backfill, revisions, adjusted prices and constituent selection are not point-in-time verified.",
+      "A calendar session does not prove each stored value is an original unfilled observation."
+    ],
+    "snapshot_rows": 4069,
+    "end_date": "2023-12-31",
+    "excluded_after_end_date": 705,
+    "usable_sessions": 2250,
+    "start": "2014-10-16",
+    "end": "2023-12-29"
+  },
+  "limitations": [
+    "Candidate was selected using these development years; this is retrospective stability analysis, not nested validation or an untouched holdout.",
+    "Legacy snapshot is not point-in-time verified; release/vintage, prior backfill and constituent selection limitations remain.",
+    "Overlapping target windows are dependent; fold win counts are descriptive, not significance tests.",
+    "Quarter-end target windows that cross a refit boundary are excluded equally for every model."
+  ],
+  "settings": {
+    "lookback": 90,
+    "horizon": 7,
+    "alpha": 10000.0,
+    "input_representation": "relative",
+    "target_representation": "relative",
+    "selection_rule": "No candidate selection or tuning; fixed alpha=10000 from the preceding development study."
+  },
+  "provenance": {
+    "data_sha256": "03975b20227b6daac041aa3a64edeb79f3dc8243b09249a91cb6217c3320f853",
+    "source_sha256": {
+      "__init__.py": "ccfd5f0fa3e5ae592d26195b656d1ad6deedf2ab02d868ba43adcff0ba46b9e3",
+      "ablation.py": "5cbaf064fcca14bb5b0003e0e8ab21fcbaefa1f35c939fad4932fd0350538ddf",
+      "data.py": "e57eea16c49a3af51711528cc21be870f9200993016b6f8e49e64beceea5f738",
+      "metrics.py": "b1dd97cb382a1ffbb2be654d88a2e1ba57252795d9a1df72bddf54306b8c0dae",
+      "neural.py": "336e87742f7107138a0e997c3e6f0c7ec63ac28a9cc8e13682e9d17d131202fb",
+      "run.py": "639dd12365977f4a9aa3a95149c27a82e5c1bf5532a22b8a6e4fd5ca097c8dff",
+      "walk_forward.py": "6edd0049d469c3dd25b6e44cb275ba80fc9f60e7b00756b115c2c4b2b0c8a2ec"
+    },
+    "versions": {
+      "python": "3.12.10",
+      "numpy": "2.5.3",
+      "pandas": "2.3.3",
+      "scikit-learn": "1.9.0",
+      "exchange-calendars": "4.13.2",
+      "tensorflow": "2.20.0",
+      "keras": "3.15.1",
+      "joblib": "1.6.0"
+    },
+    "git_revision": "be107dc93ab2b1ccdfac959d97cd474b9f3f18e1",
+    "created_utc": "2026-09-08T06:23:58.288237+00:00"
+  },
+  "definitions": {
+    "aggregation": "Equal weight per stock and horizon; overlapping origins are not independent observations.",
+    "direction": "Exact sign(predicted-origin) == sign(actual-origin); flat is a third class.",
+    "skill": "1 - model_MAE / persistence_MAE per stock/horizon; positive beats persistence; zero denominator excluded.",
+    "prices": "Input snapshot price units; MAE/RMSE retained per stock, not averaged across different price scales."
+  },
+  "models": {
+    "persistence": {
+      "macro_mape_pct": 2.74954746395844,
+      "macro_mae_skill_vs_persistence": 0.0,
+      "macro_direction_agreement_pct": 0.3846153846153847,
+      "origin_count": 442,
+      "non_positive_prediction_count": 0,
+      "fold_mape_wins_vs_persistence": 0,
+      "by_target_year": {
+        "2022": {
+          "macro_mape_pct": 2.917355084529751,
+          "macro_mae_skill_vs_persistence": 0.0,
+          "macro_direction_agreement_pct": 0.3831168831168831,
+          "origin_count": 220,
+          "non_positive_prediction_count": 0
+        },
+        "2023": {
+          "macro_mape_pct": 2.5832516237526364,
+          "macro_mae_skill_vs_persistence": 0.0,
+          "macro_direction_agreement_pct": 0.38610038610038605,
+          "origin_count": 222,
+          "non_positive_prediction_count": 0
+        }
+      }
+    },
+    "mean-return-expanding": {
+      "macro_mape_pct": 2.749619721147173,
+      "macro_mae_skill_vs_persistence": 0.00232257153122872,
+      "macro_direction_agreement_pct": 54.43762120232708,
+      "origin_count": 442,
+      "non_positive_prediction_count": 0,
+      "fold_mape_wins_vs_persistence": 2,
+      "by_target_year": {
+        "2022": {
+          "macro_mape_pct": 2.9398857314645017,
+          "macro_mae_skill_vs_persistence": -0.0037000855693966306,
+          "macro_direction_agreement_pct": 51.87012987012987,
+          "origin_count": 220,
+          "non_positive_prediction_count": 0
+        },
+        "2023": {
+          "macro_mape_pct": 2.5610678190309026,
+          "macro_mae_skill_vs_persistence": 0.008429012329914377,
+          "macro_direction_agreement_pct": 56.98198198198198,
+          "origin_count": 222,
+          "non_positive_prediction_count": 0
+        }
+      }
+    },
+    "ridge-expanding": {
+      "macro_mape_pct": 2.74282447189496,
+      "macro_mae_skill_vs_persistence": 0.004319899331862752,
+      "macro_direction_agreement_pct": 54.109566903684545,
+      "origin_count": 442,
+      "non_positive_prediction_count": 0,
+      "fold_mape_wins_vs_persistence": 5,
+      "by_target_year": {
+        "2022": {
+          "macro_mape_pct": 2.933274911488989,
+          "macro_mae_skill_vs_persistence": -0.0010240919868063152,
+          "macro_direction_agreement_pct": 52.09415584415584,
+          "origin_count": 220,
+          "non_positive_prediction_count": 0
+        },
+        "2023": {
+          "macro_mape_pct": 2.5540898020270046,
+          "macro_mae_skill_vs_persistence": 0.010128634298785274,
+          "macro_direction_agreement_pct": 56.10682110682111,
+          "origin_count": 222,
+          "non_positive_prediction_count": 0
+        }
+      }
+    },
+    "ridge-fixed": {
+      "macro_mape_pct": 2.744270008912681,
+      "macro_mae_skill_vs_persistence": 0.003978882004987856,
+      "macro_direction_agreement_pct": 53.574660633484164,
+      "origin_count": 442,
+      "non_positive_prediction_count": 0,
+      "fold_mape_wins_vs_persistence": 4,
+      "by_target_year": {
+        "2022": {
+          "macro_mape_pct": 2.9372663896434883,
+          "macro_mae_skill_vs_persistence": -0.0018982911417071788,
+          "macro_direction_agreement_pct": 51.4448051948052,
+          "origin_count": 220,
+          "non_positive_prediction_count": 0
+        },
+        "2023": {
+          "macro_mape_pct": 2.5530123343145847,
+          "macro_mae_skill_vs_persistence": 0.010399912361993304,
+          "macro_direction_agreement_pct": 55.68532818532818,
+          "origin_count": 222,
+          "non_positive_prediction_count": 0
+        }
+      }
+    }
+  },
+  "folds": [
+    {
+      "name": "2022Q1",
+      "train_end": "2021-12-31",
+      "evaluation_end": "2022-03-31",
+      "fixed_control_fit_end": "2021-12-30",
+      "artifact_sha256": {
+        "mean-return.joblib": "7ce81ac711f055ae3f498f5fdefd63b516213123a5cab9fa89b62bbb5f45bc2a",
+        "ridge.joblib": "8abc2e5c18a07e1427fbcb77decd5421009b8b484f9e0f6877dd39a32ad77c9d",
+        "scalers.joblib": "daed590c612c2e4b0af6b4e3f205fe5f70df79ed2b2ffb0e35d04029a674999a"
+      },
+      "dataset": {
+        "partitions": {
+          "train": {
+            "samples": 1664,
+            "first_origin": "2015-03-02",
+            "last_origin": "2021-12-21",
+            "first_target": "2015-03-03",
+            "last_target": "2021-12-30"
+          },
+          "validation": {
+            "samples": 53,
+            "first_origin": "2021-12-30",
+            "last_origin": "2022-03-22",
+            "first_target": "2022-01-04",
+            "last_target": "2022-03-31"
+          }
+        },
+        "purged_boundary_windows": 6,
+        "scaler_fit_start": "2014-10-16",
+        "scaler_fit_end": "2021-12-30",
+        "features": [
+          "Toyota",
+          "SoftBank Group",
+          "Mitsubishi UFJ Financial",
+          "Sony Group",
+          "Hitachi",
+          "Fast Retailing",
+          "SMFG",
+          "Nintendo",
+          "Tokyo Electron",
+          "Advantest",
+          "Mitsubishi Heavy Ind",
+          "Mitsubishi Corp",
+          "Keyence",
+          "Chugai Pharma",
+          "ITOCHU",
+          "Mizuho Financial",
+          "NTT",
+          "Mitsui & Co",
+          "Recruit Holdings",
+          "Tokio Marine"
+        ],
+        "representation": "relative",
+        "input_representation": "relative",
+        "target_representation": "relative",
+        "target_definition": "price/origin_price - 1"
+      },
+      "summaries": {
+        "persistence": {
+          "macro_mape_pct": 3.722370008789325,
+          "macro_mae_skill_vs_persistence": 0.0,
+          "macro_direction_agreement_pct": 0.10781671159029649,
+          "origin_count": 53,
+          "non_positive_prediction_count": 0
+        },
+        "mean-return-expanding": {
+          "macro_mape_pct": 3.7450600072911504,
+          "macro_mae_skill_vs_persistence": 0.0006610793292942499,
+          "macro_direction_agreement_pct": 51.34770889487871,
+          "origin_count": 53,
+          "non_positive_prediction_count": 0
+        },
+        "ridge-expanding": {
+          "macro_mape_pct": 3.746976496639135,
+          "macro_mae_skill_vs_persistence": 0.0018129251502514083,
+          "macro_direction_agreement_pct": 52.34501347708895,
+          "origin_count": 53,
+          "non_positive_prediction_count": 0
+        },
+        "ridge-fixed": {
+          "macro_mape_pct": 3.746976496639135,
+          "macro_mae_skill_vs_persistence": 0.0018129251502514083,
+          "macro_direction_agreement_pct": 52.34501347708895,
+          "origin_count": 53,
+          "non_positive_prediction_count": 0
+        }
+      }
+    },
+    {
+      "name": "2022Q2",
+      "train_end": "2022-03-31",
+      "evaluation_end": "2022-06-30",
+      "fixed_control_fit_end": "2021-12-30",
+      "artifact_sha256": {
+        "mean-return.joblib": "02a636ef9ea2bd6bc2b3fe5012b4ccfeb244d054b4f2a52275e1e9510344bff6",
+        "ridge.joblib": "1c2a51b7fdd5249ffec14ee765b6064a433f68b9a969f5214b0d8eb74bfab8a2",
+        "scalers.joblib": "7acf4ab450741b6c92ed29c4b7a39b905118788fd72ef3754925214dfca35778"
+      },
+      "dataset": {
+        "partitions": {
+          "train": {
+            "samples": 1723,
+            "first_origin": "2015-03-02",
+            "last_origin": "2022-03-22",
+            "first_target": "2015-03-03",
+            "last_target": "2022-03-31"
+          },
+          "validation": {
+            "samples": 55,
+            "first_origin": "2022-03-31",
+            "last_origin": "2022-06-21",
+            "first_target": "2022-04-01",
+            "last_target": "2022-06-30"
+          }
+        },
+        "purged_boundary_windows": 6,
+        "scaler_fit_start": "2014-10-16",
+        "scaler_fit_end": "2022-03-31",
+        "features": [
+          "Toyota",
+          "SoftBank Group",
+          "Mitsubishi UFJ Financial",
+          "Sony Group",
+          "Hitachi",
+          "Fast Retailing",
+          "SMFG",
+          "Nintendo",
+          "Tokyo Electron",
+          "Advantest",
+          "Mitsubishi Heavy Ind",
+          "Mitsubishi Corp",
+          "Keyence",
+          "Chugai Pharma",
+          "ITOCHU",
+          "Mizuho Financial",
+          "NTT",
+          "Mitsui & Co",
+          "Recruit Holdings",
+          "Tokio Marine"
+        ],
+        "representation": "relative",
+        "input_representation": "relative",
+        "target_representation": "relative",
+        "target_definition": "price/origin_price - 1"
+      },
+      "summaries": {
+        "persistence": {
+          "macro_mape_pct": 3.0212355142992595,
+          "macro_mae_skill_vs_persistence": 0.0,
+          "macro_direction_agreement_pct": 0.48051948051948057,
+          "origin_count": 55,
+          "non_positive_prediction_count": 0
+        },
+        "mean-return-expanding": {
+          "macro_mape_pct": 3.0701469319287633,
+          "macro_mae_skill_vs_persistence": -0.009664473456998467,
+          "macro_direction_agreement_pct": 49.025974025974016,
+          "origin_count": 55,
+          "non_positive_prediction_count": 0
+        },
+        "ridge-expanding": {
+          "macro_mape_pct": 3.060399171332467,
+          "macro_mae_skill_vs_persistence": -0.005703118114950573,
+          "macro_direction_agreement_pct": 49.12987012987013,
+          "origin_count": 55,
+          "non_positive_prediction_count": 0
+        },
+        "ridge-fixed": {
+          "macro_mape_pct": 3.067318075108114,
+          "macro_mae_skill_vs_persistence": -0.007055100486189923,
+          "macro_direction_agreement_pct": 47.5064935064935,
+          "origin_count": 55,
+          "non_positive_prediction_count": 0
+        }
+      }
+    },
+    {
+      "name": "2022Q3",
+      "train_end": "2022-06-30",
+      "evaluation_end": "2022-09-30",
+      "fixed_control_fit_end": "2021-12-30",
+      "artifact_sha256": {
+        "mean-return.joblib": "9566f4e3171536b43f94498a55560788016a76e8ef140c83da1d63a253aaacec",
+        "ridge.joblib": "66b951625b1a495df989f78205350cab0373b7ea906dbe23d038e388c0e08568",
+        "scalers.joblib": "eb643a41a8719eea23c29c28c240f69145b36ceb1eab9e708c06674ad2db4d8b"
+      },
+      "dataset": {
+        "partitions": {
+          "train": {
+            "samples": 1784,
+            "first_origin": "2015-03-02",
+            "last_origin": "2022-06-21",
+            "first_target": "2015-03-03",
+            "last_target": "2022-06-30"
+          },
+          "validation": {
+            "samples": 56,
+            "first_origin": "2022-06-30",
+            "last_origin": "2022-09-20",
+            "first_target": "2022-07-01",
+            "last_target": "2022-09-30"
+          }
+        },
+        "purged_boundary_windows": 6,
+        "scaler_fit_start": "2014-10-16",
+        "scaler_fit_end": "2022-06-30",
+        "features": [
+          "Toyota",
+          "SoftBank Group",
+          "Mitsubishi UFJ Financial",
+          "Sony Group",
+          "Hitachi",
+          "Fast Retailing",
+          "SMFG",
+          "Nintendo",
+          "Tokyo Electron",
+          "Advantest",
+          "Mitsubishi Heavy Ind",
+          "Mitsubishi Corp",
+          "Keyence",
+          "Chugai Pharma",
+          "ITOCHU",
+          "Mizuho Financial",
+          "NTT",
+          "Mitsui & Co",
+          "Recruit Holdings",
+          "Tokio Marine"
+        ],
+        "representation": "relative",
+        "input_representation": "relative",
+        "target_representation": "relative",
+        "target_definition": "price/origin_price - 1"
+      },
+      "summaries": {
+        "persistence": {
+          "macro_mape_pct": 2.332710256876529,
+          "macro_mae_skill_vs_persistence": 0.0,
+          "macro_direction_agreement_pct": 0.48469387755102034,
+          "origin_count": 56,
+          "non_positive_prediction_count": 0
+        },
+        "mean-return-expanding": {
+          "macro_mape_pct": 2.350958222404001,
+          "macro_mae_skill_vs_persistence": -0.0048446787677803235,
+          "macro_direction_agreement_pct": 51.9515306122449,
+          "origin_count": 56,
+          "non_positive_prediction_count": 0
+        },
+        "ridge-expanding": {
+          "macro_mape_pct": 2.345320078090919,
+          "macro_mae_skill_vs_persistence": -0.002548667495372703,
+          "macro_direction_agreement_pct": 51.53061224489796,
+          "origin_count": 56,
+          "non_positive_prediction_count": 0
+        },
+        "ridge-fixed": {
+          "macro_mape_pct": 2.3456460259173877,
+          "macro_mae_skill_vs_persistence": -0.0022246549288401475,
+          "macro_direction_agreement_pct": 51.97704081632653,
+          "origin_count": 56,
+          "non_positive_prediction_count": 0
+        }
+      }
+    },
+    {
+      "name": "2022Q4",
+      "train_end": "2022-09-30",
+      "evaluation_end": "2022-12-31",
+      "fixed_control_fit_end": "2021-12-30",
+      "artifact_sha256": {
+        "mean-return.joblib": "e20a08601b6dd05dcbc76d57e6e0d2adea687d1383cc7c3f2bd65f4e8bd902bb",
+        "ridge.joblib": "c3c4fa25bc3156b5265031d72e98b44e4840b462b06f23232cfd73abaa381794",
+        "scalers.joblib": "d1981d1d7288e87fdfd307a1bb59fdde66d1922c62a83acc59dd981d346deb44"
+      },
+      "dataset": {
+        "partitions": {
+          "train": {
+            "samples": 1846,
+            "first_origin": "2015-03-02",
+            "last_origin": "2022-09-20",
+            "first_target": "2015-03-03",
+            "last_target": "2022-09-30"
+          },
+          "validation": {
+            "samples": 56,
+            "first_origin": "2022-09-30",
+            "last_origin": "2022-12-21",
+            "first_target": "2022-10-03",
+            "last_target": "2022-12-30"
+          }
+        },
+        "purged_boundary_windows": 6,
+        "scaler_fit_start": "2014-10-16",
+        "scaler_fit_end": "2022-09-30",
+        "features": [
+          "Toyota",
+          "SoftBank Group",
+          "Mitsubishi UFJ Financial",
+          "Sony Group",
+          "Hitachi",
+          "Fast Retailing",
+          "SMFG",
+          "Nintendo",
+          "Tokyo Electron",
+          "Advantest",
+          "Mitsubishi Heavy Ind",
+          "Mitsubishi Corp",
+          "Keyence",
+          "Chugai Pharma",
+          "ITOCHU",
+          "Mizuho Financial",
+          "NTT",
+          "Mitsui & Co",
+          "Recruit Holdings",
+          "Tokio Marine"
+        ],
+        "representation": "relative",
+        "input_representation": "relative",
+        "target_representation": "relative",
+        "target_definition": "price/origin_price - 1"
+      },
+      "summaries": {
+        "persistence": {
+          "macro_mape_pct": 2.63808536534225,
+          "macro_mae_skill_vs_persistence": 0.0,
+          "macro_direction_agreement_pct": 0.4464285714285714,
+          "origin_count": 56,
+          "non_positive_prediction_count": 0
+        },
+        "mean-return-expanding": {
+          "macro_mape_pct": 2.638838193304523,
+          "macro_mae_skill_vs_persistence": -0.0014476902384284102,
+          "macro_direction_agreement_pct": 55.076530612244895,
+          "origin_count": 56,
+          "non_positive_prediction_count": 0
+        },
+        "ridge-expanding": {
+          "macro_mape_pct": 2.626265132309397,
+          "macro_mae_skill_vs_persistence": 0.003523451146385842,
+          "macro_direction_agreement_pct": 55.33163265306123,
+          "origin_count": 56,
+          "non_positive_prediction_count": 0
+        },
+        "ridge-fixed": {
+          "macro_mape_pct": 2.634824639595949,
+          "macro_mae_skill_vs_persistence": 0.00045073740710026647,
+          "macro_direction_agreement_pct": 53.92857142857142,
+          "origin_count": 56,
+          "non_positive_prediction_count": 0
+        }
+      }
+    },
+    {
+      "name": "2023Q1",
+      "train_end": "2022-12-31",
+      "evaluation_end": "2023-03-31",
+      "fixed_control_fit_end": "2021-12-30",
+      "artifact_sha256": {
+        "mean-return.joblib": "7e6f1c5e04c65b847fd90c866f669ead0c1b3783c523e6d37a809f875a73319b",
+        "ridge.joblib": "258edc0e0c4012a32114084d935984e7911f12a58b7d958a21a790ca73d33542",
+        "scalers.joblib": "1b0e60ad5de9eab80f508976dc9259fe473d68fb95d25df977efa60c513135ce"
+      },
+      "dataset": {
+        "partitions": {
+          "train": {
+            "samples": 1908,
+            "first_origin": "2015-03-02",
+            "last_origin": "2022-12-21",
+            "first_target": "2015-03-03",
+            "last_target": "2022-12-30"
+          },
+          "validation": {
+            "samples": 54,
+            "first_origin": "2022-12-30",
+            "last_origin": "2023-03-22",
+            "first_target": "2023-01-04",
+            "last_target": "2023-03-31"
+          }
+        },
+        "purged_boundary_windows": 6,
+        "scaler_fit_start": "2014-10-16",
+        "scaler_fit_end": "2022-12-30",
+        "features": [
+          "Toyota",
+          "SoftBank Group",
+          "Mitsubishi UFJ Financial",
+          "Sony Group",
+          "Hitachi",
+          "Fast Retailing",
+          "SMFG",
+          "Nintendo",
+          "Tokyo Electron",
+          "Advantest",
+          "Mitsubishi Heavy Ind",
+          "Mitsubishi Corp",
+          "Keyence",
+          "Chugai Pharma",
+          "ITOCHU",
+          "Mizuho Financial",
+          "NTT",
+          "Mitsui & Co",
+          "Recruit Holdings",
+          "Tokio Marine"
+        ],
+        "representation": "relative",
+        "input_representation": "relative",
+        "target_representation": "relative",
+        "target_definition": "price/origin_price - 1"
+      },
+      "summaries": {
+        "persistence": {
+          "macro_mape_pct": 2.572804144207926,
+          "macro_mae_skill_vs_persistence": 0.0,
+          "macro_direction_agreement_pct": 0.27777777777777773,
+          "origin_count": 54,
+          "non_positive_prediction_count": 0
+        },
+        "mean-return-expanding": {
+          "macro_mape_pct": 2.550416284229965,
+          "macro_mae_skill_vs_persistence": 0.00798807104260551,
+          "macro_direction_agreement_pct": 55.06613756613755,
+          "origin_count": 54,
+          "non_positive_prediction_count": 0
+        },
+        "ridge-expanding": {
+          "macro_mape_pct": 2.5513556435312834,
+          "macro_mae_skill_vs_persistence": 0.008251319969004576,
+          "macro_direction_agreement_pct": 54.78835978835978,
+          "origin_count": 54,
+          "non_positive_prediction_count": 0
+        },
+        "ridge-fixed": {
+          "macro_mape_pct": 2.5449930484367673,
+          "macro_mae_skill_vs_persistence": 0.010272675673210854,
+          "macro_direction_agreement_pct": 54.19312169312169,
+          "origin_count": 54,
+          "non_positive_prediction_count": 0
+        }
+      }
+    },
+    {
+      "name": "2023Q2",
+      "train_end": "2023-03-31",
+      "evaluation_end": "2023-06-30",
+      "fixed_control_fit_end": "2021-12-30",
+      "artifact_sha256": {
+        "mean-return.joblib": "13dab4872811fbfe6fd3c988c2e63582a3d8b73139012acca9512a62e4a03d64",
+        "ridge.joblib": "3c273614f26634897a1db3fe0c8dad96760a248b7ae073a5afdc29fa2f5ddb33",
+        "scalers.joblib": "8bacc076b17ddb4cda058a0ea4e8b52f4919c830f2e23c7b276d78a57a971fb6"
+      },
+      "dataset": {
+        "partitions": {
+          "train": {
+            "samples": 1968,
+            "first_origin": "2015-03-02",
+            "last_origin": "2023-03-22",
+            "first_target": "2015-03-03",
+            "last_target": "2023-03-31"
+          },
+          "validation": {
+            "samples": 56,
+            "first_origin": "2023-03-31",
+            "last_origin": "2023-06-21",
+            "first_target": "2023-04-03",
+            "last_target": "2023-06-30"
+          }
+        },
+        "purged_boundary_windows": 6,
+        "scaler_fit_start": "2014-10-16",
+        "scaler_fit_end": "2023-03-31",
+        "features": [
+          "Toyota",
+          "SoftBank Group",
+          "Mitsubishi UFJ Financial",
+          "Sony Group",
+          "Hitachi",
+          "Fast Retailing",
+          "SMFG",
+          "Nintendo",
+          "Tokyo Electron",
+          "Advantest",
+          "Mitsubishi Heavy Ind",
+          "Mitsubishi Corp",
+          "Keyence",
+          "Chugai Pharma",
+          "ITOCHU",
+          "Mizuho Financial",
+          "NTT",
+          "Mitsui & Co",
+          "Recruit Holdings",
+          "Tokio Marine"
+        ],
+        "representation": "relative",
+        "input_representation": "relative",
+        "target_representation": "relative",
+        "target_definition": "price/origin_price - 1"
+      },
+      "summaries": {
+        "persistence": {
+          "macro_mape_pct": 2.6795767468542544,
+          "macro_mae_skill_vs_persistence": 0.0,
+          "macro_direction_agreement_pct": 0.3826530612244897,
+          "origin_count": 56,
+          "non_positive_prediction_count": 0
+        },
+        "mean-return-expanding": {
+          "macro_mape_pct": 2.590763156619008,
+          "macro_mae_skill_vs_persistence": 0.031709560417056304,
+          "macro_direction_agreement_pct": 67.51275510204083,
+          "origin_count": 56,
+          "non_positive_prediction_count": 0
+        },
+        "ridge-expanding": {
+          "macro_mape_pct": 2.609722542808165,
+          "macro_mae_skill_vs_persistence": 0.023026553570054335,
+          "macro_direction_agreement_pct": 63.91581632653062,
+          "origin_count": 56,
+          "non_positive_prediction_count": 0
+        },
+        "ridge-fixed": {
+          "macro_mape_pct": 2.6010513558975368,
+          "macro_mae_skill_vs_persistence": 0.026096377504766382,
+          "macro_direction_agreement_pct": 63.41836734693878,
+          "origin_count": 56,
+          "non_positive_prediction_count": 0
+        }
+      }
+    },
+    {
+      "name": "2023Q3",
+      "train_end": "2023-06-30",
+      "evaluation_end": "2023-09-30",
+      "fixed_control_fit_end": "2021-12-30",
+      "artifact_sha256": {
+        "mean-return.joblib": "2a38c27e419e57e072e3546a6787765ccfdb9d5dacdec09dc657c5e7190337f5",
+        "ridge.joblib": "3f373370619c06837de5396c20cfb41bda8cac327ccc49de6cc07b626a0b2eea",
+        "scalers.joblib": "7481ce61f9fa3d9b689a3efc23a32326134f43b29a32519c2c456ae761580d51"
+      },
+      "dataset": {
+        "partitions": {
+          "train": {
+            "samples": 2030,
+            "first_origin": "2015-03-02",
+            "last_origin": "2023-06-21",
+            "first_target": "2015-03-03",
+            "last_target": "2023-06-30"
+          },
+          "validation": {
+            "samples": 56,
+            "first_origin": "2023-06-30",
+            "last_origin": "2023-09-20",
+            "first_target": "2023-07-03",
+            "last_target": "2023-09-29"
+          }
+        },
+        "purged_boundary_windows": 6,
+        "scaler_fit_start": "2014-10-16",
+        "scaler_fit_end": "2023-06-30",
+        "features": [
+          "Toyota",
+          "SoftBank Group",
+          "Mitsubishi UFJ Financial",
+          "Sony Group",
+          "Hitachi",
+          "Fast Retailing",
+          "SMFG",
+          "Nintendo",
+          "Tokyo Electron",
+          "Advantest",
+          "Mitsubishi Heavy Ind",
+          "Mitsubishi Corp",
+          "Keyence",
+          "Chugai Pharma",
+          "ITOCHU",
+          "Mizuho Financial",
+          "NTT",
+          "Mitsui & Co",
+          "Recruit Holdings",
+          "Tokio Marine"
+        ],
+        "representation": "relative",
+        "input_representation": "relative",
+        "target_representation": "relative",
+        "target_definition": "price/origin_price - 1"
+      },
+      "summaries": {
+        "persistence": {
+          "macro_mape_pct": 2.4020298991429314,
+          "macro_mae_skill_vs_persistence": 0.0,
+          "macro_direction_agreement_pct": 0.43367346938775503,
+          "origin_count": 56,
+          "non_positive_prediction_count": 0
+        },
+        "mean-return-expanding": {
+          "macro_mape_pct": 2.4200992961092864,
+          "macro_mae_skill_vs_persistence": -0.004327132316489761,
+          "macro_direction_agreement_pct": 53.78826530612245,
+          "origin_count": 56,
+          "non_positive_prediction_count": 0
+        },
+        "ridge-expanding": {
+          "macro_mape_pct": 2.389568704189919,
+          "macro_mae_skill_vs_persistence": 0.006582673645078099,
+          "macro_direction_agreement_pct": 54.19642857142857,
+          "origin_count": 56,
+          "non_positive_prediction_count": 0
+        },
+        "ridge-fixed": {
+          "macro_mape_pct": 2.408092889871323,
+          "macro_mae_skill_vs_persistence": 0.00011763408664152707,
+          "macro_direction_agreement_pct": 50.90561224489796,
+          "origin_count": 56,
+          "non_positive_prediction_count": 0
+        }
+      }
+    },
+    {
+      "name": "2023Q4",
+      "train_end": "2023-09-30",
+      "evaluation_end": "2023-12-31",
+      "fixed_control_fit_end": "2021-12-30",
+      "artifact_sha256": {
+        "mean-return.joblib": "e176545363af809c214436f5769ef3b59477787212aa5998a6618677d8398aa4",
+        "ridge.joblib": "01c954e60e9fd3b698448e151a07ffc697fe5a9be0fe2a6e378af17a481143d7",
+        "scalers.joblib": "b3c890c732d72342fe22c8d9ad2f5a8a09be208c7c87b149934bce82d82642f3"
+      },
+      "dataset": {
+        "partitions": {
+          "train": {
+            "samples": 2092,
+            "first_origin": "2015-03-02",
+            "last_origin": "2023-09-20",
+            "first_target": "2015-03-03",
+            "last_target": "2023-09-29"
+          },
+          "validation": {
+            "samples": 56,
+            "first_origin": "2023-09-29",
+            "last_origin": "2023-12-20",
+            "first_target": "2023-10-02",
+            "last_target": "2023-12-29"
+          }
+        },
+        "purged_boundary_windows": 6,
+        "scaler_fit_start": "2014-10-16",
+        "scaler_fit_end": "2023-09-29",
+        "features": [
+          "Toyota",
+          "SoftBank Group",
+          "Mitsubishi UFJ Financial",
+          "Sony Group",
+          "Hitachi",
+          "Fast Retailing",
+          "SMFG",
+          "Nintendo",
+          "Tokyo Electron",
+          "Advantest",
+          "Mitsubishi Heavy Ind",
+          "Mitsubishi Corp",
+          "Keyence",
+          "Chugai Pharma",
+          "ITOCHU",
+          "Mizuho Financial",
+          "NTT",
+          "Mitsui & Co",
+          "Recruit Holdings",
+          "Tokio Marine"
+        ],
+        "representation": "relative",
+        "input_representation": "relative",
+        "target_representation": "relative",
+        "target_definition": "price/origin_price - 1"
+      },
+      "summaries": {
+        "persistence": {
+          "macro_mape_pct": 2.6782225805359814,
+          "macro_mae_skill_vs_persistence": 0.0,
+          "macro_direction_agreement_pct": 0.4464285714285714,
+          "origin_count": 56,
+          "non_positive_prediction_count": 0
+        },
+        "mean-return-expanding": {
+          "macro_mape_pct": 2.6826121272081758,
+          "macro_mae_skill_vs_persistence": -0.0027206458628254646,
+          "macro_direction_agreement_pct": 51.49234693877552,
+          "origin_count": 56,
+          "non_positive_prediction_count": 0
+        },
+        "ridge-expanding": {
+          "macro_mape_pct": 2.6656146690609464,
+          "macro_mae_skill_vs_persistence": 0.0029497976730197485,
+          "macro_direction_agreement_pct": 51.4795918367347,
+          "origin_count": 56,
+          "non_positive_prediction_count": 0
+        },
+        "ridge-fixed": {
+          "macro_mape_pct": 2.657625639985646,
+          "macro_mae_skill_vs_persistence": 0.006493851606564602,
+          "macro_direction_agreement_pct": 54.170918367346935,
+          "origin_count": 56,
+          "non_positive_prediction_count": 0
+        }
+      }
+    }
+  ]
+}

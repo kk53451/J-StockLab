@@ -8,6 +8,8 @@
 
 다음 실험: [입력/타깃 분리와 규제 강도](../docs/ML_REGULARIZATION_ABLATION.md). `--input-representation` / `--target-representation`으로 각 쪽을 독립 지정한다. `--model mean-return`은 학습 창의 종목·horizon별 평균 변화율만 사용하는 추가 기준선이다. `python -m ml_eval.ablation --output <새 디렉터리>`로 고정된 13개 실행과 연도별 진단을 재현한다.
 
+[Walk-forward 안정성 점검](../docs/ML_WALK_FORWARD.md): `python -m ml_eval.walk_forward --output <새 디렉터리>`로 2022~2023년의 8개 분기에서 고정 후보를 재학습한다. 같은 날짜의 고정 모델·평균 변화율·현재 가격 유지와 비교하며 2024년 이후는 전처리 입력에서도 제외한다. 이미 후보 선택에 사용한 개발 기간을 재평가하는 진단이다.
+
 ## 설치
 
 프로젝트 루트에서 Python 3.12로 실행한다. 기존 TensorFlow 2.15 환경과 섞지 않는다.
