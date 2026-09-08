@@ -1,0 +1,240 @@
+{
+  "record_date": "2026-09-08",
+  "evaluation_split": "validation",
+  "test_evaluated": false,
+  "protocol": "Single temporal split, seed 42, initial configurations; not a tuned model ranking or point-in-time backtest.",
+  "data_sha256": "03975b20227b6daac041aa3a64edeb79f3dc8243b09249a91cb6217c3320f853",
+  "data_config": {
+    "lookback": 90,
+    "horizon": 7,
+    "train_end": "2021-12-30",
+    "validation_end": "2023-12-29",
+    "feature_set": "stock"
+  },
+  "source": {
+    "calendar": "XTKS",
+    "source_rows": 4069,
+    "trading_sessions": 2721,
+    "removed_non_sessions": 1348,
+    "economic_lag_sessions": 0,
+    "limitations": [
+      "Legacy snapshot: prior backfill, revisions, adjusted prices and constituent selection are not point-in-time verified.",
+      "A calendar session does not prove each stored value is an original unfilled observation."
+    ],
+    "usable_sessions": 2721,
+    "start": "2014-10-16",
+    "end": "2025-12-05"
+  },
+  "dataset": {
+    "partitions": {
+      "train": {
+        "samples": 1664,
+        "first_origin": "2015-03-02",
+        "last_origin": "2021-12-21",
+        "first_target": "2015-03-03",
+        "last_target": "2021-12-30"
+      },
+      "validation": {
+        "samples": 484,
+        "first_origin": "2021-12-30",
+        "last_origin": "2023-12-20",
+        "first_target": "2022-01-04",
+        "last_target": "2023-12-29"
+      },
+      "test": {
+        "samples": 465,
+        "first_origin": "2023-12-29",
+        "last_origin": "2025-11-26",
+        "first_target": "2024-01-04",
+        "last_target": "2025-12-05"
+      }
+    },
+    "purged_boundary_windows": 12,
+    "scaler_fit_start": "2014-10-16",
+    "scaler_fit_end": "2021-12-30",
+    "features": [
+      "Toyota",
+      "SoftBank Group",
+      "Mitsubishi UFJ Financial",
+      "Sony Group",
+      "Hitachi",
+      "Fast Retailing",
+      "SMFG",
+      "Nintendo",
+      "Tokyo Electron",
+      "Advantest",
+      "Mitsubishi Heavy Ind",
+      "Mitsubishi Corp",
+      "Keyence",
+      "Chugai Pharma",
+      "ITOCHU",
+      "Mizuho Financial",
+      "NTT",
+      "Mitsui & Co",
+      "Recruit Holdings",
+      "Tokio Marine"
+    ]
+  },
+  "source_sha256": {
+    "__init__.py": "2b8e616d0b7ed8f973dc3fb88f6925681ce36281d64f25b44a762a882ffbc2cb",
+    "data.py": "34698a87f256074a20a4ad7030fc27224a4b65c4d7ff34354fdd4763f8c205a2",
+    "metrics.py": "3b0a7e1c87776221a8c39a0c0f1ff345a005caa5b40d2a99eb96cd2c6e82677c",
+    "neural.py": "bdfaa4795d97cb85e7216f3207a68f15b51a25f232a22284ed4d02cf32b5e7fb",
+    "run.py": "efa7271ecfdcbcc682b5812c94a4707313fc175a0d9623d2dc5fe8cea704e2ff"
+  },
+  "versions": {
+    "python": "3.12.10",
+    "numpy": "2.5.3",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.9.0",
+    "exchange-calendars": "4.13.2",
+    "tensorflow": "2.20.0",
+    "keras": "3.15.1",
+    "joblib": "1.6.0"
+  },
+  "runs": [
+    {
+      "run_directory": "artifacts/persistence-stock-v1",
+      "model": "persistence",
+      "settings": {
+        "alpha": 10.0,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "created_utc": "2026-09-08T00:05:09.698988+00:00",
+      "artifact_sha256": {
+        "scalers.joblib": "b2d211c4b2481c671ba15f3211d9f557bef3efed7912eb9abcfa4919336703d1"
+      },
+      "epochs_completed": null,
+      "best_validation_epoch": null,
+      "summary": {
+        "origin_count": 484,
+        "stock_count": 20,
+        "horizon_sessions": 7,
+        "macro_mape_pct": 2.7293732373476423,
+        "macro_direction_agreement_pct": 0.37042502951593864,
+        "macro_mae_skill_vs_persistence": 0.0,
+        "non_positive_prediction_count": 0,
+        "definitions": {
+          "aggregation": "Equal weight per stock and horizon; overlapping origins are not independent observations.",
+          "direction": "Exact sign(predicted-origin) == sign(actual-origin); flat is a third class.",
+          "skill": "1 - model_MAE / persistence_MAE per stock/horizon; positive beats persistence; zero denominator excluded.",
+          "prices": "Input snapshot price units; MAE/RMSE retained per stock, not averaged across different price scales."
+        }
+      }
+    },
+    {
+      "run_directory": "artifacts/ridge-stock-v2",
+      "model": "ridge",
+      "settings": {
+        "alpha": 10.0,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "created_utc": "2026-09-08T00:05:14.381747+00:00",
+      "artifact_sha256": {
+        "model.joblib": "2c357a960e7600a38ea7c8c40eac7de126a0e3d5da1292d4d65e7b2285cc1020",
+        "scalers.joblib": "b2d211c4b2481c671ba15f3211d9f557bef3efed7912eb9abcfa4919336703d1"
+      },
+      "epochs_completed": null,
+      "best_validation_epoch": null,
+      "summary": {
+        "origin_count": 484,
+        "stock_count": 20,
+        "horizon_sessions": 7,
+        "macro_mape_pct": 19.93876459845271,
+        "macro_direction_agreement_pct": 47.18417945690673,
+        "macro_mae_skill_vs_persistence": -6.843312090062731,
+        "non_positive_prediction_count": 0,
+        "definitions": {
+          "aggregation": "Equal weight per stock and horizon; overlapping origins are not independent observations.",
+          "direction": "Exact sign(predicted-origin) == sign(actual-origin); flat is a third class.",
+          "skill": "1 - model_MAE / persistence_MAE per stock/horizon; positive beats persistence; zero denominator excluded.",
+          "prices": "Input snapshot price units; MAE/RMSE retained per stock, not averaged across different price scales."
+        }
+      }
+    },
+    {
+      "run_directory": "artifacts/lstm-stock-v1",
+      "model": "lstm",
+      "settings": {
+        "alpha": 10.0,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "created_utc": "2026-09-08T00:03:42.117515+00:00",
+      "artifact_sha256": {
+        "model.keras": "23465cc1bfa15f64dcc59214b3963e20fc235bcf5be2045ffafd229533b38dab",
+        "scalers.joblib": "b2d211c4b2481c671ba15f3211d9f557bef3efed7912eb9abcfa4919336703d1"
+      },
+      "epochs_completed": 35,
+      "best_validation_epoch": 30,
+      "summary": {
+        "origin_count": 484,
+        "stock_count": 20,
+        "horizon_sessions": 7,
+        "macro_mape_pct": 21.164768959220652,
+        "macro_direction_agreement_pct": 48.46517119244392,
+        "macro_mae_skill_vs_persistence": -8.049112914377273,
+        "non_positive_prediction_count": 0,
+        "definitions": {
+          "aggregation": "Equal weight per stock and horizon; overlapping origins are not independent observations.",
+          "direction": "Exact sign(predicted-origin) == sign(actual-origin); flat is a third class.",
+          "skill": "1 - model_MAE / persistence_MAE per stock/horizon; positive beats persistence; zero denominator excluded.",
+          "prices": "Input snapshot price units; MAE/RMSE retained per stock, not averaged across different price scales."
+        }
+      }
+    },
+    {
+      "run_directory": "artifacts/transformer-stock-v1",
+      "model": "transformer",
+      "settings": {
+        "alpha": 10.0,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "created_utc": "2026-09-08T00:05:24.542667+00:00",
+      "artifact_sha256": {
+        "model.keras": "2eb4f80aa6b3a20c308aa6df0133526cc0e846eba77991db68994cd0884b9e2a",
+        "scalers.joblib": "b2d211c4b2481c671ba15f3211d9f557bef3efed7912eb9abcfa4919336703d1"
+      },
+      "epochs_completed": 15,
+      "best_validation_epoch": 10,
+      "summary": {
+        "origin_count": 484,
+        "stock_count": 20,
+        "horizon_sessions": 7,
+        "macro_mape_pct": 27.0169608579136,
+        "macro_direction_agreement_pct": 46.97018890200709,
+        "macro_mae_skill_vs_persistence": -11.245935602749984,
+        "non_positive_prediction_count": 0,
+        "definitions": {
+          "aggregation": "Equal weight per stock and horizon; overlapping origins are not independent observations.",
+          "direction": "Exact sign(predicted-origin) == sign(actual-origin); flat is a third class.",
+          "skill": "1 - model_MAE / persistence_MAE per stock/horizon; positive beats persistence; zero denominator excluded.",
+          "prices": "Input snapshot price units; MAE/RMSE retained per stock, not averaged across different price scales."
+        }
+      }
+    }
+  ]
+}
