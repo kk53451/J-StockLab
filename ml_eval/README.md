@@ -6,6 +6,8 @@
 
 후속 실험: [가격 수준과 변화율 표현 비교](../docs/ML_RETURN_EXPERIMENT.md). `--representation relative`는 주가 단독 입력을 origin 가격으로 정규화하고 미래 변화율을 학습하며, 예측을 가격으로 복원한 뒤 동일 지표로 평가한다. 기본값 `price`는 기존 동작을 유지한다.
 
+다음 실험: [입력/타깃 분리와 규제 강도](../docs/ML_REGULARIZATION_ABLATION.md). `--input-representation` / `--target-representation`으로 각 쪽을 독립 지정한다. `--model mean-return`은 학습 창의 종목·horizon별 평균 변화율만 사용하는 추가 기준선이다. `python -m ml_eval.ablation --output <새 디렉터리>`로 고정된 13개 실행과 연도별 진단을 재현한다.
+
 ## 설치
 
 프로젝트 루트에서 Python 3.12로 실행한다. 기존 TensorFlow 2.15 환경과 섞지 않는다.

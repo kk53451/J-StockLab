@@ -26,6 +26,16 @@ class DataConfig:
     validation_end: str = "2023-12-29"
     feature_set: str = "stock"
     representation: str = "price"
+    input_representation: str | None = None
+    target_representation: str | None = None
+
+    @property
+    def input_mode(self):
+        return self.input_representation or self.representation
+
+    @property
+    def target_mode(self):
+        return self.target_representation or self.representation
 
     def validate(self):
         if self.lookback < 1 or self.horizon < 1:
@@ -36,7 +46,10 @@ class DataConfig:
             raise ValueError("feature_set must be stock or stock-econ")
         if self.representation not in ("price", "relative"):
             raise ValueError("representation must be price or relative")
-        if self.representation == "relative" and self.feature_set != "stock":
+        for mode in (self.input_representation, self.target_representation):
+            if mode is not None and mode not in ("price", "relative"):
+                raise ValueError("input/target representation must be price or relative")
+        if "relative" in (self.input_mode, self.target_mode) and self.feature_set != "stock":
             raise ValueError("relative representation currently requires stock-only features")
 
 
@@ -151,26 +164,31 @@ def make_dataset(frame: pd.DataFrame, features: list[str], config: DataConfig,
             raise ValueError(f"No {name} windows; adjust cutoffs/lookback/horizon")
     current = y_values[origins]
     target_prices = y_values[targets]
-    relative = config.representation == "relative"
-    if relative and features != list(STOCKS):
+    relative_input = config.input_mode == "relative"
+    relative_target = config.target_mode == "relative"
+    if relative_input and features != list(STOCKS):
         raise ValueError("relative representation requires stock columns in canonical order")
-    model_targets = target_prices / current[:, None, :] - 1 if relative else target_prices
+    model_targets = target_prices / current[:, None, :] - 1 if relative_target else target_prices
     if scalers is None:
         scalers = {
             "features": features, "stocks": list(STOCKS), "representation": config.representation,
+            "input_representation": config.input_mode, "target_representation": config.target_mode,
             # Relative inputs are dimensionless and origin-local; no fitted input scaler.
-            "x": None if relative else MinMaxScaler().fit(training[features]),
+            "x": None if relative_input else MinMaxScaler().fit(training[features]),
             "y": MinMaxScaler().fit(model_targets[masks["train"]].reshape(-1, len(STOCKS)))
-                 if relative else MinMaxScaler().fit(training[list(STOCKS)]),
+                 if relative_target else MinMaxScaler().fit(training[list(STOCKS)]),
         }
     if (scalers["features"] != features or scalers["stocks"] != list(STOCKS)
-            or scalers.get("representation", "price") != config.representation):
+            or scalers.get("input_representation", scalers.get("representation", "price")) != config.input_mode
+            or scalers.get("target_representation", scalers.get("representation", "price")) != config.target_mode):
         raise ValueError("Saved scaler schema/representation does not match dataset")
-    if relative:
+    if relative_input:
         x_windows = (y_values[inputs] / current[:, None, :] - 1).astype(np.float32)
-        target_scaled = scalers["y"].transform(model_targets.reshape(-1, len(STOCKS))).reshape(model_targets.shape)
     else:
         x_windows = scalers["x"].transform(frame[features]).astype(np.float32)[inputs]
+    if relative_target:
+        target_scaled = scalers["y"].transform(model_targets.reshape(-1, len(STOCKS))).reshape(model_targets.shape)
+    else:
         target_scaled = scalers["y"].transform(frame[list(STOCKS)])[targets]
     target_scaled = target_scaled.astype(np.float32)
     partitions, split_metadata = {}, {}
@@ -194,5 +212,7 @@ def make_dataset(frame: pd.DataFrame, features: list[str], config: DataConfig,
         "scaler_fit_end": str(training.index.max().date()),
         "features": features,
         "representation": config.representation,
-        "target_definition": "price/origin_price - 1" if relative else "price",
+        "input_representation": config.input_mode,
+        "target_representation": config.target_mode,
+        "target_definition": "price/origin_price - 1" if relative_target else "price",
     })
