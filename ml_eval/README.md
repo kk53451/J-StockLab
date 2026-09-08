@@ -4,6 +4,8 @@
 
 개선 배경: [2026-09-08 감사 기록](../docs/ML_AUDIT_2026-09-08.md).
 
+후속 실험: [가격 수준과 변화율 표현 비교](../docs/ML_RETURN_EXPERIMENT.md). `--representation relative`는 주가 단독 입력을 origin 가격으로 정규화하고 미래 변화율을 학습하며, 예측을 가격으로 복원한 뒤 동일 지표로 평가한다. 기본값 `price`는 기존 동작을 유지한다.
+
 ## 설치
 
 프로젝트 루트에서 Python 3.12로 실행한다. 기존 TensorFlow 2.15 환경과 섞지 않는다.

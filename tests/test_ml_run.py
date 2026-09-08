@@ -8,8 +8,8 @@ from ml_eval.data import STOCKS
 from ml_eval.run import evaluate_test, parser, train
 
 
-@pytest.fixture
-def run(tmp_path):
+@pytest.fixture(params=["price", "relative"])
+def run(tmp_path, request):
     dates = pd.date_range("2020-01-01", "2020-06-30")
     rng = np.random.default_rng(12)
     prices = 100 + np.cumsum(rng.normal(0.1, 0.3, (len(dates), len(STOCKS))), axis=0)
@@ -22,6 +22,7 @@ def run(tmp_path):
         "train", "--data", str(source), "--output", str(output), "--model", "ridge",
         "--lookback", "5", "--horizon", "3", "--train-end", "2020-02-28",
         "--validation-end", "2020-03-31",
+        "--representation", request.param,
     ])
     train(args)
     return output, source

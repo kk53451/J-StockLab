@@ -45,7 +45,10 @@ def predict(kind, model, windows, scalers, batch_size):
         scaled = model.predict(windows.x.reshape(len(windows.x), -1))
     else:
         scaled = neural_module().predict_model(model, windows, batch_size)
-    return scalers["y"].inverse_transform(scaled.reshape(-1, len(STOCKS))).reshape(windows.y.shape)
+    decoded = scalers["y"].inverse_transform(scaled.reshape(-1, len(STOCKS))).reshape(windows.y.shape)
+    if scalers.get("representation", "price") == "relative":
+        return windows.current[:, None, :] * (1 + decoded)
+    return decoded
 
 
 def evaluate(windows, predictions, output):
@@ -80,7 +83,8 @@ def provenance():
 
 
 def train(args):
-    config = DataConfig(args.lookback, args.horizon, args.train_end, args.validation_end, args.feature_set)
+    config = DataConfig(args.lookback, args.horizon, args.train_end, args.validation_end,
+                        args.feature_set, args.representation)
     config.validate()
     if args.alpha <= 0 or not np.isfinite(args.alpha):
         raise ValueError("alpha must be finite and positive")
@@ -168,6 +172,8 @@ def parser():
     fit.add_argument("--output", type=Path, required=True)
     fit.add_argument("--model", choices=("persistence", "ridge", "lstm", "transformer"), default="ridge")
     fit.add_argument("--feature-set", choices=("stock", "stock-econ"), default="stock")
+    fit.add_argument("--representation", choices=("price", "relative"), default="price",
+                     help="Joint input/target representation; relative uses origin-normalized stocks and future returns")
     fit.add_argument("--lookback", type=int, default=90)
     fit.add_argument("--horizon", type=int, default=7)
     fit.add_argument("--train-end", default="2021-12-30")
