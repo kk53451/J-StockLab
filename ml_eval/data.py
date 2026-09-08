@@ -25,6 +25,7 @@ class DataConfig:
     train_end: str = "2021-12-30"
     validation_end: str = "2023-12-29"
     feature_set: str = "stock"
+    representation: str = "price"
 
     def validate(self):
         if self.lookback < 1 or self.horizon < 1:
@@ -33,6 +34,10 @@ class DataConfig:
             raise ValueError("train_end must precede validation_end")
         if self.feature_set not in ("stock", "stock-econ"):
             raise ValueError("feature_set must be stock or stock-econ")
+        if self.representation not in ("price", "relative"):
+            raise ValueError("representation must be price or relative")
+        if self.representation == "relative" and self.feature_set != "stock":
+            raise ValueError("relative representation currently requires stock-only features")
 
 
 @dataclass
@@ -128,17 +133,7 @@ def make_dataset(frame: pd.DataFrame, features: list[str], config: DataConfig,
     training = frame.loc[frame.index <= train_end]
     if len(training) < config.lookback + config.horizon:
         raise ValueError("Not enough training sessions")
-    if scalers is None:
-        scalers = {
-            "features": features, "stocks": list(STOCKS),
-            "x": MinMaxScaler().fit(training[features]),
-            "y": MinMaxScaler().fit(training[list(STOCKS)]),
-        }
-    if scalers["features"] != features or scalers["stocks"] != list(STOCKS):
-        raise ValueError("Saved scaler schema does not match dataset")
-    x_values = scalers["x"].transform(frame[features]).astype(np.float32)
     y_values = frame[list(STOCKS)].to_numpy(dtype=np.float64)
-    y_scaled = scalers["y"].transform(frame[list(STOCKS)]).astype(np.float32)
 
     # Origin is the LAST available input session. Day1 is immediately next.
     origins = np.arange(config.lookback - 1, len(frame) - config.horizon)
@@ -151,13 +146,38 @@ def make_dataset(frame: pd.DataFrame, features: list[str], config: DataConfig,
         "validation": (target_dates[:, 0] > train_end.to_datetime64()) & (target_dates[:, -1] <= validation_end.to_datetime64()),
         "test": target_dates[:, 0] > validation_end.to_datetime64(),
     }
-    partitions, split_metadata = {}, {}
     for name, mask in masks.items():
         if not mask.any():
             raise ValueError(f"No {name} windows; adjust cutoffs/lookback/horizon")
+    current = y_values[origins]
+    target_prices = y_values[targets]
+    relative = config.representation == "relative"
+    if relative and features != list(STOCKS):
+        raise ValueError("relative representation requires stock columns in canonical order")
+    model_targets = target_prices / current[:, None, :] - 1 if relative else target_prices
+    if scalers is None:
+        scalers = {
+            "features": features, "stocks": list(STOCKS), "representation": config.representation,
+            # Relative inputs are dimensionless and origin-local; no fitted input scaler.
+            "x": None if relative else MinMaxScaler().fit(training[features]),
+            "y": MinMaxScaler().fit(model_targets[masks["train"]].reshape(-1, len(STOCKS)))
+                 if relative else MinMaxScaler().fit(training[list(STOCKS)]),
+        }
+    if (scalers["features"] != features or scalers["stocks"] != list(STOCKS)
+            or scalers.get("representation", "price") != config.representation):
+        raise ValueError("Saved scaler schema/representation does not match dataset")
+    if relative:
+        x_windows = (y_values[inputs] / current[:, None, :] - 1).astype(np.float32)
+        target_scaled = scalers["y"].transform(model_targets.reshape(-1, len(STOCKS))).reshape(model_targets.shape)
+    else:
+        x_windows = scalers["x"].transform(frame[features]).astype(np.float32)[inputs]
+        target_scaled = scalers["y"].transform(frame[list(STOCKS)])[targets]
+    target_scaled = target_scaled.astype(np.float32)
+    partitions, split_metadata = {}, {}
+    for name, mask in masks.items():
         partitions[name] = Windows(
-            x=x_values[inputs[mask]], y=y_values[targets[mask]],
-            y_scaled=y_scaled[targets[mask]], current=y_values[origins[mask]],
+            x=x_windows[mask], y=target_prices[mask],
+            y_scaled=target_scaled[mask], current=current[mask],
             origins=dates[origins[mask]], target_dates=target_dates[mask],
         )
         split_metadata[name] = {
@@ -173,4 +193,6 @@ def make_dataset(frame: pd.DataFrame, features: list[str], config: DataConfig,
         "scaler_fit_start": str(training.index.min().date()),
         "scaler_fit_end": str(training.index.max().date()),
         "features": features,
+        "representation": config.representation,
+        "target_definition": "price/origin_price - 1" if relative else "price",
     })
