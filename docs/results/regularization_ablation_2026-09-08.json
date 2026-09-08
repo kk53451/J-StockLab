@@ -1,0 +1,651 @@
+{
+  "evaluation_split": "validation",
+  "test_evaluated": false,
+  "selection_rule": "Minimum overall validation macro MAPE over 12 Ridge candidates; compare against persistence and training mean return; year slices are diagnostics only.",
+  "data_sha256": "03975b20227b6daac041aa3a64edeb79f3dc8243b09249a91cb6217c3320f853",
+  "data_config": {
+    "lookback": 90,
+    "horizon": 7,
+    "train_end": "2021-12-30",
+    "validation_end": "2023-12-29",
+    "feature_set": "stock"
+  },
+  "source": {
+    "calendar": "XTKS",
+    "source_rows": 4069,
+    "trading_sessions": 2721,
+    "removed_non_sessions": 1348,
+    "economic_lag_sessions": 0,
+    "limitations": [
+      "Legacy snapshot: prior backfill, revisions, adjusted prices and constituent selection are not point-in-time verified.",
+      "A calendar session does not prove each stored value is an original unfilled observation."
+    ],
+    "usable_sessions": 2721,
+    "start": "2014-10-16",
+    "end": "2025-12-05"
+  },
+  "source_sha256": {
+    "__init__.py": "ccfd5f0fa3e5ae592d26195b656d1ad6deedf2ab02d868ba43adcff0ba46b9e3",
+    "ablation.py": "5cbaf064fcca14bb5b0003e0e8ab21fcbaefa1f35c939fad4932fd0350538ddf",
+    "data.py": "f17be3f54d2db2c50c5cb16416816c84b5ec536d35850a6741121ac662deff91",
+    "metrics.py": "b1dd97cb382a1ffbb2be654d88a2e1ba57252795d9a1df72bddf54306b8c0dae",
+    "neural.py": "336e87742f7107138a0e997c3e6f0c7ec63ac28a9cc8e13682e9d17d131202fb",
+    "run.py": "ee8615f3c2365e3669512d78130b5bb42622763ff99bc2c1b664a5b496e4d0e6"
+  },
+  "versions": {
+    "python": "3.12.10",
+    "numpy": "2.5.3",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.9.0",
+    "exchange-calendars": "4.13.2",
+    "tensorflow": "2.20.0",
+    "keras": "3.15.1",
+    "joblib": "1.6.0"
+  },
+  "partitions": {
+    "train": {
+      "samples": 1664,
+      "first_origin": "2015-03-02",
+      "last_origin": "2021-12-21",
+      "first_target": "2015-03-03",
+      "last_target": "2021-12-30"
+    },
+    "validation": {
+      "samples": 484,
+      "first_origin": "2021-12-30",
+      "last_origin": "2023-12-20",
+      "first_target": "2022-01-04",
+      "last_target": "2023-12-29"
+    },
+    "test": {
+      "samples": 465,
+      "first_origin": "2023-12-29",
+      "last_origin": "2025-11-26",
+      "first_target": "2024-01-04",
+      "last_target": "2025-12-05"
+    }
+  },
+  "best_ridge_candidate": "relative-relative-a10000",
+  "limitations": [
+    "Development validation has already informed earlier experiments; this is not a fresh holdout claim.",
+    "Year slices use the same fixed model, not walk-forward refits; cross-year target windows excluded only from slices.",
+    "Equal numeric alpha does not imply equal effective regularization under different input scales."
+  ],
+  "persistence": {
+    "macro_mape_pct": 2.7293732373476423,
+    "macro_mae_skill_vs_persistence": 0.0,
+    "macro_direction_agreement_pct": 0.37042502951593864,
+    "origin_count": 484,
+    "non_positive_prediction_count": 0
+  },
+  "definitions": {
+    "aggregation": "Equal weight per stock and horizon; overlapping origins are not independent observations.",
+    "direction": "Exact sign(predicted-origin) == sign(actual-origin); flat is a third class.",
+    "skill": "1 - model_MAE / persistence_MAE per stock/horizon; positive beats persistence; zero denominator excluded.",
+    "prices": "Input snapshot price units; MAE/RMSE retained per stock, not averaged across different price scales."
+  },
+  "yearly_persistence": {
+    "2022": {
+      "macro_mape_pct": 2.8898327576617255,
+      "macro_mae_skill_vs_persistence": 0.0,
+      "macro_direction_agreement_pct": 0.3751500600240095,
+      "origin_count": 238,
+      "non_positive_prediction_count": 0
+    },
+    "2023": {
+      "macro_mape_pct": 2.5900728632832593,
+      "macro_mae_skill_vs_persistence": 0.0,
+      "macro_direction_agreement_pct": 0.36607142857142855,
+      "origin_count": 240,
+      "non_positive_prediction_count": 0
+    }
+  },
+  "runs": [
+    {
+      "name": "price-price-a100",
+      "model": "ridge",
+      "input": "price",
+      "target": "price",
+      "alpha": 100,
+      "settings": {
+        "alpha": 100.0,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "run_directory": "artifacts/regularization-ablation-v1/price-price-a100",
+      "summary": {
+        "macro_mape_pct": 16.803026280120076,
+        "macro_mae_skill_vs_persistence": -5.652578227228731,
+        "macro_direction_agreement_pct": 47.412927981109796,
+        "origin_count": 484,
+        "non_positive_prediction_count": 0
+      },
+      "excluded_cross_year_windows": 6,
+      "by_target_year": {
+        "2022": {
+          "macro_mape_pct": 13.574968999233633,
+          "macro_mae_skill_vs_persistence": -4.031650146600878,
+          "macro_direction_agreement_pct": 48.958583433373356,
+          "origin_count": 238,
+          "non_positive_prediction_count": 0
+        },
+        "2023": {
+          "macro_mape_pct": 20.01914236791804,
+          "macro_mae_skill_vs_persistence": -7.15666774159231,
+          "macro_direction_agreement_pct": 45.711309523809526,
+          "origin_count": 240,
+          "non_positive_prediction_count": 0
+        }
+      }
+    },
+    {
+      "name": "price-price-a1000",
+      "model": "ridge",
+      "input": "price",
+      "target": "price",
+      "alpha": 1000,
+      "settings": {
+        "alpha": 1000.0,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "run_directory": "artifacts/regularization-ablation-v1/price-price-a1000",
+      "summary": {
+        "macro_mape_pct": 16.861432432657118,
+        "macro_mae_skill_vs_persistence": -5.833546203110481,
+        "macro_direction_agreement_pct": 47.399645808736715,
+        "origin_count": 484,
+        "non_positive_prediction_count": 0
+      },
+      "excluded_cross_year_windows": 6,
+      "by_target_year": {
+        "2022": {
+          "macro_mape_pct": 13.787716941302252,
+          "macro_mae_skill_vs_persistence": -4.1511619138964,
+          "macro_direction_agreement_pct": 48.32232893157262,
+          "origin_count": 238,
+          "non_positive_prediction_count": 0
+        },
+        "2023": {
+          "macro_mape_pct": 19.91082900354255,
+          "macro_mae_skill_vs_persistence": -7.291341497946425,
+          "macro_direction_agreement_pct": 46.35119047619048,
+          "origin_count": 240,
+          "non_positive_prediction_count": 0
+        }
+      }
+    },
+    {
+      "name": "price-price-a10000",
+      "model": "ridge",
+      "input": "price",
+      "target": "price",
+      "alpha": 10000,
+      "settings": {
+        "alpha": 10000.0,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "run_directory": "artifacts/regularization-ablation-v1/price-price-a10000",
+      "summary": {
+        "macro_mape_pct": 19.328255121512843,
+        "macro_mae_skill_vs_persistence": -7.208601947296797,
+        "macro_direction_agreement_pct": 48.28069657615112,
+        "origin_count": 484,
+        "non_positive_prediction_count": 0
+      },
+      "excluded_cross_year_windows": 6,
+      "by_target_year": {
+        "2022": {
+          "macro_mape_pct": 15.589953611021,
+          "macro_mae_skill_vs_persistence": -5.051578237048364,
+          "macro_direction_agreement_pct": 49.054621848739494,
+          "origin_count": 238,
+          "non_positive_prediction_count": 0
+        },
+        "2023": {
+          "macro_mape_pct": 23.025378018026817,
+          "macro_mae_skill_vs_persistence": -8.89701734598634,
+          "macro_direction_agreement_pct": 47.452380952380956,
+          "origin_count": 240,
+          "non_positive_prediction_count": 0
+        }
+      }
+    },
+    {
+      "name": "price-relative-a100",
+      "model": "ridge",
+      "input": "price",
+      "target": "relative",
+      "alpha": 100,
+      "settings": {
+        "alpha": 100.0,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "run_directory": "artifacts/regularization-ablation-v1/price-relative-a100",
+      "summary": {
+        "macro_mape_pct": 6.968174484551814,
+        "macro_mae_skill_vs_persistence": -1.7429812679459828,
+        "macro_direction_agreement_pct": 45.7969303423849,
+        "origin_count": 484,
+        "non_positive_prediction_count": 0
+      },
+      "excluded_cross_year_windows": 6,
+      "by_target_year": {
+        "2022": {
+          "macro_mape_pct": 4.250380999109758,
+          "macro_mae_skill_vs_persistence": -0.5227073027165949,
+          "macro_direction_agreement_pct": 47.418967587034814,
+          "origin_count": 238,
+          "non_positive_prediction_count": 0
+        },
+        "2023": {
+          "macro_mape_pct": 9.716870007181344,
+          "macro_mae_skill_vs_persistence": -2.7003456089494633,
+          "macro_direction_agreement_pct": 43.81845238095239,
+          "origin_count": 240,
+          "non_positive_prediction_count": 0
+        }
+      }
+    },
+    {
+      "name": "price-relative-a1000",
+      "model": "ridge",
+      "input": "price",
+      "target": "relative",
+      "alpha": 1000,
+      "settings": {
+        "alpha": 1000.0,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "run_directory": "artifacts/regularization-ablation-v1/price-relative-a1000",
+      "summary": {
+        "macro_mape_pct": 4.0218438178454425,
+        "macro_mae_skill_vs_persistence": -0.5261204089418348,
+        "macro_direction_agreement_pct": 45.46930342384888,
+        "origin_count": 484,
+        "non_positive_prediction_count": 0
+      },
+      "excluded_cross_year_windows": 6,
+      "by_target_year": {
+        "2022": {
+          "macro_mape_pct": 3.2346840765129907,
+          "macro_mae_skill_vs_persistence": -0.131882164117783,
+          "macro_direction_agreement_pct": 46.80672268907563,
+          "origin_count": 238,
+          "non_positive_prediction_count": 0
+        },
+        "2023": {
+          "macro_mape_pct": 4.843745814878775,
+          "macro_mae_skill_vs_persistence": -0.8483909644563766,
+          "macro_direction_agreement_pct": 43.788690476190474,
+          "origin_count": 240,
+          "non_positive_prediction_count": 0
+        }
+      }
+    },
+    {
+      "name": "price-relative-a10000",
+      "model": "ridge",
+      "input": "price",
+      "target": "relative",
+      "alpha": 10000,
+      "settings": {
+        "alpha": 10000.0,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "run_directory": "artifacts/regularization-ablation-v1/price-relative-a10000",
+      "summary": {
+        "macro_mape_pct": 3.065171372047595,
+        "macro_mae_skill_vs_persistence": -0.13731765355615821,
+        "macro_direction_agreement_pct": 45.61540731995277,
+        "origin_count": 484,
+        "non_positive_prediction_count": 0
+      },
+      "excluded_cross_year_windows": 6,
+      "by_target_year": {
+        "2022": {
+          "macro_mape_pct": 2.9856848032245473,
+          "macro_mae_skill_vs_persistence": -0.03523044558295185,
+          "macro_direction_agreement_pct": 47.13085234093637,
+          "origin_count": 238,
+          "non_positive_prediction_count": 0
+        },
+        "2023": {
+          "macro_mape_pct": 3.1725632938459287,
+          "macro_mae_skill_vs_persistence": -0.22602131199771927,
+          "macro_direction_agreement_pct": 43.81547619047618,
+          "origin_count": 240,
+          "non_positive_prediction_count": 0
+        }
+      }
+    },
+    {
+      "name": "relative-price-a100",
+      "model": "ridge",
+      "input": "relative",
+      "target": "price",
+      "alpha": 100,
+      "settings": {
+        "alpha": 100.0,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "run_directory": "artifacts/regularization-ablation-v1/relative-price-a100",
+      "summary": {
+        "macro_mape_pct": 44.74592689241297,
+        "macro_mae_skill_vs_persistence": -18.49253645803495,
+        "macro_direction_agreement_pct": 46.89197166469894,
+        "origin_count": 484,
+        "non_positive_prediction_count": 450
+      },
+      "excluded_cross_year_windows": 6,
+      "by_target_year": {
+        "2022": {
+          "macro_mape_pct": 42.49194370330001,
+          "macro_mae_skill_vs_persistence": -15.7925263165366,
+          "macro_direction_agreement_pct": 49.903961584633855,
+          "origin_count": 238,
+          "non_positive_prediction_count": 450
+        },
+        "2023": {
+          "macro_mape_pct": 46.79400812555528,
+          "macro_mae_skill_vs_persistence": -20.2954920624282,
+          "macro_direction_agreement_pct": 43.49702380952382,
+          "origin_count": 240,
+          "non_positive_prediction_count": 0
+        }
+      }
+    },
+    {
+      "name": "relative-price-a1000",
+      "model": "ridge",
+      "input": "relative",
+      "target": "price",
+      "alpha": 1000,
+      "settings": {
+        "alpha": 1000.0,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "run_directory": "artifacts/regularization-ablation-v1/relative-price-a1000",
+      "summary": {
+        "macro_mape_pct": 43.82908802407685,
+        "macro_mae_skill_vs_persistence": -18.22015707651385,
+        "macro_direction_agreement_pct": 46.230814639905546,
+        "origin_count": 484,
+        "non_positive_prediction_count": 0
+      },
+      "excluded_cross_year_windows": 6,
+      "by_target_year": {
+        "2022": {
+          "macro_mape_pct": 40.90439518515506,
+          "macro_mae_skill_vs_persistence": -15.274659763151762,
+          "macro_direction_agreement_pct": 49.13865546218487,
+          "origin_count": 238,
+          "non_positive_prediction_count": 0
+        },
+        "2023": {
+          "macro_mape_pct": 46.764713633811205,
+          "macro_mae_skill_vs_persistence": -20.30808348786113,
+          "macro_direction_agreement_pct": 42.92261904761905,
+          "origin_count": 240,
+          "non_positive_prediction_count": 0
+        }
+      }
+    },
+    {
+      "name": "relative-price-a10000",
+      "model": "ridge",
+      "input": "relative",
+      "target": "price",
+      "alpha": 10000,
+      "settings": {
+        "alpha": 10000.0,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "run_directory": "artifacts/regularization-ablation-v1/relative-price-a10000",
+      "summary": {
+        "macro_mape_pct": 42.96202960123343,
+        "macro_mae_skill_vs_persistence": -17.997882199888533,
+        "macro_direction_agreement_pct": 46.164403778040146,
+        "origin_count": 484,
+        "non_positive_prediction_count": 0
+      },
+      "excluded_cross_year_windows": 6,
+      "by_target_year": {
+        "2022": {
+          "macro_mape_pct": 37.88817168815428,
+          "macro_mae_skill_vs_persistence": -14.270674764070305,
+          "macro_direction_agreement_pct": 49.05462184873949,
+          "origin_count": 238,
+          "non_positive_prediction_count": 0
+        },
+        "2023": {
+          "macro_mape_pct": 48.089185972359616,
+          "macro_mae_skill_vs_persistence": -20.864250737820893,
+          "macro_direction_agreement_pct": 42.87202380952382,
+          "origin_count": 240,
+          "non_positive_prediction_count": 0
+        }
+      }
+    },
+    {
+      "name": "relative-relative-a100",
+      "model": "ridge",
+      "input": "relative",
+      "target": "relative",
+      "alpha": 100,
+      "settings": {
+        "alpha": 100.0,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "run_directory": "artifacts/regularization-ablation-v1/relative-relative-a100",
+      "summary": {
+        "macro_mape_pct": 2.884026756915717,
+        "macro_mae_skill_vs_persistence": -0.04953951220488105,
+        "macro_direction_agreement_pct": 51.484651711924435,
+        "origin_count": 484,
+        "non_positive_prediction_count": 0
+      },
+      "excluded_cross_year_windows": 6,
+      "by_target_year": {
+        "2022": {
+          "macro_mape_pct": 3.094621590473143,
+          "macro_mae_skill_vs_persistence": -0.06172687206396436,
+          "macro_direction_agreement_pct": 49.88895558223289,
+          "origin_count": 238,
+          "non_positive_prediction_count": 0
+        },
+        "2023": {
+          "macro_mape_pct": 2.6785987516148073,
+          "macro_mae_skill_vs_persistence": -0.036347035862958545,
+          "macro_direction_agreement_pct": 53.398809523809526,
+          "origin_count": 240,
+          "non_positive_prediction_count": 0
+        }
+      }
+    },
+    {
+      "name": "relative-relative-a1000",
+      "model": "ridge",
+      "input": "relative",
+      "target": "relative",
+      "alpha": 1000,
+      "settings": {
+        "alpha": 1000.0,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "run_directory": "artifacts/regularization-ablation-v1/relative-relative-a1000",
+      "summary": {
+        "macro_mape_pct": 2.737234742472488,
+        "macro_mae_skill_vs_persistence": 0.0007899711050574608,
+        "macro_direction_agreement_pct": 53.13164108618654,
+        "origin_count": 484,
+        "non_positive_prediction_count": 0
+      },
+      "excluded_cross_year_windows": 6,
+      "by_target_year": {
+        "2022": {
+          "macro_mape_pct": 2.9326045848062683,
+          "macro_mae_skill_vs_persistence": -0.006309996779943351,
+          "macro_direction_agreement_pct": 51.91176470588235,
+          "origin_count": 238,
+          "non_positive_prediction_count": 0
+        },
+        "2023": {
+          "macro_mape_pct": 2.557010507699277,
+          "macro_mae_skill_vs_persistence": 0.009852574618674618,
+          "macro_direction_agreement_pct": 54.75,
+          "origin_count": 240,
+          "non_positive_prediction_count": 0
+        }
+      }
+    },
+    {
+      "name": "relative-relative-a10000",
+      "model": "ridge",
+      "input": "relative",
+      "target": "relative",
+      "alpha": 10000,
+      "settings": {
+        "alpha": 10000.0,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "run_directory": "artifacts/regularization-ablation-v1/relative-relative-a10000",
+      "summary": {
+        "macro_mape_pct": 2.726655963898638,
+        "macro_mae_skill_vs_persistence": 0.0032328446841336685,
+        "macro_direction_agreement_pct": 53.1198347107438,
+        "origin_count": 484,
+        "non_positive_prediction_count": 0
+      },
+      "excluded_cross_year_windows": 6,
+      "by_target_year": {
+        "2022": {
+          "macro_mape_pct": 2.910704629273394,
+          "macro_mae_skill_vs_persistence": -0.00241847483826423,
+          "macro_direction_agreement_pct": 50.90036014405762,
+          "origin_count": 238,
+          "non_positive_prediction_count": 0
+        },
+        "2023": {
+          "macro_mape_pct": 2.561118199078129,
+          "macro_mae_skill_vs_persistence": 0.010213487081422772,
+          "macro_direction_agreement_pct": 55.672619047619044,
+          "origin_count": 240,
+          "non_positive_prediction_count": 0
+        }
+      }
+    },
+    {
+      "name": "mean-return",
+      "model": "mean-return",
+      "input": "price",
+      "target": "relative",
+      "alpha": 100,
+      "settings": {
+        "alpha": 100.0,
+        "seed": 42,
+        "epochs": 50,
+        "batch_size": 32,
+        "patience": 5,
+        "units": 64,
+        "learning_rate": 0.0001,
+        "position_encoding": true
+      },
+      "run_directory": "artifacts/regularization-ablation-v1/mean-return",
+      "summary": {
+        "macro_mape_pct": 2.7350782236414464,
+        "macro_mae_skill_vs_persistence": 0.00042302562687664494,
+        "macro_direction_agreement_pct": 53.2172373081464,
+        "origin_count": 484,
+        "non_positive_prediction_count": 0
+      },
+      "excluded_cross_year_windows": 6,
+      "by_target_year": {
+        "2022": {
+          "macro_mape_pct": 2.918084411471239,
+          "macro_mae_skill_vs_persistence": -0.005442059808065801,
+          "macro_direction_agreement_pct": 50.690276110444174,
+          "origin_count": 238,
+          "non_positive_prediction_count": 0
+        },
+        "2023": {
+          "macro_mape_pct": 2.5707424237709158,
+          "macro_mae_skill_vs_persistence": 0.007328248787708931,
+          "macro_direction_agreement_pct": 56.07738095238095,
+          "origin_count": 240,
+          "non_positive_prediction_count": 0
+        }
+      }
+    }
+  ]
+}

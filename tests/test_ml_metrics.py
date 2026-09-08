@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from ml_eval.data import STOCKS, Windows
-from ml_eval.metrics import persistence, prediction_table, score
+from ml_eval.metrics import persistence, prediction_table, score, yearly_scores
 
 
 def windows(flat=False):
@@ -54,3 +54,21 @@ def test_nonfinite_predictions_fail():
     predictions[0, 0, 0] = np.nan
     with pytest.raises(ValueError):
         score(data, predictions)
+
+
+def test_year_slices_exclude_only_cross_year_target_windows():
+    data = windows()
+    data.target_dates = np.array([["2023-12-29", "2024-01-04"], ["2024-01-04", "2024-01-05"]], dtype="datetime64[D]")
+    result = yearly_scores(data, data.y)
+    assert result["excluded_cross_year_windows"] == 1
+    assert list(result["years"]) == ["2024"]
+    assert result["years"]["2024"]["model"]["origin_count"] == 1
+    assert result["years"]["2024"]["model"]["macro_mape_pct"] == 0
+    assert result["years"]["2024"]["persistence"]["macro_mape_pct"] > 0
+    assert score(data, data.y)[1]["origin_count"] == 2
+
+
+def test_year_slices_reject_wrong_shape():
+    data = windows()
+    with pytest.raises(ValueError, match="shape"):
+        yearly_scores(data, data.y[:1])

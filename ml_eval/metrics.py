@@ -3,6 +3,8 @@
 import numpy as np
 import pandas as pd
 
+from dataclasses import fields
+
 from .data import STOCKS, Windows
 
 
@@ -64,3 +66,21 @@ def prediction_table(windows: Windows, predictions: np.ndarray) -> pd.DataFrame:
         "predicted_price": predictions.reshape(-1),
         "predicted_return_pct": ((predictions / current - 1) * 100).reshape(-1),
     })
+
+
+def yearly_scores(windows: Windows, predictions: np.ndarray) -> dict:
+    """Score only windows whose entire target horizon lies in one year."""
+    if predictions.shape != windows.y.shape or not np.isfinite(predictions).all():
+        raise ValueError("Invalid prediction shape or values")
+    first = pd.DatetimeIndex(windows.target_dates[:, 0]).year.to_numpy()
+    last = pd.DatetimeIndex(windows.target_dates[:, -1]).year.to_numpy()
+    result = {"excluded_cross_year_windows": int((first != last).sum()), "years": {}}
+    for year in sorted(set(first)):
+        mask = (first == year) & (last == year)
+        if not mask.any():
+            continue
+        subset = Windows(**{field.name: getattr(windows, field.name)[mask] for field in fields(Windows)})
+        _, model_summary = score(subset, predictions[mask])
+        _, baseline_summary = score(subset, persistence(subset))
+        result["years"][str(year)] = {"model": model_summary, "persistence": baseline_summary}
+    return result

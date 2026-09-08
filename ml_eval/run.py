@@ -41,12 +41,14 @@ def neural_module():
 def predict(kind, model, windows, scalers, batch_size):
     if kind == "persistence":
         return persistence(windows)
+    if kind == "mean-return":
+        return windows.current[:, None, :] * (1 + model[None, :, :])
     if kind == "ridge":
         scaled = model.predict(windows.x.reshape(len(windows.x), -1))
     else:
         scaled = neural_module().predict_model(model, windows, batch_size)
     decoded = scalers["y"].inverse_transform(scaled.reshape(-1, len(STOCKS))).reshape(windows.y.shape)
-    if scalers.get("representation", "price") == "relative":
+    if scalers.get("target_representation", scalers.get("representation", "price")) == "relative":
         return windows.current[:, None, :] * (1 + decoded)
     return decoded
 
@@ -84,7 +86,7 @@ def provenance():
 
 def train(args):
     config = DataConfig(args.lookback, args.horizon, args.train_end, args.validation_end,
-                        args.feature_set, args.representation)
+                        args.feature_set, args.representation, args.input_representation, args.target_representation)
     config.validate()
     if args.alpha <= 0 or not np.isfinite(args.alpha):
         raise ValueError("alpha must be finite and positive")
@@ -113,7 +115,10 @@ def train(args):
     joblib.dump(dataset.scalers, output / "scalers.joblib")
     training, validation = dataset.partitions["train"], dataset.partitions["validation"]
     model = None
-    if args.model == "ridge":
+    if args.model == "mean-return":
+        model = (training.y / training.current[:, None, :] - 1).mean(axis=0)
+        joblib.dump(model, output / "model.joblib")
+    elif args.model == "ridge":
         # Regularized multi-output linear baseline, replacing underdetermined OLS.
         model = Ridge(alpha=args.alpha, solver="lsqr", tol=1e-6)
         with threadpool_limits(limits=4):
@@ -152,7 +157,7 @@ def evaluate_test(args):
     scalers = joblib.load(output / "scalers.joblib")
     windows = make_dataset(frame, features, config, scalers).partitions["test"]
     kind, model = manifest["model"], None
-    if kind == "ridge":
+    if kind in ("ridge", "mean-return"):
         model = joblib.load(output / "model.joblib")
     elif kind in ("lstm", "transformer"):
         model = neural_module().keras.models.load_model(output / "model.keras", compile=False)
@@ -170,10 +175,14 @@ def parser():
     fit = commands.add_parser("train", help="Train and evaluate VALIDATION only")
     fit.add_argument("--data", type=Path, default=Path("api/data/total.csv"))
     fit.add_argument("--output", type=Path, required=True)
-    fit.add_argument("--model", choices=("persistence", "ridge", "lstm", "transformer"), default="ridge")
+    fit.add_argument("--model", choices=("persistence", "mean-return", "ridge", "lstm", "transformer"), default="ridge")
     fit.add_argument("--feature-set", choices=("stock", "stock-econ"), default="stock")
     fit.add_argument("--representation", choices=("price", "relative"), default="price",
                      help="Joint input/target representation; relative uses origin-normalized stocks and future returns")
+    fit.add_argument("--input-representation", choices=("price", "relative"),
+                     help="Override only the input side of --representation")
+    fit.add_argument("--target-representation", choices=("price", "relative"),
+                     help="Override only the target side of --representation")
     fit.add_argument("--lookback", type=int, default=90)
     fit.add_argument("--horizon", type=int, default=7)
     fit.add_argument("--train-end", default="2021-12-30")

@@ -78,7 +78,8 @@ def test_price_artifacts_without_representation_remain_compatible():
     frame, config = dataset_inputs()
     price_config = DataConfig(5, 3, config.train_end, config.validation_end)
     original = make_dataset(frame, list(STOCKS), price_config)
-    legacy_scalers = {k: v for k, v in original.scalers.items() if k != "representation"}
+    legacy_scalers = {k: v for k, v in original.scalers.items()
+                      if k not in ("representation", "input_representation", "target_representation")}
     restored = make_dataset(frame, list(STOCKS), price_config, legacy_scalers)
     windows = restored.partitions["validation"]
 
